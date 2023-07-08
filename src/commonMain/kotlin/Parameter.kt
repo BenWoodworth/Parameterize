@@ -5,6 +5,12 @@ public class Parameter<out T> internal constructor(
     public val argumentCount: ULong,
     public val getArgument: (index: ULong) -> T
 ) {
+    override fun toString(): String =
+        context.getVariableParameterOrNull(this)
+            ?.value?.toString()
+            ?: "Parameter value not initialized yet."
+
+
     public companion object
 }
 

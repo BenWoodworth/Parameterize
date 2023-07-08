@@ -16,6 +16,9 @@ public fun parameterize(block: ParameterizeScope.() -> Unit) {
 public class ParameterizeScope internal constructor(
     private val context: ParameterizeContext
 ) {
+    override fun toString(): String =
+        "ParameterizeScope(iteration = ${context.iteration})"
+
     public operator fun <T> Parameter<T>.getValue(thisRef: Any?, variable: KProperty<*>): T =
         context.getVariableParameterValue(variable, this)
 
@@ -27,14 +30,14 @@ public class ParameterizeScope internal constructor(
 }
 
 internal class ParameterizeContext(
-    private val iteration: ULong
+    val iteration: ULong
 ) {
     var nextIteration: ULong? = null
         private set
 
     private var nextParameterIndex = iteration
 
-    private class VariableParameterValue<out T>(
+    class VariableParameterValue<out T>(
         val variable: KProperty<*>,
         val parameter: Parameter<T>,
         val value: T
@@ -42,14 +45,14 @@ internal class ParameterizeContext(
 
     private val variables = mutableListOf<VariableParameterValue<*>>()
 
+    fun <T> getVariableParameterOrNull(parameter: Parameter<T>): VariableParameterValue<T>? {
+        val variableProperty = variables.firstOrNull { it.parameter == parameter }
+
+        @Suppress("UNCHECKED_CAST")
+        return variableProperty as VariableParameterValue<T>?
+    }
+
     fun <T> getVariableParameterValue(variable: KProperty<*>, parameter: Parameter<T>): T {
-        fun getVariableParameterOrNull(): VariableParameterValue<T>? {
-            val variableProperty = variables.firstOrNull { it.variable == variable && it.parameter == parameter }
-
-            @Suppress("UNCHECKED_CAST")
-            return variableProperty as VariableParameterValue<T>?
-        }
-
         fun initializeVariableParameter(): VariableParameterValue<T> {
             val parameterIndex = nextParameterIndex % parameter.argumentCount
             nextParameterIndex /= parameter.argumentCount
@@ -68,7 +71,7 @@ internal class ParameterizeContext(
             return initializedVariable
         }
 
-        val variableProperty = getVariableParameterOrNull() ?: initializeVariableParameter()
+        val variableProperty = getVariableParameterOrNull(parameter) ?: initializeVariableParameter()
         return variableProperty.value
     }
 }
