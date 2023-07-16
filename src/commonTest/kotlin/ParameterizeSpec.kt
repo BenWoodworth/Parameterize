@@ -2,6 +2,7 @@ package com.benwoodworth.parameterize
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ParameterizeSpec {
     @Test
@@ -95,5 +96,36 @@ class ParameterizeSpec {
         }
 
         assertEquals(expectedIterations, iterations)
+    }
+
+    @Test
+    fun parameter_with_no_arguments_should_finish_iteration_early() {
+        val iterations = mutableListOf<String>()
+
+        parameterize {
+            val digit1 by parameter(1..5)
+            val digit2 by parameter((1..5).filter { it > digit1 })
+            val digit3 by parameter((1..5).filter { it > digit2 })
+
+            val increasingDigits = "$digit1$digit2$digit3"
+            iterations += increasingDigits
+        }
+
+        val expectedIterations = listOf("123", "124", "125", "134", "135", "145", "234", "235", "245", "345")
+        assertEquals(expectedIterations, iterations)
+    }
+
+    @Test
+    fun unused_parameter_with_no_arguments_should_not_finish_iteration_early() {
+        var finishedIteration = false
+
+        parameterize {
+            @Suppress("UNUSED_VARIABLE")
+            val unused: String by parameter(emptyList())
+
+            finishedIteration = true
+        }
+
+        assertTrue(finishedIteration)
     }
 }

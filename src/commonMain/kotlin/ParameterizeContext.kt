@@ -64,6 +64,8 @@ internal class ParameterizeContext {
 
             is ParameterState.Uninitialized -> {
                 val iterator = state.arguments.iterator()
+                if (!iterator.hasNext()) throw ParameterizeContinue
+
                 val initialized = ParameterState.Initialized(variable, iterator, iterator.next())
 
                 parameterStates[parameter.index] = initialized

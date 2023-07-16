@@ -7,12 +7,17 @@ public fun parameterize(block: ParameterizeScope.() -> Unit) {
     val context = ParameterizeContext()
 
     while (context.hasNextIteration) {
-        ParameterizeScope(iteration, context).block()
+        try {
+            ParameterizeScope(iteration, context).block()
+        } catch (_: ParameterizeContinue) {
+        }
 
         context.finishIteration()
         iteration++
     }
 }
+
+internal data object ParameterizeContinue : Throwable()
 
 public class Parameter<out T> internal constructor(
     internal val context: ParameterizeContext,
