@@ -33,8 +33,8 @@ class ParameterizeSpec {
     fun with_two_independent_parameters_it_should_iterate_the_same_as_nested_loops() {
         val iterations = mutableListOf<String>()
         parameterize {
-            val letter by parameter('a', 'b', 'c', 'd')
-            val number by parameter(0, 1, 2, 3)
+            val letter by parameterOf('a', 'b', 'c', 'd')
+            val number by parameterOf(0, 1, 2, 3)
 
             iterations += "$letter$number"
         }
@@ -78,7 +78,7 @@ class ParameterizeSpec {
             var string = ""
 
             repeat(3) {
-                val letter by parameter('a', 'b', 'c')
+                val letter by parameterOf('a', 'b', 'c')
                 string += letter
             }
 

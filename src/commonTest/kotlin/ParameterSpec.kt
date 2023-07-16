@@ -7,7 +7,7 @@ class ParameterSpec {
     @Test
     @Suppress("UNUSED_VARIABLE")
     fun toString_before_variable_is_used_should_match_message_from_lazy() = parameterize {
-        val parameterDelegate = parameter("unused")
+        val parameterDelegate = parameterOf("unused")
         val lazyDelegate = lazy { "unused" }
 
         val parameterVariable by parameterDelegate
@@ -19,7 +19,7 @@ class ParameterSpec {
 
     @Test
     fun toString_after_variable_is_used_should_match_the_value() = parameterize {
-        val parameterDelegate = parameter(1, 2, 3, "a", "b", "c")
+        val parameterDelegate = parameterOf(1, 2, 3, "a", "b", "c")
         val parameterVariable by parameterDelegate
 
         readVariable(parameterVariable)

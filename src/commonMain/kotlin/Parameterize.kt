@@ -41,7 +41,7 @@ public class ParameterizeScope internal constructor(
         context.createParameter(arguments)
 }
 
-public fun <T> ParameterizeScope.parameter(vararg arguments: T): Parameter<T> =
+public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> =
     parameter(arguments.asIterable())
 
 public fun <T> ParameterizeScope.parameter(lazyArguments: () -> Iterable<T>): Parameter<T> =
