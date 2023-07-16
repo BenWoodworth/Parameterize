@@ -1,7 +1,6 @@
 package com.benwoodworth.parameterize
 
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class ParameterizeSpec {
@@ -22,17 +21,16 @@ class ParameterizeSpec {
 
         val iterations = mutableListOf<Char>()
         parameterize {
-            val letter by parameter(letters)
+            val letter by parameter { letters }
 
             iterations += letter
         }
 
-        iterations.sort()
-        assertContentEquals(letters, iterations)
+        assertEquals(letters, iterations)
     }
 
     @Test
-    fun with_two_independent_parameters_it_should_iterate_once_per_permutation() {
+    fun with_two_independent_parameters_it_should_iterate_the_same_as_nested_loops() {
         val iterations = mutableListOf<String>()
         parameterize {
             val letter by parameter('a', 'b', 'c', 'd')
@@ -41,37 +39,36 @@ class ParameterizeSpec {
             iterations += "$letter$number"
         }
 
-        iterations.sort()
-        val expectedIterations = listOf(
-            "a0", "a1", "a2", "a3",
-            "b0", "b1", "b2", "b3",
-            "c0", "c1", "c2", "c3",
-            "d0", "d1", "d2", "d3"
-        )
+        val expectedIterations = mutableListOf<String>()
+        for (letter in listOf('a', 'b', 'c', 'd')) {
+            for (number in listOf(0, 1, 2, 3)) {
+                expectedIterations += "$letter$number"
+            }
+        }
 
-        assertContentEquals(expectedIterations, iterations)
+        assertEquals(expectedIterations, iterations)
     }
 
     @Test
-    fun with_two_dependent_parameters_it_should_iterate_once_per_permutation() {
+    fun with_two_dependent_parameters_it_should_iterate_the_same_as_nested_loops() {
+        val numbers = (0..4).toList()
+
         val iterations = mutableListOf<String>()
         parameterize {
-            val numbers = (0..3).toList()
-
-            val number by parameter(numbers)
-            val differentNumber by parameter(numbers.filter { it != number })
+            val number by parameter { numbers }
+            val differentNumber by parameter { numbers.filter { it != number } }
 
             iterations += "$number$differentNumber"
         }
 
-        iterations.sort()
-        val expectedIterations = listOf(
-            "01", "02", "03", "10",
-            "12", "13", "20", "21",
-            "23", "30", "31", "32"
-        )
+        val expectedIterations = mutableListOf<String>()
+        for (number in numbers) {
+            for (differentNumber in numbers.filter { it != number }) {
+                expectedIterations += "$number$differentNumber"
+            }
+        }
 
-        assertContentEquals(expectedIterations, iterations)
+        assertEquals(expectedIterations, iterations)
     }
 
     @Test
@@ -88,13 +85,15 @@ class ParameterizeSpec {
             iterations += string
         }
 
-        iterations.sort()
-        val expectedIterations = listOf(
-            "aaa", "aab", "aac", "aba", "abb", "abc", "aca", "acb", "acc",
-            "baa", "bab", "bac", "bba", "bbb", "bbc", "bca", "bcb", "bcc",
-            "caa", "cab", "cac", "cba", "cbb", "cbc", "cca", "ccb", "ccc",
-        )
+        val expectedIterations = mutableListOf<String>()
+        for (letter1 in listOf('a', 'b', 'c')) {
+            for (letter2 in listOf('a', 'b', 'c')) {
+                for (letter3 in listOf('a', 'b', 'c')) {
+                    expectedIterations += "$letter1$letter2$letter3"
+                }
+            }
+        }
 
-        assertContentEquals(expectedIterations, iterations)
+        assertEquals(expectedIterations, iterations)
     }
 }
