@@ -4,7 +4,7 @@ import kotlin.reflect.KProperty
 
 private sealed interface ParameterState<T> {
     class Uninitialized<T>(
-        val arguments: () -> Iterable<T>
+        val arguments: Iterable<T>
     ) : ParameterState<T>
 
     class Initialized<T>(
@@ -33,7 +33,7 @@ internal class ParameterizeContext {
         hasNextIteration = parameterStates.isNotEmpty()
     }
 
-    fun <T> createParameter(arguments: () -> Iterable<T>): Parameter<T> {
+    fun <T> createParameter(arguments: Iterable<T>): Parameter<T> {
         val parameter = getParameterFromCache(nextParameterIndex++)
 
         if (parameter.index > parameterStates.lastIndex) {
@@ -63,7 +63,7 @@ internal class ParameterizeContext {
             }
 
             is ParameterState.Uninitialized -> {
-                val iterator = state.arguments().iterator()
+                val iterator = state.arguments.iterator()
                 val initialized = ParameterState.Initialized(variable, iterator, iterator.next())
 
                 parameterStates[parameter.index] = initialized
