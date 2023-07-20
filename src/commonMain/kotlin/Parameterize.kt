@@ -2,7 +2,11 @@ package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
 
-public fun parameterize(block: ParameterizeScope.() -> Unit) {
+public fun parameterize(
+    configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
+    throwHandler: ParameterizeThrowHandler = configuration.throwHandler,
+    block: ParameterizeScope.() -> Unit
+) {
     var iteration = 0uL
     val context = ParameterizeContext()
 
@@ -10,6 +14,8 @@ public fun parameterize(block: ParameterizeScope.() -> Unit) {
         try {
             ParameterizeScope(iteration, context).block()
         } catch (_: ParameterizeContinue) {
+        } catch (thrown: Throwable) {
+            throwHandler.invoke(ParameterizeThrowHandlerScope(context), thrown)
         }
 
         context.finishIteration()

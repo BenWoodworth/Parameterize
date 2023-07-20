@@ -98,4 +98,9 @@ internal class ParameterizeContext {
 
             null -> Unit
         }
+
+    fun getReadParameters(): List<Pair<KProperty<*>, *>> =
+        parameterStates
+            .filterIsInstance<ParameterState.Initialized<*>>()
+            .map { it.variable to it.argument }
 }
