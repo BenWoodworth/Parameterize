@@ -2,105 +2,71 @@ package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
 
-private sealed interface ParameterState<T> {
-    class Uninitialized<T>(
-        val arguments: Iterable<T>
-    ) : ParameterState<T>
-
-    class Initialized<T>(
-        val variable: KProperty<*>,
-        val argumentIterator: Iterator<T>,
-        var argument: T
-    ) : ParameterState<T> {
-        fun nextArgument() {
-            argument = argumentIterator.next()
-        }
-    }
-}
-
 internal class ParameterizeContext {
-    private val parameterCache = ArrayList<Parameter<*>>()
-    private val parameterStates = ArrayList<ParameterState<*>>()
-    private var nextParameterIndex = 0
+    /**
+     * The parameters created for [parameterize].
+     *
+     * Parameter instances are re-used between iterations, so will never be removed.
+     * The true number of parameters in the current iteration is maintained in [parameterCount].
+     */
+    private val parameters = ArrayList<Parameter<*>>()
+    private var parameterCount = 0
 
     var hasNextIteration: Boolean = true
         private set
 
     fun finishIteration() {
-        nextParameterIndex = 0
         nextArgumentPermutation()
+        hasNextIteration = parameterCount > 0
 
-        hasNextIteration = parameterStates.isNotEmpty()
+        parameterCount = 0
     }
 
-    fun <T> createParameter(arguments: Iterable<T>): Parameter<T> {
-        val parameter = getParameterFromCache(nextParameterIndex++)
+    fun <T> declareParameter(arguments: Iterable<T>): Parameter<T> {
+        val parameterIndex = parameterCount++
 
-        if (parameter.index > parameterStates.lastIndex) {
-            parameterStates += ParameterState.Uninitialized(arguments)
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        return parameter as Parameter<T>
-    }
-
-    private fun getParameterFromCache(index: Int): Parameter<*> =
-        if (index <= parameterCache.lastIndex) {
-            parameterCache[index]
+        val parameter = if (parameterIndex in parameters.indices) {
+            @Suppress("UNCHECKED_CAST")
+            parameters[parameterIndex] as Parameter<T>
         } else {
-            Parameter<Any?>(this, index)
-                .also { parameterCache.add(it) }
+            Parameter<T>()
+                .also { parameters += it }
         }
 
-    private fun <T> getParameterState(parameter: Parameter<T>): ParameterState<T> =
-        @Suppress("UNCHECKED_CAST")
-        (parameterStates[parameter.index] as ParameterState<T>)
-
-    fun <T> getParameterArgument(variable: KProperty<*>, parameter: Parameter<T>): T =
-        when (val state = getParameterState(parameter)) {
-            is ParameterState.Initialized -> {
-                state.argument
-            }
-
-            is ParameterState.Uninitialized -> {
-                val iterator = state.arguments.iterator()
-                if (!iterator.hasNext()) throw ParameterizeContinue
-
-                val initialized = ParameterState.Initialized(variable, iterator, iterator.next())
-
-                parameterStates[parameter.index] = initialized
-                initialized.argument
-            }
+        if (!parameter.isDeclared) {
+            parameter.declare(arguments)
         }
 
-    fun getParameterVariableOrNull(parameter: Parameter<*>): KProperty<*>? =
-        (parameterStates.getOrNull(parameter.index) as? ParameterState.Initialized)?.variable
+        return parameter
+    }
 
     /**
      * Iterate the last parameter to its next argument,
      * or if all its arguments have been used, remove it and try again.
      */
-    private tailrec fun nextArgumentPermutation(): Unit =
-        when (val lastParameter = parameterStates.lastOrNull()) {
-            is ParameterState.Initialized -> {
-                if (lastParameter.argumentIterator.hasNext()) {
-                    lastParameter.nextArgument()
-                } else {
-                    parameterStates.removeLast()
-                    nextArgumentPermutation()
-                }
-            }
-
-            is ParameterState.Uninitialized -> {
-                parameterStates.removeLast()
-                nextArgumentPermutation()
-            }
-
-            null -> Unit
+    private tailrec fun nextArgumentPermutation() {
+        if (parameterCount == 0) {
+            return
         }
 
+        val lastParameter = parameters[parameterCount - 1]
+
+        if (!lastParameter.isInitialized) {
+            parameterCount--
+            return nextArgumentPermutation()
+        }
+
+        if (lastParameter.isLastArgument) {
+            parameterCount--
+            lastParameter.reset()
+            return nextArgumentPermutation()
+        }
+
+        lastParameter.nextArgument()
+    }
+
     fun getReadParameters(): List<Pair<KProperty<*>, *>> =
-        parameterStates
-            .filterIsInstance<ParameterState.Initialized<*>>()
-            .map { it.variable to it.argument }
+        parameters.take(parameterCount)
+            .filter { it.isInitialized }
+            .mapNotNull { it.getPropertyArgumentOrNull() }
 }

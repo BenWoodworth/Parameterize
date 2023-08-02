@@ -1,6 +1,5 @@
 package com.benwoodworth.parameterize
 
-@Suppress("UNUSED_EXPRESSION")
-fun <T> readVariable(variable: T) {
-    variable
+@Suppress("UNUSED_PARAMETER")
+fun <T> readProperty(property: T) {
 }

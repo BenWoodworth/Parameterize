@@ -25,18 +25,6 @@ public fun parameterize(
 
 internal data object ParameterizeContinue : Throwable()
 
-public class Parameter<out T> internal constructor(
-    internal val context: ParameterizeContext,
-    internal val index: Int
-) {
-    override fun toString(): String {
-        val variable = context.getParameterVariableOrNull(this)
-            ?: return "Parameter value not initialized yet."
-
-        return context.getParameterArgument(variable, this).toString()
-    }
-}
-
 public class ParameterizeScope internal constructor(
     private val iteration: ULong,
     private val context: ParameterizeContext,
@@ -44,12 +32,13 @@ public class ParameterizeScope internal constructor(
     override fun toString(): String =
         "ParameterizeScope(iteration = $iteration)"
 
-    public operator fun <T> Parameter<T>.getValue(thisRef: Any?, variable: KProperty<*>): T =
-        context.getParameterArgument(variable, this)
+    public operator fun <T> Parameter<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
+        @Suppress("UNCHECKED_CAST")
+        readArgument(property as KProperty<T>)
 
 
     public fun <T> parameter(arguments: Iterable<T>): Parameter<T> =
-        context.createParameter(arguments)
+        context.declareParameter(arguments)
 }
 
 public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> =
