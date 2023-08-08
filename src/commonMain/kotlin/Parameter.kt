@@ -2,7 +2,9 @@ package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
 
-public class Parameter<T> internal constructor() {
+public class Parameter<T> internal constructor(
+    internal val context: ParameterizeContext?
+) {
     /*
      * Conceptually, a parameter is a reusable source of arguments, and is in
      * one of three different states internally.
@@ -40,12 +42,14 @@ public class Parameter<T> internal constructor() {
     private var property: KProperty<T>? = null
     private var argumentIterator: Iterator<T>? = null
     private var argument: T? = null
+    internal var hasBeenRead: Boolean = false
 
     internal fun reset() {
         arguments = null
         property = null
         argumentIterator = null
         argument = null
+        hasBeenRead = false
     }
 
 
@@ -88,7 +92,16 @@ public class Parameter<T> internal constructor() {
     internal fun readArgument(property: KProperty<T>): T {
         if (!isInitialized) {
             initialize(property)
+        } else if (!property.isSameAs(this.property!!)) {
+            val error = if (hasBeenRead) {
+                "Cannot use property with `${property.name}`. Already initialized with `${this.property!!.name}`."
+            } else {
+                "Expected to be initializing `${this.property!!.name}`, but got `${property.name}`"
+            }
+            throw ParameterizeException(error)
         }
+
+        hasBeenRead = true
 
         // The argument must be `T` and not `T?`, since this Parameter is initialized
         @Suppress("UNCHECKED_CAST")

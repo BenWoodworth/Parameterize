@@ -19,6 +19,10 @@ internal class ParameterizeContext {
         nextArgumentPermutation()
         hasNextIteration = parameterCount > 0
 
+        for (i in 0..<parameterCount) {
+            parameters[i].hasBeenRead = false
+        }
+
         parameterCount = 0
     }
 
@@ -29,7 +33,7 @@ internal class ParameterizeContext {
             @Suppress("UNCHECKED_CAST")
             parameters[parameterIndex] as Parameter<T>
         } else {
-            Parameter<T>()
+            Parameter<T>(this)
                 .also { parameters += it }
         }
 

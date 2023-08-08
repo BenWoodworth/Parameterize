@@ -5,7 +5,7 @@ import kotlin.test.*
 
 class ParameterSpec {
     private fun <T> declaredParameter(arguments: Iterable<T>): Parameter<T> =
-        Parameter<T>().apply { declare(arguments) }
+        Parameter<T>(null).apply { declare(arguments) }
 
     private fun <T> initializedParameter(arguments: Iterable<T>): Pair<KProperty<T>, Parameter<T>> {
         lateinit var propertyReference: KProperty<T>
@@ -28,7 +28,7 @@ class ParameterSpec {
 
     @Test
     fun newly_created_parameter_should_be_neither_declared_nor_initialized() {
-        val parameter = Parameter<Nothing>()
+        val parameter = Parameter<Nothing>(null)
 
         assertFalse(parameter.isDeclared, parameter::isDeclared.toString())
         assertFalse(parameter.isInitialized, parameter::isInitialized.toString())
@@ -53,7 +53,7 @@ class ParameterSpec {
     @Test
     fun reset_parameter_should_be_neither_declared_nor_initialized() {
         val undeclaredParameters = listOf(
-            "newly constructed" to { Parameter<Any>() },
+            "newly constructed" to { Parameter<Any>(null) },
             "declared" to { declaredParameter('a'..'c') },
             "initialized" to { initializedParameter('a'..'c').second }
         )
@@ -107,7 +107,7 @@ class ParameterSpec {
     @Test
     fun getting_property_argument_should_return_null_if_not_initialized() {
         val uninitializedParameters = listOf(
-            "newly constructed" to { Parameter<Any>() },
+            "newly constructed" to { Parameter<Any>(null) },
             "declared" to { declaredParameter('a'..'c') },
         )
 
@@ -125,14 +125,14 @@ class ParameterSpec {
         assertNotNull(parameterArgument)
 
         val (property, argument) = parameterArgument
-        assertEquals(expectedProperty.toString(), property.toString(), "parameter argument property")
+        assertTrue(expectedProperty.isSameAs(property), "parameter argument's property")
         assertEquals(parameter.readArgument(expectedProperty), argument)
     }
 
     @Test
     fun to_string_when_not_initialized_should_match_message_from_lazy() {
         val uninitializedParameters = listOf(
-            "newly constructed" to Parameter<Any>(),
+            "newly constructed" to Parameter<Any>(null),
             "declared" to declaredParameter('a'..'c'),
         )
 
