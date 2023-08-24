@@ -1,5 +1,6 @@
 package com.benwoodworth.parameterize
 
+import kotlin.jvm.JvmInline
 import kotlin.reflect.KProperty
 
 public fun parameterize(
@@ -29,6 +30,11 @@ internal data object ParameterizeContinue : Throwable()
 
 internal class ParameterizeException(override val message: String) : Exception(message)
 
+@JvmInline
+public value class Parameter<T> internal constructor(
+    internal val arguments: Iterable<T>
+)
+
 public class ParameterizeScope internal constructor(
     private val iteration: ULong,
     private val context: ParameterizeContext,
@@ -38,13 +44,18 @@ public class ParameterizeScope internal constructor(
     override fun toString(): String =
         "ParameterizeScope(iteration = $iteration)"
 
-    public operator fun <T> Parameter<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
+    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
+        if (readingParameters != 0) {
+            throw ParameterizeException("Declaring a parameter within another is not supported")
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        return context.declareParameter(property as KProperty<T>, arguments)
+    }
+
+    public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
         try {
             readingParameters++
-
-            if (context != this@ParameterizeScope.context) {
-                throw ParameterizeException("Cannot initialize `a` with parameter from another scope")
-            }
 
             @Suppress("UNCHECKED_CAST")
             readArgument(property as KProperty<T>)
@@ -57,7 +68,7 @@ public class ParameterizeScope internal constructor(
             throw ParameterizeException("Declaring a parameter within another is not supported")
         }
 
-        return context.declareParameter(arguments)
+        return Parameter(arguments)
     }
 }
 

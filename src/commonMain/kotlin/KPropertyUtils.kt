@@ -1,19 +1,16 @@
 package com.benwoodworth.parameterize
 
+import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 private val canCompareWithEquals = run {
-    class PropertyReference {
-        operator fun getValue(thisRef: Any?, property: KProperty<*>) = property
-    }
+    val propertyReference by ReadOnlyProperty { _, property -> property }
 
-    val property by PropertyReference()
-
-    property == property
+    propertyReference == propertyReference
 }
 
 // Kotlin/JS `KProperty.equals()` does not work: https://youtrack.jetbrains.com/issue/KT-59866/
-internal fun KProperty<*>.isSameAs(other: KProperty<*>): Boolean =
+internal fun KProperty<*>.equalsProperty(other: KProperty<*>): Boolean =
     when {
         this === other -> true
         canCompareWithEquals -> this == other

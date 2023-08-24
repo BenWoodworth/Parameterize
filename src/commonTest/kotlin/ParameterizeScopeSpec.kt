@@ -10,7 +10,6 @@ class ParameterizeScopeSpec {
 
         parameterize {
             val a by parameter((1..100).toList())
-            readProperty(a)
 
             assertEquals("ParameterizeScope(iteration = $iteration)", this@parameterize.toString())
 

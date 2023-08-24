@@ -1,37 +1,38 @@
 package com.benwoodworth.parameterize
 
-import kotlin.reflect.KProperty
+import kotlin.properties.ReadOnlyProperty
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class KPropertyUtilsSpec {
     @Test
-    fun property_should_be_same_through_different_delegates() {
-        class PropertyReference {
-            operator fun getValue(thisRef: Any?, variable: KProperty<*>) = variable
-        }
+    fun property_should_equal_the_same_instance() {
+        val property by ReadOnlyProperty { _, property -> property }
 
-        val variable by PropertyReference()
+        val reference = property
 
-        val reference1 = variable
-        val reference2 = variable
-
-        assertTrue(reference1.isSameAs(reference2))
+        assertTrue(reference.equalsProperty(reference))
     }
 
     @Test
-    fun property_should_not_be_same_as_another() {
-        class PropertyReference {
-            operator fun getValue(thisRef: Any?, variable: KProperty<*>) = variable
-        }
+    fun property_should_equal_the_same_property_through_different_delegate_calls() {
+        val property by ReadOnlyProperty { _, property -> property }
 
-        val variable1 by PropertyReference()
-        val variable2 by PropertyReference()
+        val reference1 = property
+        val reference2 = property
 
-        val reference1 = variable1
-        val reference2 = variable2
+        assertTrue(reference1.equalsProperty(reference2))
+    }
 
-        assertFalse(reference1.isSameAs(reference2))
+    @Test
+    fun property_should_not_equal_a_different_property() {
+        val property1 by ReadOnlyProperty { _, property -> property }
+        val property2 by ReadOnlyProperty { _, property -> property }
+
+        val reference1 = property1
+        val reference2 = property2
+
+        assertFalse(reference1.equalsProperty(reference2))
     }
 }

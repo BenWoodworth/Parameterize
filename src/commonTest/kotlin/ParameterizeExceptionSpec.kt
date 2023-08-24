@@ -1,34 +1,9 @@
 package com.benwoodworth.parameterize
 
+import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.*
 
 class ParameterizeExceptionSpec {
-    private var failureProbeWasUsed: Boolean = false
-    private var failedWithinFailureProbe: Boolean = false
-
-    private fun <T> probeFailure(block: () -> T): T =
-        try {
-            failureProbeWasUsed = true
-            block()
-        } catch (e: ParameterizeException) {
-            failedWithinFailureProbe = true
-            throw e
-        }
-
-    @BeforeTest
-    fun beforeTest() {
-        failureProbeWasUsed = false
-        failedWithinFailureProbe = false
-    }
-
-    @AfterTest
-    fun afterTest() {
-        if (failureProbeWasUsed) {
-            assertTrue(failedWithinFailureProbe, "Should have failed within probe")
-        }
-    }
-
-
     @Test
     fun should_rethrow_and_not_continue_after_ParameterizeException() {
         var iterations = 0
@@ -40,7 +15,7 @@ class ParameterizeExceptionSpec {
             ) {
                 iterations++
 
-                val parameter by parameter { 1..10 }
+                val parameter by parameterOf(1, 2)
                 readProperty(parameter)
 
                 throw exception
@@ -52,22 +27,23 @@ class ParameterizeExceptionSpec {
     }
 
     @Test
-    fun reusing_a_parameter_for_multiple_properties() {
+    fun parameter_delegate_used_with_the_wrong_property() {
         val exception = assertFailsWith<ParameterizeException> {
             parameterize {
-                val parameter = parameterOf(1)
+                lateinit var interceptedDelegateFromA: ParameterDelegate<Int>
 
-                val a by parameter
-                readProperty(a)
-
-                val b by parameter
-                probeFailure {
-                    readProperty(b)
+                val a by PropertyDelegateProvider { thisRef: Any?, property ->
+                    parameterOf(1)
+                        .provideDelegate(thisRef, property)
+                        .also { interceptedDelegateFromA = it }
                 }
+
+                val b by interceptedDelegateFromA
+                readProperty(b)
             }
         }
 
-        assertEquals("Cannot use property with `b`. Already initialized with `a`.", exception.message)
+        assertEquals("Cannot use parameter delegate with `b`. Already declared for `a`.", exception.message)
     }
 
     @Test
@@ -77,20 +53,17 @@ class ParameterizeExceptionSpec {
 
             parameterize {
                 if (shouldDeclareA) {
-                    val a by parameterOf(1, 2)
-                    readProperty(a)
+                    val a by parameterOf(1)
                 }
 
-                val b by parameterOf('a', 'b')
-                probeFailure {
-                    readProperty(b)
-                }
+                val b by parameterOf(1, 2)
+                readProperty(b)
 
                 shouldDeclareA = false
             }
         }
 
-        assertEquals("Expected to be initializing `a`, but got `b`", exception.message)
+        assertEquals("Expected to be declaring `a`, but got `b`", exception.message)
     }
 
     @Test
@@ -100,31 +73,28 @@ class ParameterizeExceptionSpec {
 
             parameterize {
                 if (shouldDeclareA) {
-                    val a by parameterOf(1, 2)
-                    probeFailure {
-                        readProperty(a)
-                    }
+                    val a by parameterOf(2)
                 }
 
-                val b by parameterOf('a', 'b')
+                val b by parameterOf(1, 2)
                 readProperty(b)
 
                 shouldDeclareA = true
             }
         }
 
-        assertEquals("Expected to be initializing `b`, but got `a`", exception.message)
+        assertEquals("Expected to be declaring `b`, but got `a`", exception.message)
     }
 
     @Test
-    fun parameter_declared_within_another_parameter_initialization() {
+    fun parameter_creation_within_another_initialization() {
         val exception = assertFailsWith<ParameterizeException> {
             parameterize {
-                val outer by parameter {
-                    val inner by probeFailure { parameterOf(1, 2) }
-
-                    listOf(inner)
+                val outer: String by parameter {
+                    parameter(emptyList<Nothing>())
+                    fail("Should have thrown")
                 }
+
                 readProperty(outer)
             }
         }
@@ -133,43 +103,20 @@ class ParameterizeExceptionSpec {
     }
 
     @Test
-    fun parameter_declared_within_another_parameter_initialization_dependent() {
+    fun parameter_delegate_creation_within_another_initialization() {
         val exception = assertFailsWith<ParameterizeException> {
             parameterize {
-                val dependency by parameterOf(1, 2)
+                val parameter = parameter(listOf(1))
 
-                val outer by parameter {
-                    readProperty(dependency)
-
-                    val inner by probeFailure { parameterOf(1, 2) }
-
-                    listOf(inner)
+                val outer: String by parameter {
+                    val innerParameter by parameter
+                    fail("Should have thrown")
                 }
+
                 readProperty(outer)
             }
         }
 
         assertEquals("Declaring a parameter within another is not supported", exception.message)
-    }
-
-    @Test
-    fun parameter_from_a_different_parameterize_scope() {
-        lateinit var parameter: Parameter<Char>
-
-        parameterize {
-            parameter = parameterOf('a')
-        }
-
-        val exception = assertFailsWith<ParameterizeException> {
-            parameterize {
-                val a by parameter
-
-                probeFailure {
-                    readProperty(a)
-                }
-            }
-        }
-
-        assertEquals("Cannot initialize `a` with parameter from another scope", exception.message)
     }
 }

@@ -2,70 +2,71 @@ package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
 
-public class Parameter<T> internal constructor(
-    internal val context: ParameterizeContext?
-) {
-    /*
-     * Conceptually, a parameter is a reusable source of arguments, and is in
-     * one of three different states internally.
-     *
-     * Undeclared:
-     *   Completely null state, waiting to be setup with arguments.
-     *
-     *   Parameters can be reset to this state, enabling instances to be reused
-     *   in the future.
-     *
-     *
-     * Declared:
-     *   Set up with arguments, but has not been read from yet.
-     *
-     *   The parameter property can not be known until the property is read,
-     *   since it is provided by the property delegation, and the delegation
-     *   first occurs when the property is read.
-     *
-     *   The argument and iterator are also loaded lazily, in case the property
-     *   is not actually used, saving any potentially unnecessary computation.
-     *
-     *
-     * Initialized:
-     *   The parameter has been read, and has an argument set from the iterator.
-     *
-     *   The stored argument iterator will always have a next argument. When
-     *   there is no next argument, it will be set to null, and then lazily set
-     *   to a new iterator again when the next argument is needed.
-     */
+/*
+ * Conceptually, a parameter delegate is a reusable source of arguments, and
+ * is in one of three different states internally.
+ *
+ * Undeclared:
+ *   Completely null state, waiting to be set up with property and arguments.
+ *
+ *   Parameter delegates can be reset to this state, enabling instances to
+ *   be reused in the future.
+ *
+ * Declared:
+ *   Set up with a property and arguments, but has not been read from yet.
+ *
+ *   The argument and iterator are loaded lazily in case the parameter is not
+ *   actually used, saving any potentially unnecessary computation.
+ *
+ * Initialized:
+ *   The parameter has been read, and has an argument set from the iterator.
+ *   Stays initialized until reset.
+ *
+ *   The stored argument iterator will always have a next argument. When
+ *   there is no next argument, it will be set to null, and then lazily set
+ *   to a new iterator again when the next argument is needed.
+ *
+ *   The delegate can be re-declared without being reset, marking it as
+ *   unread again. The property will be checked to verify it's the same, but
+ *   the new arguments will be assumed to be the same and ignored in favor
+ *   of continuing through the current iterator.
+ */
 
+public class ParameterDelegate<T> internal constructor() {
     // Declared
+    private var property: KProperty<T>? = null
     private var arguments: Iterable<T>? = null
 
     // Initialized
-    private var property: KProperty<T>? = null
+    private var argument: T = uninitialized // T | Uninitialized
     private var argumentIterator: Iterator<T>? = null
-    private var argument: T? = null
+
+    /**
+     * True if [declare]d, and [readArgument] has been used since the last [declare] call.
+     */
     internal var hasBeenRead: Boolean = false
+        private set
 
     internal fun reset() {
-        arguments = null
         property = null
+        arguments = null
         argumentIterator = null
-        argument = null
+        argument = uninitialized
         hasBeenRead = false
     }
 
-
-    internal val isDeclared: Boolean
-        get() = arguments != null
-
-    internal val isInitialized: Boolean
-        get() = property != null
-
+    /**
+     * @throws IllegalStateException if used before the argument has been initialized.
+     */
     internal val isLastArgument: Boolean
-        get() = argumentIterator == null
+        get() {
+            check(argument !== uninitialized) { "Argument has not been initialized" }
+            return argumentIterator == null
+        }
 
 
     /**
-     * Returns the current argument's `toString`, or a "not initialized" message.
-     *
+     * Returns a string representation of the current argument, or a "not initialized" message.
      *
      * Useful while debugging, e.g. inline hints that show property values:
      * ```
@@ -73,49 +74,92 @@ public class Parameter<T> internal constructor(
      * ```
      */
     override fun toString(): String =
-        if (isInitialized) {
-            argument.toString()
-        } else {
-            "Parameter argument not initialized yet."
+        argument.toString()
+
+    /**
+     * Set up the delegate for a parameter [property] with the given [arguments].
+     *
+     * If this delegate is already [declare]d, [property] and [arguments] should be equal to those that were originally passed in.
+     * The [property] will be checked to make sure it's the same, [hasBeenRead] will be set to `false`, and the current argument will remain the same.
+     * The new [arguments] will be ignored in favor of re-using the existing arguments, under the assumption that they're equal.
+     *
+     * @throws ParameterizeException if already declared for a different [property].
+     */
+    internal fun declare(property: KProperty<T>, arguments: Iterable<T>) {
+        val declaredProperty = this.property
+
+        if (declaredProperty == null) {
+            this.property = property
+            this.arguments = arguments
+        } else if (!property.equalsProperty(declaredProperty)) {
+            throw ParameterizeException("Expected to be declaring `${declaredProperty.name}`, but got `${property.name}`")
         }
 
-    internal fun declare(arguments: Iterable<T>) {
-        check(!isDeclared) { "Parameter is already declared" }
-        this.arguments = arguments
+        hasBeenRead = false
     }
 
-    private fun initialize(property: KProperty<T>) {
-        this.property = property
-        nextArgument()
+    /**
+     * Initialize and return the argument.
+     */
+    private fun initialize(arguments: Iterable<T>): T {
+        val iterator = arguments.iterator()
+        if (!iterator.hasNext()) {
+            throw ParameterizeContinue
+        }
+
+        val argument = iterator.next()
+        this.argument = argument
+
+        if (iterator.hasNext()) {
+            argumentIterator = iterator
+        }
+
+        return argument
     }
 
+    /**
+     * Read the current argument, or initialize it from the arguments that were originally declared.
+     */
     internal fun readArgument(property: KProperty<T>): T {
-        if (!isInitialized) {
-            initialize(property)
-        } else if (!property.isSameAs(this.property!!)) {
-            val error = if (hasBeenRead) {
-                "Cannot use property with `${property.name}`. Already initialized with `${this.property!!.name}`."
-            } else {
-                "Expected to be initializing `${this.property!!.name}`, but got `${property.name}`"
+        val declaredProperty = checkNotNull(this.property) {
+            "Cannot read argument before parameter delegate has been declared"
+        }
+
+        if (!property.equalsProperty(declaredProperty)) {
+            throw ParameterizeException("Cannot use parameter delegate with `${property.name}`. Already declared for `${declaredProperty.name}`.")
+        }
+
+        var argument = argument
+        if (argument == uninitialized) {
+            val arguments = checkNotNull(arguments) {
+                "Parameter delegate is declared for ${property.name}, but ${::arguments.name} is null"
             }
-            throw ParameterizeException(error)
+
+            argument = initialize(arguments)
         }
 
         hasBeenRead = true
-
-        // The argument must be `T` and not `T?`, since this Parameter is initialized
-        @Suppress("UNCHECKED_CAST")
-        return argument as T
+        return argument
     }
 
+    /**
+     * Iterates the parameter argument.
+     *
+     * @throws IllegalStateException if the argument has not been initialized yet.
+     */
     internal fun nextArgument() {
-        var iterator = argumentIterator
+        val arguments = checkNotNull(arguments) {
+            "Cannot iterate arguments before parameter delegate has been declared"
+        }
 
+        check(argument != uninitialized) {
+            "Cannot iterate arguments before parameter argument has been initialized"
+        }
+
+        var iterator = argumentIterator
         if (iterator == null) {
-            val arguments = requireNotNull(arguments) { "Cannot iterate arguments before declared" }
             iterator = arguments.iterator()
 
-            if (!iterator.hasNext()) throw ParameterizeContinue
             argumentIterator = iterator
         }
 
@@ -127,11 +171,44 @@ public class Parameter<T> internal constructor(
     }
 
     /**
-     * Returns the property and argument if initialized, or null otherwise.
+     * Returns the property and argument if initialized, or `null` otherwise.
      */
     internal fun getPropertyArgumentOrNull(): Pair<KProperty<T>, T>? {
-        val property = property ?: return null
+        val argument = argument
+        if (argument === uninitialized) return null
 
-        return property to readArgument(property)
+        val property = checkNotNull(property) {
+            "Parameter delegate argument is initialized, but ${::property.name} is null"
+        }
+
+        return property to argument
     }
+
+    /**
+     * A placeholder value for [argument] to signify that it is not initialized.
+     *
+     * Since the argument itself may be nullable, `null` can't be used instead,
+     * as that may actually be the argument's value.
+     */
+    private object Uninitialized {
+        override fun toString(): String = "Parameter argument not initialized yet."
+    }
+
+    /**
+     * A hack to use [Uninitialized] as a value for [argument], abusing
+     * generic type erasure since [T] is effectively [Any]? at runtime.
+     *
+     * Developers should be conscious of this every time [argument] is read, and
+     * check that it's not [uninitialized] before using.
+     *
+     * Ideally [argument]'s type should be `T | Uninitialized`, but Kotlin
+     * doesn't support union types so instead this abuses generic type erasure
+     * to disguise [Uninitialized] as T. When denotable unions are added to the
+     * language ([KT-13108](https://youtrack.jetbrains.com/issue/KT-13108)),
+     * this property should be removed, and [argument]'s type should be changed
+     * to be `T | Uninitialized` instead.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private inline val uninitialized: T
+        get() = Uninitialized as T
 }

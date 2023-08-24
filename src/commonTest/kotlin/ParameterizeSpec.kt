@@ -120,7 +120,6 @@ class ParameterizeSpec {
         var finishedIteration = false
 
         parameterize {
-            @Suppress("UNUSED_VARIABLE")
             val unused: String by parameter(emptyList())
 
             finishedIteration = true

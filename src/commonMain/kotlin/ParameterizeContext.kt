@@ -9,7 +9,7 @@ internal class ParameterizeContext {
      * Parameter instances are re-used between iterations, so will never be removed.
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
-    private val parameters = ArrayList<Parameter<*>>()
+    private val parameterDelegates = ArrayList<ParameterDelegate<*>>()
     private var parameterCount = 0
 
     var hasNextIteration: Boolean = true
@@ -17,31 +17,25 @@ internal class ParameterizeContext {
 
     fun finishIteration() {
         nextArgumentPermutation()
+
         hasNextIteration = parameterCount > 0
-
-        for (i in 0..<parameterCount) {
-            parameters[i].hasBeenRead = false
-        }
-
         parameterCount = 0
     }
 
-    fun <T> declareParameter(arguments: Iterable<T>): Parameter<T> {
+    fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<T> {
         val parameterIndex = parameterCount++
 
-        val parameter = if (parameterIndex in parameters.indices) {
+        val parameterDelegate = if (parameterIndex in parameterDelegates.indices) {
             @Suppress("UNCHECKED_CAST")
-            parameters[parameterIndex] as Parameter<T>
+            parameterDelegates[parameterIndex] as ParameterDelegate<T>
         } else {
-            Parameter<T>(this)
-                .also { parameters += it }
+            ParameterDelegate<T>()
+                .also { parameterDelegates += it }
         }
 
-        if (!parameter.isDeclared) {
-            parameter.declare(arguments)
-        }
+        parameterDelegate.declare(property, arguments)
 
-        return parameter
+        return parameterDelegate
     }
 
     /**
@@ -53,14 +47,9 @@ internal class ParameterizeContext {
             return
         }
 
-        val lastParameter = parameters[parameterCount - 1]
+        val lastParameter = parameterDelegates[parameterCount - 1]
 
-        if (!lastParameter.isInitialized) {
-            parameterCount--
-            return nextArgumentPermutation()
-        }
-
-        if (lastParameter.isLastArgument) {
+        if (!lastParameter.hasBeenRead || lastParameter.isLastArgument) {
             parameterCount--
             lastParameter.reset()
             return nextArgumentPermutation()
@@ -70,7 +59,7 @@ internal class ParameterizeContext {
     }
 
     fun getReadParameters(): List<Pair<KProperty<*>, *>> =
-        parameters.take(parameterCount)
-            .filter { it.isInitialized }
+        parameterDelegates.take(parameterCount)
+            .filter { it.hasBeenRead }
             .mapNotNull { it.getPropertyArgumentOrNull() }
 }
