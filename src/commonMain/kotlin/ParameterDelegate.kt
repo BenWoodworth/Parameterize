@@ -32,14 +32,28 @@ import kotlin.reflect.KProperty
  *   of continuing through the current iterator.
  */
 
-public class ParameterDelegate<T> internal constructor() {
+public class ParameterDelegate<@Suppress("unused") T> internal constructor() {
+    /*
+     * The internal state does not use the generic type, so T is purely for
+     * syntax, helping Kotlin infer a property type from the parameter through
+     * provideDelegate. So because T is not used, it can be safely cast to a
+     * different generic type, despite it being an "unchecked cast".
+     * (e.g. the declared property's type when providing the delegate)
+     *
+     * Instead, methods have their own generic type, checked against a property
+     * that's passed in. Since the internal argument state is always of the same
+     * type as the currently declared property, checking that the property taken
+     * into the method is the same is enough to ensure that the argument being
+     * read out is the correct type.
+     */
+
     // Declared
-    private var property: KProperty<T>? = null
-    private var arguments: Iterable<T>? = null
+    private var property: KProperty<*>? = null
+    private var arguments: Iterable<*>? = null
 
     // Initialized
-    private var argument: T = uninitialized // T | Uninitialized
-    private var argumentIterator: Iterator<T>? = null
+    private var argument: Any? = Uninitialized // T | Uninitialized
+    private var argumentIterator: Iterator<*>? = null
 
     /**
      * True if [declare]d, and [readArgument] has been used since the last [declare] call.
@@ -51,7 +65,7 @@ public class ParameterDelegate<T> internal constructor() {
         property = null
         arguments = null
         argumentIterator = null
-        argument = uninitialized
+        argument = Uninitialized
         hasBeenRead = false
     }
 
@@ -60,7 +74,7 @@ public class ParameterDelegate<T> internal constructor() {
      */
     internal val isLastArgument: Boolean
         get() {
-            check(argument !== uninitialized) { "Argument has not been initialized" }
+            check(argument !== Uninitialized) { "Argument has not been initialized" }
             return argumentIterator == null
         }
 
@@ -85,7 +99,7 @@ public class ParameterDelegate<T> internal constructor() {
      *
      * @throws ParameterizeException if already declared for a different [property].
      */
-    internal fun declare(property: KProperty<T>, arguments: Iterable<T>) {
+    internal fun <T> declare(property: KProperty<T>, arguments: Iterable<T>) {
         val declaredProperty = this.property
 
         if (declaredProperty == null) {
@@ -101,7 +115,7 @@ public class ParameterDelegate<T> internal constructor() {
     /**
      * Initialize and return the argument.
      */
-    private fun initialize(arguments: Iterable<T>): T {
+    private fun <T> initialize(arguments: Iterable<T>): T {
         val iterator = arguments.iterator()
         if (!iterator.hasNext()) {
             throw ParameterizeContinue
@@ -120,7 +134,7 @@ public class ParameterDelegate<T> internal constructor() {
     /**
      * Read the current argument, or initialize it from the arguments that were originally declared.
      */
-    internal fun readArgument(property: KProperty<T>): T {
+    internal fun <T> readArgument(property: KProperty<T>): T {
         val declaredProperty = checkNotNull(this.property) {
             "Cannot read argument before parameter delegate has been declared"
         }
@@ -130,12 +144,16 @@ public class ParameterDelegate<T> internal constructor() {
         }
 
         var argument = argument
-        if (argument == uninitialized) {
+        if (argument !== Uninitialized) {
+            @Suppress("UNCHECKED_CAST") // Argument is initialized with property's arguments, so must be T
+            argument as T
+        } else {
             val arguments = checkNotNull(arguments) {
                 "Parameter delegate is declared for ${property.name}, but ${::arguments.name} is null"
             }
 
-            argument = initialize(arguments)
+            @Suppress("UNCHECKED_CAST") // The arguments are declared for property, so must be Iterable<T>
+            argument = initialize(arguments as Iterable<T>)
         }
 
         hasBeenRead = true
@@ -152,7 +170,7 @@ public class ParameterDelegate<T> internal constructor() {
             "Cannot iterate arguments before parameter delegate has been declared"
         }
 
-        check(argument != uninitialized) {
+        check(argument != Uninitialized) {
             "Cannot iterate arguments before parameter argument has been initialized"
         }
 
@@ -173,9 +191,9 @@ public class ParameterDelegate<T> internal constructor() {
     /**
      * Returns the property and argument if initialized, or `null` otherwise.
      */
-    internal fun getPropertyArgumentOrNull(): Pair<KProperty<T>, T>? {
+    internal fun getPropertyArgumentOrNull(): Pair<KProperty<*>, *>? {
         val argument = argument
-        if (argument === uninitialized) return null
+        if (argument === Uninitialized) return null
 
         val property = checkNotNull(property) {
             "Parameter delegate argument is initialized, but ${::property.name} is null"
@@ -193,22 +211,4 @@ public class ParameterDelegate<T> internal constructor() {
     private object Uninitialized {
         override fun toString(): String = "Parameter argument not initialized yet."
     }
-
-    /**
-     * A hack to use [Uninitialized] as a value for [argument], abusing
-     * generic type erasure since [T] is effectively [Any]? at runtime.
-     *
-     * Developers should be conscious of this every time [argument] is read, and
-     * check that it's not [uninitialized] before using.
-     *
-     * Ideally [argument]'s type should be `T | Uninitialized`, but Kotlin
-     * doesn't support union types so instead this abuses generic type erasure
-     * to disguise [Uninitialized] as T. When denotable unions are added to the
-     * language ([KT-13108](https://youtrack.jetbrains.com/issue/KT-13108)),
-     * this property should be removed, and [argument]'s type should be changed
-     * to be `T | Uninitialized` instead.
-     */
-    @Suppress("UNCHECKED_CAST")
-    private inline val uninitialized: T
-        get() = Uninitialized as T
 }
