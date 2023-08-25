@@ -25,10 +25,10 @@ public class ParameterizeConfiguration private constructor(
         /**
          * Handles a failure during an iteration.
          *
-         * If [Unit] is returned, then [parameterize] will continue to the next iteration.
-         * Otherwise, re-throwing will end execution, and that exception will not be re-caught.
+         * If the throw handler returns, then [parameterize] will continue to the next iteration.
+         * Throwing from the handler end the execution and propagate out to the caller.
          *
-         * By default, prints "Failed with arguments: ..." and re-throws.
+         * By default, prints "Failed with arguments: ..." and re-throws the same instance.
          */
         public var throwHandler: ParameterizeThrowHandler = from.throwHandler
 
