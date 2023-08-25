@@ -9,7 +9,7 @@ internal class ParameterizeContext {
      * Parameter instances are re-used between iterations, so will never be removed.
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
-    private val parameterDelegates = ArrayList<ParameterDelegate<*>>()
+    private val parameterDelegates = ArrayList<ParameterDelegate<Nothing>>()
     private var parameterCount = 0
 
     var hasNextIteration: Boolean = true
@@ -22,14 +22,13 @@ internal class ParameterizeContext {
         parameterCount = 0
     }
 
-    fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<T> {
+    fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<Nothing> {
         val parameterIndex = parameterCount++
 
         val parameterDelegate = if (parameterIndex in parameterDelegates.indices) {
-            @Suppress("UNCHECKED_CAST")
-            parameterDelegates[parameterIndex] as ParameterDelegate<T>
+            parameterDelegates[parameterIndex]
         } else {
-            ParameterDelegate<T>()
+            ParameterDelegate<Nothing>()
                 .also { parameterDelegates += it }
         }
 
