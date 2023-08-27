@@ -58,7 +58,7 @@ public class ParameterizeScope internal constructor(
             readingParameters++
 
             @Suppress("UNCHECKED_CAST")
-            readArgument(property as KProperty<T>)
+            context.readParameter(this, property as KProperty<T>)
         } finally {
             readingParameters--
         }

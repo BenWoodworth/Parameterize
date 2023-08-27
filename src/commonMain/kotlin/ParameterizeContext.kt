@@ -10,16 +10,20 @@ internal class ParameterizeContext {
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
     private val parameterDelegates = ArrayList<ParameterDelegate<Nothing>>()
+    private val parameterDelegatesUsed = ArrayList<ParameterDelegate<*>>()
+
     private var parameterCount = 0
+    private var parameterCountAfterAllUsed = 0
 
     var hasNextIteration: Boolean = true
         private set
 
     fun finishIteration() {
-        nextArgumentPermutation()
+        hasNextIteration = nextArgumentPermutationOrFalse()
 
-        hasNextIteration = parameterCount > 0
+        parameterDelegatesUsed.clear()
         parameterCount = 0
+        parameterCountAfterAllUsed = 0
     }
 
     fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<Nothing> {
@@ -37,24 +41,53 @@ internal class ParameterizeContext {
         return parameterDelegate
     }
 
+    fun <T> readParameter(parameterDelegate: ParameterDelegate<*>, property: KProperty<T>): T {
+        val isFirstRead = !parameterDelegate.hasBeenRead
+
+        return parameterDelegate.readArgument(property)
+            .also {
+                if (isFirstRead) trackUsedParameter(parameterDelegate)
+            }
+    }
+
+    private fun trackUsedParameter(parameterDelegate: ParameterDelegate<*>) {
+        parameterDelegatesUsed += parameterDelegate
+
+        if (!parameterDelegate.isLastArgument) {
+            parameterCountAfterAllUsed = parameterCount
+        }
+    }
+
     /**
-     * Iterate the last parameter to its next argument,
-     * or if all its arguments have been used, remove it and try again.
+     * Iterate the last parameter (by first read this iteration) that has a next
+     * argument, and reset all parameters that were first read after it (since
+     * they may depend on the now changed value, and may be calculated
+     * differently).
+     *
+     * Returns `true` if the arguments are at a new permutation.
      */
-    private tailrec fun nextArgumentPermutation() {
-        if (parameterCount == 0) {
-            return
+    private fun nextArgumentPermutationOrFalse(): Boolean {
+        var iterated = false
+
+        for (parameter in parameterDelegatesUsed.asReversed()) {
+            if (!parameter.isLastArgument) {
+                parameter.nextArgument()
+                iterated = true
+                break
+            }
+
+            parameter.reset()
         }
 
-        val lastParameter = parameterDelegates[parameterCount - 1]
+        for (i in parameterCountAfterAllUsed..<parameterCount) {
+            val delegate = parameterDelegates[i]
 
-        if (!lastParameter.hasBeenRead || lastParameter.isLastArgument) {
-            parameterCount--
-            lastParameter.reset()
-            return nextArgumentPermutation()
+            if (!delegate.hasBeenRead) {
+                delegate.reset()
+            }
         }
 
-        lastParameter.nextArgument()
+        return iterated
     }
 
     fun getReadParameters(): List<Pair<KProperty<*>, *>> =

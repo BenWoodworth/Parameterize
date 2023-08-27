@@ -127,4 +127,68 @@ class ParameterizeSpec {
 
         assertTrue(finishedIteration)
     }
+
+    @Test
+    fun parameter_that_depends_on_a_later_one() {
+        val iterations = mutableListOf<String>()
+
+        parameterize {
+            lateinit var laterValue: String
+
+            val earlier by parameter {
+                listOf("${laterValue}1", "${laterValue}2", "${laterValue}3")
+            }
+
+            val later by parameterOf("a", "b")
+            laterValue = later
+
+            iterations += earlier
+        }
+
+        val expectedIterations = listOf("a1", "a2", "a3", "b1", "b2", "b3")
+        assertEquals(expectedIterations, iterations)
+    }
+
+    @Test
+    fun parameters_that_are_read_out_of_order() {
+        val iterations = mutableListOf<String>()
+
+        parameterize {
+            val first by parameterOf(1, 2)
+            val second by parameterOf("a", "b")
+
+            iterations += "$second$first"
+        }
+
+        val expectedIterations = listOf("a1", "a2", "b1", "b2")
+        assertEquals(expectedIterations, iterations)
+    }
+
+    @Test
+    fun swapping_unused_parameters() {
+        val iterations = mutableListOf<String>()
+
+        parameterize {
+            val firstReadParameter by parameterOf("a", "b")
+            if (firstReadParameter == "a") {
+                val unread1A: String by parameterOf()
+            } else {
+                val unread1B: String by parameterOf()
+            }
+
+            val lastReadParameter by parameterOf("1", "2")
+            if (lastReadParameter == "1") {
+                val unread2A: String by parameterOf()
+            } else {
+                val unread2B: String by parameterOf()
+            }
+
+            iterations += "$firstReadParameter$lastReadParameter"
+        }
+
+        val expectedIterations = listOf("a1", "a2", "b1", "b2")
+        assertEquals(expectedIterations, iterations)
+    }
+
+
 }
