@@ -21,7 +21,6 @@ internal class ParameterizeContext {
     fun finishIteration() {
         hasNextIteration = nextArgumentPermutationOrFalse()
 
-        parameterDelegatesUsed.clear()
         parameterCount = 0
         parameterCountAfterAllUsed = 0
     }
@@ -69,13 +68,19 @@ internal class ParameterizeContext {
     private fun nextArgumentPermutationOrFalse(): Boolean {
         var iterated = false
 
-        for (parameter in parameterDelegatesUsed.asReversed()) {
+        val usedParameterIterator = parameterDelegatesUsed
+            .listIterator(parameterDelegatesUsed.lastIndex + 1)
+
+        while (usedParameterIterator.hasPrevious()) {
+            val parameter = usedParameterIterator.previous()
+
             if (!parameter.isLastArgument) {
                 parameter.nextArgument()
                 iterated = true
                 break
             }
 
+            usedParameterIterator.remove()
             parameter.reset()
         }
 

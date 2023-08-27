@@ -190,5 +190,21 @@ class ParameterizeSpec {
         assertEquals(expectedIterations, iterations)
     }
 
+    @Test
+    fun parameter_only_read_from_another_lazy_initialization() {
+        val iterations = mutableListOf<String>()
 
+        parameterize {
+            val letter by parameter('a'..'c')
+
+            val letterNumber by parameter {
+                (1..3).map { "$letter$it" }
+            }
+
+            iterations += letterNumber
+        }
+
+        val expectedIterations = listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
+        assertEquals(expectedIterations, iterations)
+    }
 }

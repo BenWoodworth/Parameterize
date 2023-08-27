@@ -55,9 +55,6 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
     private var argument: Any? = Uninitialized // T | Uninitialized
     private var argumentIterator: Iterator<*>? = null
 
-    /**
-     * True if [declare]d, and [readArgument] has been used since the last [declare] call.
-     */
     internal var hasBeenRead: Boolean = false
         private set
 
@@ -94,7 +91,7 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
      * Set up the delegate for a parameter [property] with the given [arguments].
      *
      * If this delegate is already [declare]d, [property] and [arguments] should be equal to those that were originally passed in.
-     * The [property] will be checked to make sure it's the same, [hasBeenRead] will be set to `false`, and the current argument will remain the same.
+     * The [property] will be checked to make sure it's the same, and the current argument will remain the same.
      * The new [arguments] will be ignored in favor of re-using the existing arguments, under the assumption that they're equal.
      *
      * @throws ParameterizeException if already declared for a different [property].
@@ -108,8 +105,6 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
         } else if (!property.equalsProperty(declaredProperty)) {
             throw ParameterizeException("Expected to be declaring `${declaredProperty.name}`, but got `${property.name}`")
         }
-
-        hasBeenRead = false
     }
 
     /**

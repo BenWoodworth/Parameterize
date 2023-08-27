@@ -189,15 +189,6 @@ class ParameterDelegateSpec {
     }
 
     @Test
-    fun redeclare_should_set_has_been_read_to_false() {
-        delegate.declare(::property, listOf("a", "b"))
-        delegate.readArgument(::property)
-        delegate.declare(::property, listOf("a", "b"))
-
-        assertFalse(delegate.hasBeenRead)
-    }
-
-    @Test
     fun redeclare_arguments_should_keep_using_the_original_arguments() {
         delegate.declare(::property, listOf("a"))
 
