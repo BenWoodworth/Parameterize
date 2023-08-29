@@ -87,11 +87,43 @@ class ParameterizeExceptionSpec {
     }
 
     @Test
-    fun parameter_creation_within_another_initialization() {
+    fun parameter_call_within_another_initialization_with_iterable() {
         val exception = assertFailsWith<ParameterizeException> {
             parameterize {
-                val outer: String by parameter {
+                val outer: String by customLazyParameter {
                     parameter(emptyList<Nothing>())
+                    fail("Should have thrown")
+                }
+
+                readProperty(outer)
+            }
+        }
+
+        assertEquals("Declaring a parameter within another is not supported", exception.message)
+    }
+
+    @Test
+    fun parameter_call_within_another_initialization_with_vararg() {
+        val exception = assertFailsWith<ParameterizeException> {
+            parameterize {
+                val outer: String by customLazyParameter {
+                    parameterOf<Nothing>()
+                    fail("Should have thrown")
+                }
+
+                readProperty(outer)
+            }
+        }
+
+        assertEquals("Declaring a parameter within another is not supported", exception.message)
+    }
+
+    @Test
+    fun parameter_call_within_another_initialization_with_lazy_arguments() {
+        val exception = assertFailsWith<ParameterizeException> {
+            parameterize {
+                val outer: String by customLazyParameter {
+                    parameter { emptyList<Nothing>() }
                     fail("Should have thrown")
                 }
 
@@ -108,7 +140,7 @@ class ParameterizeExceptionSpec {
             parameterize {
                 val parameter = parameter(listOf(1))
 
-                val outer: String by parameter {
+                val outer: String by customLazyParameter {
                     val innerParameter by parameter
                     fail("Should have thrown")
                 }

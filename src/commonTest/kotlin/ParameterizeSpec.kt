@@ -2,6 +2,7 @@ package com.benwoodworth.parameterize
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ParameterizeSpec {
@@ -14,6 +15,42 @@ class ParameterizeSpec {
         }
 
         assertEquals(1, count)
+    }
+
+    @Test
+    fun parameter_with_lazy_arguments_should_create_parameter_correctly() = parameterize {
+        val lazyParameter = parameter { 'a'..'z' }
+
+        assertEquals(('a'..'z').toList(), lazyParameter.arguments.toList())
+    }
+
+    @Test
+    fun parameter_with_lazy_arguments_should_not_be_evaluated_before_read() = parameterize {
+        var evaluated = false
+
+        parameter {
+            evaluated = true
+            emptyList<String>()
+        }
+
+        assertFalse(evaluated)
+    }
+
+    @Test
+    fun parameter_with_lazy_arguments_should_only_be_evaluated_once() = parameterize {
+        var evaluationCount = 0
+
+        val lazyParameter = parameter {
+            evaluationCount++
+            1..10
+        }
+
+        repeat(5) { i ->
+            val arguments = lazyParameter.arguments.toList()
+            assertEquals((1..10).toList(), arguments, "Iteration #$i")
+        }
+
+        assertEquals(1, evaluationCount)
     }
 
     @Test
