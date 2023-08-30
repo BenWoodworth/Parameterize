@@ -1,7 +1,10 @@
 package com.benwoodworth.parameterize
 
 import kotlin.properties.PropertyDelegateProvider
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 class ParameterizeExceptionSpec {
     @Test
@@ -84,71 +87,5 @@ class ParameterizeExceptionSpec {
         }
 
         assertEquals("Expected to be declaring `b`, but got `a`", exception.message)
-    }
-
-    @Test
-    fun parameter_call_within_another_initialization_with_iterable() {
-        val exception = assertFailsWith<ParameterizeException> {
-            parameterize {
-                val outer: String by customLazyParameter {
-                    parameter(emptyList<Nothing>())
-                    fail("Should have thrown")
-                }
-
-                readProperty(outer)
-            }
-        }
-
-        assertEquals("Declaring a parameter within another is not supported", exception.message)
-    }
-
-    @Test
-    fun parameter_call_within_another_initialization_with_vararg() {
-        val exception = assertFailsWith<ParameterizeException> {
-            parameterize {
-                val outer: String by customLazyParameter {
-                    parameterOf<Nothing>()
-                    fail("Should have thrown")
-                }
-
-                readProperty(outer)
-            }
-        }
-
-        assertEquals("Declaring a parameter within another is not supported", exception.message)
-    }
-
-    @Test
-    fun parameter_call_within_another_initialization_with_lazy_arguments() {
-        val exception = assertFailsWith<ParameterizeException> {
-            parameterize {
-                val outer: String by customLazyParameter {
-                    parameter { emptyList<Nothing>() }
-                    fail("Should have thrown")
-                }
-
-                readProperty(outer)
-            }
-        }
-
-        assertEquals("Declaring a parameter within another is not supported", exception.message)
-    }
-
-    @Test
-    fun parameter_delegate_creation_within_another_initialization() {
-        val exception = assertFailsWith<ParameterizeException> {
-            parameterize {
-                val parameter = parameter(listOf(1))
-
-                val outer: String by customLazyParameter {
-                    val innerParameter by parameter
-                    fail("Should have thrown")
-                }
-
-                readProperty(outer)
-            }
-        }
-
-        assertEquals("Declaring a parameter within another is not supported", exception.message)
     }
 }

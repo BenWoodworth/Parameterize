@@ -39,37 +39,19 @@ public class ParameterizeScope internal constructor(
     private val iteration: ULong,
     private val context: ParameterizeContext,
 ) {
-    private var readingParameters = 0
-
     override fun toString(): String =
         "ParameterizeScope(iteration = $iteration)"
 
-    public fun <T> parameter(arguments: Iterable<T>): Parameter<T> {
-        if (readingParameters != 0) {
-            throw ParameterizeException("Declaring a parameter within another is not supported")
-        }
+    public fun <T> parameter(arguments: Iterable<T>): Parameter<T> =
+        Parameter(arguments)
 
-        return Parameter(arguments)
-    }
-
-    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
-        if (readingParameters != 0) {
-            throw ParameterizeException("Declaring a parameter within another is not supported")
-        }
-
+    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> =
         @Suppress("UNCHECKED_CAST")
-        return context.declareParameter(property as KProperty<T>, arguments)
-    }
+        context.declareParameter(property as KProperty<T>, arguments)
 
     public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
-        try {
-            readingParameters++
-
-            @Suppress("UNCHECKED_CAST")
-            context.readParameter(this, property as KProperty<T>)
-        } finally {
-            readingParameters--
-        }
+        @Suppress("UNCHECKED_CAST")
+        context.readParameter(this, property as KProperty<T>)
 }
 
 public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> =

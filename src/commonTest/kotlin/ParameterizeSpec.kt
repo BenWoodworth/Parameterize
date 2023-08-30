@@ -244,4 +244,23 @@ class ParameterizeSpec {
         val expectedIterations = listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
         assertEquals(expectedIterations, iterations)
     }
+
+    @Test
+    fun declaring_parameters_within_another_initialization() {
+        val iterations = mutableListOf<String>()
+
+        parameterize {
+            val letterNumber by parameter {
+                val letter by parameter('a'..'c')
+                val number by parameter(1..3)
+
+                listOf("$letter$number")
+            }
+
+            iterations += letterNumber
+        }
+
+        val expectedIterations = listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
+        assertEquals(expectedIterations, iterations)
+    }
 }
