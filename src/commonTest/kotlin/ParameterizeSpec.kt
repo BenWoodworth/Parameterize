@@ -263,4 +263,35 @@ class ParameterizeSpec {
         val expectedIterations = listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
         assertEquals(expectedIterations, iterations)
     }
+
+    @Test
+    fun custom_lazy_arguments_implementation() {
+        fun <T> ParameterizeScope.customLazyParameter(
+            lazyArguments: () -> Iterable<T>
+        ): Parameter<T> {
+            val arguments by lazy(lazyArguments)
+
+            class CustomLazyArguments : Iterable<T> {
+                override fun iterator(): Iterator<T> = arguments.iterator()
+            }
+
+            return parameter(CustomLazyArguments())
+        }
+
+        val iterations = mutableListOf<String>()
+
+        parameterize {
+            val letterNumber by customLazyParameter {
+                val letter by parameter('a'..'c')
+                val number by parameter(1..3)
+
+                listOf("$letter$number")
+            }
+
+            iterations += letterNumber
+        }
+
+        val expectedIterations = listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
+        assertEquals(expectedIterations, iterations)
+    }
 }
