@@ -13,10 +13,11 @@ public fun parameterize(
     block: ParameterizeScope.() -> Unit
 ) {
     val context = ParameterizeContext()
+    val scope = ParameterizeScope(context)
 
     while (context.hasNextIteration) {
         try {
-            ParameterizeScope(context).block()
+            scope.block()
         } catch (_: ParameterizeContinue) {
         } catch (exception: ParameterizeException) {
             throw exception
