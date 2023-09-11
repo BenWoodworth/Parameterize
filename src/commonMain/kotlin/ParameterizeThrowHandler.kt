@@ -2,19 +2,16 @@ package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
 
-public typealias ParameterizeThrowHandler = ParameterizeThrowHandlerScope.(thrown: Throwable) -> Unit
+public typealias ParameterizeThrowHandler = ParameterizeThrowHandlerScope.(cause: Throwable) -> Unit
 
 public class ParameterizeThrowHandlerScope internal constructor(
-    private val context: ParameterizeContext
+    private val context: ParameterizeContext,
+    private val cause: Throwable
 ) {
-    public class ParameterArgument internal constructor(
-        public val parameter: KProperty<*>,
-        public val argument: Any?
-    )
-
-    public val parameters: List<ParameterArgument> by lazy {
-        context.getReadParameters().map { (parameter, argument) ->
-            ParameterArgument(parameter, argument)
-        }
+    public val arguments: List<Pair<KProperty<*>, *>> by lazy {
+        context.getReadParameters()
     }
+
+    public operator fun ParameterizeFailedError.Companion.invoke(): ParameterizeFailedError =
+        ParameterizeFailedError(arguments, cause)
 }

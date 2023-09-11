@@ -3,6 +3,10 @@ package com.benwoodworth.parameterize
 import kotlin.jvm.JvmInline
 import kotlin.reflect.KProperty
 
+/**
+ * @throws ParameterizeException when [block] executes non-deterministically, with different control flow for the same parameter arguments.
+ * @throws ParameterizeFailedError when [block] throws. (Configurable with [throwHandler])
+ */
 public fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
     throwHandler: ParameterizeThrowHandler = configuration.throwHandler,
@@ -17,8 +21,8 @@ public fun parameterize(
         } catch (_: ParameterizeContinue) {
         } catch (exception: ParameterizeException) {
             throw exception
-        } catch (thrown: Throwable) {
-            throwHandler.invoke(ParameterizeThrowHandlerScope(context), thrown)
+        } catch (cause: Throwable) {
+            ParameterizeThrowHandlerScope(context, cause).throwHandler(cause)
         }
 
         context.finishIteration()

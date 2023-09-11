@@ -14,10 +14,7 @@ public class ParameterizeConfiguration private constructor(
             Builder(from).apply(builderAction).build()
 
         public var default: ParameterizeConfiguration = ParameterizeConfiguration(
-            throwHandler = { thrown ->
-                println("Failed with arguments:" + parameters.joinToString { "\n  ${it.parameter.name} = ${it.argument}" })
-                throw thrown
-            },
+            throwHandler = { throw ParameterizeFailedError() },
         )
     }
 
@@ -28,7 +25,7 @@ public class ParameterizeConfiguration private constructor(
          * If the throw handler returns, then [parameterize] will continue to the next iteration.
          * Throwing from the handler end the execution and propagate out to the caller.
          *
-         * By default, prints "Failed with arguments: ..." and re-throws the same instance.
+         * Throws a [ParameterizeFailedError] by default.
          */
         public var throwHandler: ParameterizeThrowHandler = from.throwHandler
 

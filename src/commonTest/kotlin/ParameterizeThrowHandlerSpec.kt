@@ -1,89 +1,163 @@
 package com.benwoodworth.parameterize
 
-import kotlin.test.*
+import kotlin.reflect.KProperty
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 class ParameterizeThrowHandlerSpec {
-    @Test
-    fun throw_handler_should_be_called_with_the_thrown_instance_on_throw() {
-        val expectedThrownValue = object : Throwable("My Throwable!") {}
+    private object TestCause : Throwable("Test cause")
 
-        var valueThrown: Throwable? = null
+    @Test
+    fun should_be_called_once_on_throw() {
+        var callCount = 0
+
         parameterize(
-            throwHandler = { valueThrown = expectedThrownValue }
+            throwHandler = {
+                callCount++
+            }
         ) {
-            throw expectedThrownValue
+            throw TestCause
         }
 
-        assertNotNull(valueThrown) { "Expected throwHandler to be executed" }
-        assertSame(expectedThrownValue, valueThrown)
+        assertEquals(1, callCount)
     }
 
     @Test
-    fun throw_handler_that_doesnt_rethrow_should_continue_to_next_iteration() {
-        var lastIteration: String? = null
-
-        parameterize(throwHandler = {}) {
-            val step by parameterOf("throw", "continued")
-            lastIteration = step
-
-            if (step == "throw") {
-                throw object : Throwable("My Throwable!") {}
-            }
-        }
-
-        assertEquals("continued", lastIteration)
-    }
-
-    @Test
-    fun throw_handler_that_rethrows_another_throwable_should_cause_that_fail_with_that_throwable() {
-        val thrown = object : Throwable("Thrown") {}
-        val expectedReThrown = object : Throwable("Re-thrown") {}
-
-        val actualReThrown = assertFails {
-            parameterize(throwHandler = { throw expectedReThrown }) {
-                throw thrown
-            }
-        }
-
-        assertSame(expectedReThrown, actualReThrown)
-    }
-
-    @Test
-    fun throw_handler_properties_should_be_correct() {
-        class TestThrowable(val a: Char, val b: Char, val c: Char) : Throwable()
+    fun returning_should_continue_to_next_iteration() {
+        var lastIteration = 0
+        val throwIterations = mutableListOf<Int>()
 
         parameterize(
-            throwHandler = { thrown ->
-                val expectedParameters = (thrown as TestThrowable).run {
-                    listOf("a" to a, "b" to b, "c" to c)
+            throwHandler = {
+                throwIterations += lastIteration
+                // return, without re-throwing
+            }
+        ) {
+            val iteration by parameter(0..5)
+            lastIteration = iteration
+
+            throw TestCause
+        }
+
+        assertEquals((0..5).toList(), throwIterations)
+    }
+
+    @Test
+    fun throwing_should_end_parameterize_execution_and_propagate_out_to_the_caller() {
+        var lastIteration = 0
+
+        class CustomRethrow : Throwable()
+
+        assertFailsWith<CustomRethrow> {
+            parameterize(
+                throwHandler = {
+                    throw CustomRethrow()
                 }
+            ) {
+                val iteration by parameter(0..5)
+                lastIteration = iteration
 
-                val actualParameters = parameters
-                    .map { it.parameter.name to it.argument }
-
-                assertEquals(expectedParameters, actualParameters)
+                if (iteration == 3) {
+                    throw TestCause
+                }
             }
-        ) {
-            val a by parameterOf('a', 'b', 'c')
-            val b by parameterOf('1', '2', '3')
-            val c by parameterOf('!', '@', '#')
-
-            throw TestThrowable(a, b, c)
         }
+
+        assertEquals(3, lastIteration)
     }
 
     @Test
-    fun default_throw_handler_should_rethrow_the_same_instance() {
-        parameterize(
-            throwHandler = { thrown ->
-                val rethrown = assertFails {
-                    ParameterizeConfiguration.default.throwHandler(this, thrown)
-                }
+    fun should_be_called_with_the_same_cause() {
+        lateinit var actualCause: Throwable
 
-                assertSame(thrown, rethrown)
+        parameterize(
+            throwHandler = { cause ->
+                actualCause = cause
             }
         ) {
-            throw object : Throwable("Test throwable") {}
+            throw TestCause
+        }
+
+        assertSame(TestCause, actualCause)
+    }
+
+    @Test
+    fun should_be_called_with_used_arguments_in_declaration_order() {
+        lateinit var actualArguments: List<Pair<KProperty<*>, *>>
+
+        parameterize(
+            throwHandler = {
+                actualArguments = arguments
+            }
+        ) {
+            val a by parameterOf(1)
+            val unused1: Int by parameterOf()
+            val b by parameterOf(2)
+            val unused2: Int by parameterOf()
+            val c by parameterOf(3)
+
+            // used in a different order
+            readProperty(c)
+            readProperty(b)
+            readProperty(a)
+
+            throw TestCause
+        }
+
+        val actualArgumentsNamed = actualArguments
+            .map { (parameter, argument) -> parameter.name to argument }
+
+        assertEquals(listOf("a" to 1, "b" to 2, "c" to 3), actualArgumentsNamed)
+    }
+
+    @Test
+    fun constructed_parameterize_failed_error_should_have_the_same_cause() {
+        lateinit var error: ParameterizeFailedError
+
+        parameterize(
+            throwHandler = {
+                error = ParameterizeFailedError()
+            }
+        ) {
+            throw TestCause
+        }
+
+        assertSame(TestCause, error.cause)
+    }
+
+    @Test
+    fun constructed_parameterize_failed_error_should_have_the_same_arguments() {
+        lateinit var expectedArguments: List<Pair<KProperty<*>, *>>
+        lateinit var error: ParameterizeFailedError
+
+        parameterize(
+            throwHandler = {
+                expectedArguments = arguments
+                error = ParameterizeFailedError()
+            }
+        ) {
+            val a by parameterOf(1)
+            val b by parameterOf(2)
+            val c by parameterOf(3)
+
+            readProperty(a)
+            readProperty(b)
+            readProperty(c)
+
+            throw TestCause
+        }
+
+        assertSame(expectedArguments, error.arguments)
+    }
+
+    @Test
+    fun default_throw_handler_should_throw_a_parameterize_failed_error() {
+        assertFailsWith<ParameterizeFailedError> {
+            parameterize {
+                throw TestCause
+            }
         }
     }
 }
