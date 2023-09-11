@@ -15,7 +15,7 @@ public fun parameterize(
     val context = ParameterizeContext()
     val scope = ParameterizeScope(context)
 
-    while (context.hasNextIteration) {
+    while (context.startNextIteration()) {
         try {
             scope.block()
         } catch (_: ParameterizeContinue) {
@@ -24,8 +24,6 @@ public fun parameterize(
         } catch (cause: Throwable) {
             ParameterizeThrowHandlerScope(context, cause).throwHandler(cause)
         }
-
-        context.finishIteration()
     }
 }
 

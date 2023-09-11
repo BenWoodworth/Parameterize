@@ -15,15 +15,18 @@ internal class ParameterizeContext {
     private var parameterCount = 0
     private var parameterCountAfterAllUsed = 0
 
-    var hasNextIteration: Boolean = true
-        private set
+    private var isFirstIteration: Boolean = true
 
-    fun finishIteration() {
-        hasNextIteration = nextArgumentPermutationOrFalse()
-
-        parameterCount = 0
-        parameterCountAfterAllUsed = 0
-    }
+    /**
+     * Starts the next iteration, or returns `false` if there isn't one.
+     */
+    fun startNextIteration(): Boolean =
+        if (isFirstIteration) {
+            isFirstIteration = false
+            true
+        } else {
+            nextArgumentPermutationOrFalse()
+        }
 
     fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<Nothing> {
         val parameterIndex = parameterCount++
@@ -91,6 +94,9 @@ internal class ParameterizeContext {
                 delegate.reset()
             }
         }
+
+        parameterCount = 0
+        parameterCountAfterAllUsed = 0
 
         return iterated
     }
