@@ -12,12 +12,11 @@ public fun parameterize(
     throwHandler: ParameterizeThrowHandler = configuration.throwHandler,
     block: ParameterizeScope.() -> Unit
 ) {
-    var iteration = 0uL
     val context = ParameterizeContext()
 
     while (context.hasNextIteration) {
         try {
-            ParameterizeScope(iteration, context).block()
+            ParameterizeScope(context).block()
         } catch (_: ParameterizeContinue) {
         } catch (exception: ParameterizeException) {
             throw exception
@@ -26,7 +25,6 @@ public fun parameterize(
         }
 
         context.finishIteration()
-        iteration++
     }
 }
 
@@ -40,11 +38,16 @@ public value class Parameter<T> internal constructor(
 )
 
 public class ParameterizeScope internal constructor(
-    private val iteration: ULong,
     private val context: ParameterizeContext,
 ) {
     override fun toString(): String =
-        "ParameterizeScope(iteration = $iteration)"
+        context.getReadParameters().joinToString(
+            prefix = "ParameterizeScope(",
+            separator = ", ",
+            postfix = ")"
+        ) { (parameter, argument) ->
+            "${parameter.name} = $argument"
+        }
 
     public fun <T> parameter(arguments: Iterable<T>): Parameter<T> =
         Parameter(arguments)
