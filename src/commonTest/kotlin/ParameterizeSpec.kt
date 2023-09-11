@@ -1,3 +1,5 @@
+@file:Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
+
 package com.benwoodworth.parameterize
 
 import kotlin.test.Test
@@ -48,9 +50,9 @@ class ParameterizeSpec {
     fun parameter_with_lazy_arguments_should_not_be_evaluated_before_read() = parameterize {
         var evaluated = false
 
-        parameter {
+        parameter<Nothing> {
             evaluated = true
-            emptyList<String>()
+            emptyList()
         }
 
         assertFalse(evaluated)
@@ -150,7 +152,7 @@ class ParameterizeSpec {
     fun unused_parameter_with_no_arguments_should_not_finish_iteration_early() = testParameterize(
         listOf("finished")
     ) {
-        val unused: String by parameter(emptyList())
+        val unused by parameterOf<Nothing>()
 
         "finished"
     }
@@ -187,16 +189,16 @@ class ParameterizeSpec {
     ) {
         val firstReadParameter by parameterOf("a", "b")
         if (firstReadParameter == "a") {
-            val unread1A: String by parameterOf()
+            val unread1A by parameterOf<Nothing>()
         } else {
-            val unread1B: String by parameterOf()
+            val unread1B by parameterOf<Nothing>()
         }
 
         val lastReadParameter by parameterOf("1", "2")
         if (lastReadParameter == "1") {
-            val unread2A: String by parameterOf()
+            val unread2A by parameterOf<Nothing>()
         } else {
-            val unread2B: String by parameterOf()
+            val unread2B by parameterOf<Nothing>()
         }
 
         "$firstReadParameter$lastReadParameter"

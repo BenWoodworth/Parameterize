@@ -1,3 +1,5 @@
+@file:Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
+
 package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
@@ -93,9 +95,9 @@ class ParameterizeThrowHandlerSpec {
             }
         ) {
             val a by parameterOf(1)
-            val unused1: Int by parameterOf()
+            val unused1 by parameterOf<Nothing>()
             val b by parameterOf(2)
-            val unused2: Int by parameterOf()
+            val unused2 by parameterOf<Nothing>()
             val c by parameterOf(3)
 
             // used in a different order
