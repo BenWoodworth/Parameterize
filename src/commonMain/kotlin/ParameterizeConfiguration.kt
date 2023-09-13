@@ -23,7 +23,7 @@ public class ParameterizeConfiguration private constructor(
          * Handles a failure during an iteration.
          *
          * If the throw handler returns, then [parameterize] will continue to the next iteration.
-         * Throwing from the handler end the execution and propagate out to the caller.
+         * Throwing from the handler will end the execution, propagating out to the caller.
          *
          * Throws a [ParameterizeFailedError] by default.
          */

@@ -63,7 +63,7 @@ internal class ParameterizeContext {
     /**
      * Iterate the last parameter (by first read this iteration) that has a next
      * argument, and reset all parameters that were first read after it (since
-     * they may depend on the now changed value, and may be calculated
+     * they may depend on the now changed value, and may be computed
      * differently).
      *
      * Returns `true` if the arguments are at a new permutation.
