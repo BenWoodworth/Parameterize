@@ -10,5 +10,5 @@ import kotlin.test.Ignore
 expect annotation class NativeIgnore()
 
 @Suppress("UNUSED_PARAMETER")
-fun <T> readProperty(property: T) {
+fun <T> useParameter(parameter: T) {
 }

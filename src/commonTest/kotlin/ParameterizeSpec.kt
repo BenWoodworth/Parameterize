@@ -48,7 +48,7 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun parameter_with_lazy_arguments_should_not_be_evaluated_before_read() = parameterize {
+    fun parameter_with_lazy_arguments_should_not_be_evaluated_before_used() = parameterize {
         var evaluated = false
 
         parameter<Nothing> {
@@ -175,7 +175,7 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun parameters_that_are_read_out_of_order() = testParameterize(
+    fun parameters_that_are_used_out_of_order() = testParameterize(
         listOf("a1", "a2", "b1", "b2")
     ) {
         val first by parameterOf(1, 2)
@@ -188,25 +188,25 @@ class ParameterizeSpec {
     fun swapping_unused_parameters() = testParameterize(
         listOf("a1", "a2", "b1", "b2")
     ) {
-        val firstReadParameter by parameterOf("a", "b")
-        if (firstReadParameter == "a") {
-            val unread1A by parameterOf<Nothing>()
+        val firstUsedParameter by parameterOf("a", "b")
+        if (firstUsedParameter == "a") {
+            val unused1A by parameterOf<Nothing>()
         } else {
-            val unread1B by parameterOf<Nothing>()
+            val unused1B by parameterOf<Nothing>()
         }
 
-        val lastReadParameter by parameterOf("1", "2")
-        if (lastReadParameter == "1") {
-            val unread2A by parameterOf<Nothing>()
+        val lastUsedParameter by parameterOf("1", "2")
+        if (lastUsedParameter == "1") {
+            val unused2A by parameterOf<Nothing>()
         } else {
-            val unread2B by parameterOf<Nothing>()
+            val unused2B by parameterOf<Nothing>()
         }
 
-        "$firstReadParameter$lastReadParameter"
+        "$firstUsedParameter$lastUsedParameter"
     }
 
     @Test
-    fun parameter_only_read_from_another_lazy_initialization() = testParameterize(
+    fun parameter_only_used_from_another_lazy_initialization() = testParameterize(
         listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
     ) {
         val letter by parameter('a'..'c')
@@ -227,7 +227,7 @@ class ParameterizeSpec {
             val insideLetter by parameter('a'..'c')
             listOf(insideLetter)
         }
-        readProperty(letter) // so `insideLetter` is declared before `number`
+        useParameter(letter) // so `insideLetter` is declared before `number`
 
         val number by parameter(1..3)
 

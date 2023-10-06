@@ -13,23 +13,23 @@ import kotlin.reflect.KProperty
  *   be reused in the future.
  *
  * Declared:
- *   Set up with a property and arguments, but has not been read from yet.
+ *   Set up with a property and arguments, but has not been used yet.
  *
  *   The argument and iterator are loaded lazily in case the parameter is not
  *   actually used, saving any potentially unnecessary computation.
  *
  * Initialized:
- *   The parameter has been read, and has an argument set from the iterator.
+ *   The parameter has been used, and has an argument set from the iterator.
  *   Stays initialized until reset.
  *
- *   The stored argument iterator will always have a next argument. When
- *   there is no next argument, it will be set to null, and then lazily set
- *   to a new iterator again when the next argument is needed.
+ *   The stored argument iterator will always have a next argument. When there
+ *   is no next argument, it will be set to null, and then lazily set to a new
+ *   iterator again when the next argument is needed.
  *
- *   The delegate can be re-declared without being reset, marking it as
- *   unread again. The property will be checked to verify it's the same, but
- *   the new arguments will be assumed to be the same and ignored in favor
- *   of continuing through the current iterator.
+ *   The delegate can be re-declared without being reset, marking it as unused
+ *   again. The property will be checked to verify it's the same, but the new
+ *   arguments will be assumed to be the same and ignored in favor of continuing
+ *   through the current iterator.
  */
 
 public class ParameterDelegate<@Suppress("unused") out T> internal constructor() {
@@ -43,8 +43,8 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
      * Instead, methods have their own generic type, checked against a property
      * that's passed in. Since the internal argument state is always of the same
      * type as the currently declared property, checking that the property taken
-     * into the method is the same is enough to ensure that the argument being
-     * read out is the correct type.
+     * into the method is the same is enough to ensure that the argument
+     * returned is the correct type.
      */
 
     // Declared
@@ -55,7 +55,7 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
     private var argument: Any? = Uninitialized // T | Uninitialized
     private var argumentIterator: Iterator<*>? = null
 
-    internal var hasBeenRead: Boolean = false
+    internal var hasBeenUsed: Boolean = false
         private set
 
     internal fun reset() {
@@ -63,7 +63,7 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
         arguments = null
         argumentIterator = null
         argument = Uninitialized
-        hasBeenRead = false
+        hasBeenUsed = false
     }
 
     /**
@@ -127,11 +127,11 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
     }
 
     /**
-     * Read the current argument, or initialize it from the arguments that were originally declared.
+     * Get the current argument, or initialize it from the arguments that were originally declared.
      */
-    internal fun <T> readArgument(property: KProperty<T>): T {
+    internal fun <T> getArgument(property: KProperty<T>): T {
         val declaredProperty = checkNotNull(this.property) {
-            "Cannot read argument before parameter delegate has been declared"
+            "Cannot get argument before parameter delegate has been declared"
         }
 
         if (!property.equalsProperty(declaredProperty)) {
@@ -151,7 +151,7 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
             argument = initialize(arguments as Iterable<T>)
         }
 
-        hasBeenRead = true
+        hasBeenUsed = true
         return argument
     }
 

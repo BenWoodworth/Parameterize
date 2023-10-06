@@ -15,9 +15,9 @@ class ParameterizeScopeSpec {
         val c by parameterOf(3)
 
         // used in a different order
-        readProperty(c)
-        readProperty(b)
-        readProperty(a)
+        useParameter(c)
+        useParameter(b)
+        useParameter(a)
 
         assertEquals("${ParameterizeScope::class.simpleName}(a = $a, b = $b, c = $c)", this.toString())
     }

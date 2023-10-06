@@ -43,12 +43,12 @@ internal class ParameterizeContext {
         return parameterDelegate
     }
 
-    fun <T> readParameter(parameterDelegate: ParameterDelegate<*>, property: KProperty<T>): T {
-        val isFirstRead = !parameterDelegate.hasBeenRead
+    fun <T> getParameterArgument(parameterDelegate: ParameterDelegate<*>, property: KProperty<T>): T {
+        val isFirstUse = !parameterDelegate.hasBeenUsed
 
-        return parameterDelegate.readArgument(property)
+        return parameterDelegate.getArgument(property)
             .also {
-                if (isFirstRead) trackUsedParameter(parameterDelegate)
+                if (isFirstUse) trackUsedParameter(parameterDelegate)
             }
     }
 
@@ -61,9 +61,9 @@ internal class ParameterizeContext {
     }
 
     /**
-     * Iterate the last parameter (by first read this iteration) that has a next
-     * argument, and reset all parameters that were first read after it (since
-     * they may depend on the now changed value, and may be computed
+     * Iterate the last parameter (by the order they're first used) that has a
+     * next argument, and reset all parameters that were first used after it
+     * (since they may depend on the now changed value, and may be computed
      * differently).
      *
      * Returns `true` if the arguments are at a new permutation.
@@ -90,7 +90,7 @@ internal class ParameterizeContext {
         for (i in parameterCountAfterAllUsed..<parameterCount) {
             val delegate = parameterDelegates[i]
 
-            if (!delegate.hasBeenRead) {
+            if (!delegate.hasBeenUsed) {
                 delegate.reset()
             }
         }
@@ -101,8 +101,8 @@ internal class ParameterizeContext {
         return iterated
     }
 
-    fun getReadParameters(): List<Pair<KProperty<*>, *>> =
+    fun getUsedParameters(): List<Pair<KProperty<*>, *>> =
         parameterDelegates.take(parameterCount)
-            .filter { it.hasBeenRead }
+            .filter { it.hasBeenUsed }
             .mapNotNull { it.getPropertyArgumentOrNull() }
 }

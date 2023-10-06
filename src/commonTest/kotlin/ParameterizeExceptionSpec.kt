@@ -19,7 +19,7 @@ class ParameterizeExceptionSpec {
                 iterations++
 
                 val parameter by parameterOf(1, 2)
-                readProperty(parameter)
+                useParameter(parameter)
 
                 throw exception
             }
@@ -42,7 +42,7 @@ class ParameterizeExceptionSpec {
                 }
 
                 val b by interceptedDelegateFromA
-                readProperty(b)
+                useParameter(b)
             }
         }
 
@@ -60,7 +60,7 @@ class ParameterizeExceptionSpec {
                 }
 
                 val b by parameterOf(1, 2)
-                readProperty(b)
+                useParameter(b)
 
                 shouldDeclareA = false
             }
@@ -80,7 +80,7 @@ class ParameterizeExceptionSpec {
                 }
 
                 val b by parameterOf(1, 2)
-                readProperty(b)
+                useParameter(b)
 
                 shouldDeclareA = true
             }

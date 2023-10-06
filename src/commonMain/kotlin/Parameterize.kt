@@ -55,7 +55,7 @@ import kotlin.reflect.KProperty
  * - Parameter arguments must not be mutated, as they are re-used between iterations, and mutations from previous
  *   iterations could result in different execution, breaking the determinism assumption.
  *
- * - Care should be taken with any asynchronous code, since the order that parameters are read must be the same between
+ * - Care should be taken with any asynchronous code, since the order that parameters are used must be the same between
  *   iterations, and all async code must be awaited before the [block] completes.
  *
  * @throws ParameterizeException when [block] executes nondeterministically, with different control flow for the same parameter arguments.
@@ -94,7 +94,7 @@ public class ParameterizeScope internal constructor(
     private val context: ParameterizeContext,
 ) {
     override fun toString(): String =
-        context.getReadParameters().joinToString(
+        context.getUsedParameters().joinToString(
             prefix = "ParameterizeScope(",
             separator = ", ",
             postfix = ")"
@@ -129,7 +129,7 @@ public class ParameterizeScope internal constructor(
 
     public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
         @Suppress("UNCHECKED_CAST")
-        context.readParameter(this, property as KProperty<T>)
+        context.getParameterArgument(this, property as KProperty<T>)
 }
 
 /**

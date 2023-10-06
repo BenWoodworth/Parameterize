@@ -9,7 +9,7 @@ public class ParameterizeThrowHandlerScope internal constructor(
     private val cause: Throwable
 ) {
     public val arguments: List<Pair<KProperty<*>, *>> by lazy {
-        context.getReadParameters()
+        context.getUsedParameters()
     }
 
     public operator fun ParameterizeFailedError.Companion.invoke(): ParameterizeFailedError =

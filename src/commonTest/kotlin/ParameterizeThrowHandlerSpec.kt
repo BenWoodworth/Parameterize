@@ -101,9 +101,9 @@ class ParameterizeThrowHandlerSpec {
             val c by parameterOf(3)
 
             // used in a different order
-            readProperty(c)
-            readProperty(b)
-            readProperty(a)
+            useParameter(c)
+            useParameter(b)
+            useParameter(a)
 
             throw TestCause
         }
@@ -144,9 +144,9 @@ class ParameterizeThrowHandlerSpec {
             val b by parameterOf(2)
             val c by parameterOf(3)
 
-            readProperty(a)
-            readProperty(b)
-            readProperty(c)
+            useParameter(a)
+            useParameter(b)
+            useParameter(c)
 
             throw TestCause
         }
