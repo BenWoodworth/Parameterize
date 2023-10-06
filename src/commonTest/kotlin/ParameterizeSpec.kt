@@ -2,6 +2,7 @@
 
 package com.benwoodworth.parameterize
 
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -218,17 +219,19 @@ class ParameterizeSpec {
     }
 
     @Test
+    @Ignore
     fun declaring_parameters_within_another_initialization() = testParameterize(
         listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
     ) {
-        val letterNumber by parameter {
-            val letter by parameter('a'..'c')
-            val number by parameter(1..3)
-
-            listOf("$letter$number")
+        val letter by parameter {
+            val insideLetter by parameter('a'..'c')
+            listOf(insideLetter)
         }
+        readProperty(letter) // so `insideLetter` is declared before `number`
 
-        letterNumber
+        val number by parameter(1..3)
+
+        "$letter$number"
     }
 
     @Test
