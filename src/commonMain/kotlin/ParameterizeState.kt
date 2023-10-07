@@ -2,7 +2,7 @@ package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
 
-internal class ParameterizeContext {
+internal class ParameterizeState {
     /**
      * The parameters created for [parameterize].
      *

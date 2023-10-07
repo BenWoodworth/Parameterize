@@ -66,17 +66,17 @@ public fun parameterize(
     throwHandler: ParameterizeThrowHandler = configuration.throwHandler,
     block: ParameterizeScope.() -> Unit
 ) {
-    val context = ParameterizeContext()
-    val scope = ParameterizeScope(context)
+    val state = ParameterizeState()
+    val scope = ParameterizeScope(state)
 
-    while (context.startNextIteration()) {
+    while (state.startNextIteration()) {
         try {
             scope.block()
         } catch (_: ParameterizeContinue) {
         } catch (exception: ParameterizeException) {
             throw exception
         } catch (cause: Throwable) {
-            ParameterizeThrowHandlerScope(context, cause).throwHandler(cause)
+            ParameterizeThrowHandlerScope(state, cause).throwHandler(cause)
         }
     }
 }
@@ -91,10 +91,10 @@ public value class Parameter<T> internal constructor(
 )
 
 public class ParameterizeScope internal constructor(
-    private val context: ParameterizeContext,
+    private val state: ParameterizeState,
 ) {
     override fun toString(): String =
-        context.getUsedParameters().joinToString(
+        state.getUsedParameters().joinToString(
             prefix = "ParameterizeScope(",
             separator = ", ",
             postfix = ")"
@@ -125,11 +125,11 @@ public class ParameterizeScope internal constructor(
 
     public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> =
         @Suppress("UNCHECKED_CAST")
-        context.declareParameter(property as KProperty<T>, arguments)
+        state.declareParameter(property as KProperty<T>, arguments)
 
     public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
         @Suppress("UNCHECKED_CAST")
-        context.getParameterArgument(this, property as KProperty<T>)
+        state.getParameterArgument(this, property as KProperty<T>)
 }
 
 /**
