@@ -1,11 +1,12 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.DefaultParameterizeContext.parameterizeConfiguration
 import kotlin.jvm.JvmInline
 import kotlin.reflect.KProperty
 
 /**
- * Runs the [block] for each combination of arguments, as declared by
- * [parameter][ParameterizeScope.parameter] functions:
+ * With configuration defaults pulled in from the [ParameterizeContext], the parameterized [block] will be run for each
+ * combination of arguments as declared by [parameter][ParameterizeScope.parameter] functions:
  * ```
  * parameterize {
  *     val letter by parameter('a'..'z')
@@ -58,12 +59,14 @@ import kotlin.reflect.KProperty
  * - Care should be taken with any asynchronous code, since the order that parameters are used must be the same between
  *   iterations, and all async code must be awaited before the [block] completes.
  *
+ * @receiver [ParameterizeContext] provides the configuration for this function's default arguments.
+ *           ***Note:** Should not be used as an extension function, as it will be changed to use a context receiver in the future.*
  * @throws ParameterizeException when [block] executes nondeterministically, with different control flow for the same parameter arguments.
  * @throws ParameterizeFailedError when [block] throws. (Configurable with [throwHandler])
  */
-public fun parameterize(
-    configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
-    throwHandler: ParameterizeThrowHandler = configuration.throwHandler,
+//context(ParameterizeContext) // TODO
+public fun ParameterizeContext.parameterize(
+    throwHandler: ParameterizeThrowHandler = parameterizeConfiguration.throwHandler,
     block: ParameterizeScope.() -> Unit
 ) {
     val state = ParameterizeState()
@@ -78,6 +81,23 @@ public fun parameterize(
         } catch (cause: Throwable) {
             ParameterizeThrowHandlerScope(state, cause).throwHandler(cause)
         }
+    }
+}
+
+/**
+ * Calls [parameterize] with the default [ParameterizeContext].
+ *
+ * @see parameterize
+ */
+public fun parameterize(
+    throwHandler: ParameterizeThrowHandler = parameterizeConfiguration.throwHandler,
+    block: ParameterizeScope.() -> Unit
+) {
+    with(DefaultParameterizeContext) {
+        parameterize(
+            throwHandler,
+            block
+        )
     }
 }
 

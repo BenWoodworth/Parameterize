@@ -13,7 +13,7 @@ public class ParameterizeConfiguration private constructor(
         ): ParameterizeConfiguration =
             Builder(from).apply(builderAction).build()
 
-        public var default: ParameterizeConfiguration = ParameterizeConfiguration(
+        internal val default: ParameterizeConfiguration = ParameterizeConfiguration(
             throwHandler = { throw ParameterizeFailedError() },
         )
     }
