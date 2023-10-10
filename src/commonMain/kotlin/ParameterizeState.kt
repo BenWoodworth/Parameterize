@@ -11,6 +11,7 @@ internal class ParameterizeState {
      */
     private val parameterDelegates = ArrayList<ParameterDelegate<Nothing>>()
     private val parameterDelegatesUsed = ArrayList<ParameterDelegate<*>>()
+    private var parameterBeingUsed: KProperty<*>? = null
 
     private var parameterCount = 0
     private var parameterCountAfterAllUsed = 0
@@ -29,6 +30,10 @@ internal class ParameterizeState {
         }
 
     fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<Nothing> {
+        parameterBeingUsed.let {
+            if (it != null) throw ParameterizeException("Nesting parameters is not currently supported: `${property.name}` was declared within `${it.name}`'s arguments")
+        }
+
         val parameterIndex = parameterCount++
 
         val parameterDelegate = if (parameterIndex in parameterDelegates.indices) {
@@ -43,10 +48,24 @@ internal class ParameterizeState {
         return parameterDelegate
     }
 
+    private inline fun <T> KProperty<T>.trackNestedUsage(block: () -> T): T {
+        val previousParameterBeingUsed = parameterBeingUsed
+        parameterBeingUsed = this
+
+        try {
+            return block()
+        } finally {
+            parameterBeingUsed = previousParameterBeingUsed
+        }
+    }
+
     fun <T> getParameterArgument(parameterDelegate: ParameterDelegate<*>, property: KProperty<T>): T {
         val isFirstUse = !parameterDelegate.hasBeenUsed
 
-        return parameterDelegate.getArgument(property)
+        return property
+            .trackNestedUsage {
+                parameterDelegate.getArgument(property)
+            }
             .also {
                 if (isFirstUse) trackUsedParameter(parameterDelegate)
             }

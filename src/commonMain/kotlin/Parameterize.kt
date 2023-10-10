@@ -56,6 +56,8 @@ import kotlin.reflect.KProperty
  * - Parameter arguments must not be mutated, as they are re-used between iterations, and mutations from previous
  *   iterations could result in different execution, breaking the determinism assumption.
  *
+ * - Parameters cannot be declared within another parameter's arguments, such as nesting within a lazy `parameter {}`.
+ *
  * - Care should be taken with any asynchronous code, since the order that parameters are used must be the same between
  *   iterations, and all async code must be awaited before the [block] completes.
  *

@@ -88,4 +88,94 @@ class ParameterizeExceptionSpec {
 
         assertEquals("Expected to be declaring `b`, but got `a`", exception.message)
     }
+
+    @Test
+    fun nested_parameter_declaration_within_arguments_iterator_function() {
+        fun ParameterizeScope.testArguments() = object : Iterable<Unit> {
+            override fun iterator(): Iterator<Unit> {
+                val inner by parameterOf(Unit)
+                useParameter(inner)
+
+                return listOf(Unit).iterator()
+            }
+        }
+
+        val exception = assertFailsWith<ParameterizeException> {
+            parameterize {
+                val outer by parameter(testArguments())
+                useParameter(outer)
+
+                val end by parameterOf(Unit, Unit)
+                useParameter(end)
+            }
+        }
+
+        assertEquals(
+            "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
+            exception.message
+        )
+    }
+
+    @Test
+    fun nested_parameter_declaration_within_arguments_iterator_next_function() {
+        fun ParameterizeScope.testArgumentsIterator() = object : Iterator<Unit> {
+            private var index = 0
+
+            override fun hasNext(): Boolean = index <= 1
+
+            override fun next() {
+                if (index == 0) {
+                    val innerA by parameterOf(Unit)
+                    useParameter(innerA)
+                } else {
+                    val innerB by parameterOf(Unit)
+                    useParameter(innerB)
+                }
+
+                index++
+            }
+        }
+
+        val exception = assertFailsWith<ParameterizeException> {
+            parameterize {
+                val outer by parameter(Iterable(::testArgumentsIterator))
+                useParameter(outer)
+
+                val end by parameterOf(Unit, Unit)
+                useParameter(end)
+            }
+        }
+
+        assertEquals(
+            "Nesting parameters is not currently supported: `innerA` was declared within `outer`'s arguments",
+            exception.message
+        )
+    }
+
+    @Test
+    fun nested_parameter_declaration_with_another_valid_intermediate_parameter_usage() {
+        val exception = assertFailsWith<ParameterizeException> {
+            parameterize {
+                val trackedNestingInterference by parameterOf(Unit)
+
+                val outer by parameter {
+                    useParameter(trackedNestingInterference)
+
+                    val inner by parameterOf(Unit)
+                    useParameter(inner)
+
+                    listOf(Unit)
+                }
+                useParameter(outer)
+
+                val end by parameterOf(Unit, Unit)
+                useParameter(end)
+            }
+        }
+
+        assertEquals(
+            "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
+            exception.message
+        )
+    }
 }
