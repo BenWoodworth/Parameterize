@@ -37,14 +37,13 @@ class ParameterizeFailedErrorSpec {
             Throwable("I'm the cause")
         )
 
-        assertEquals(
-            """
-                Failed with arguments:
-                    ${::parameterA.name} = $parameterA
-                    ${::parameterB.name} = $parameterB
-            """.trimIndent(),
-            error.message
-        )
+        val expectedMessage = """
+            Failed with arguments:
+            ${'\t'}${::parameterA.name} = $parameterA
+            ${'\t'}${::parameterB.name} = $parameterB
+        """.trimIndent()
+
+        assertEquals(expectedMessage, error.message)
     }
 
     @Test

@@ -29,7 +29,7 @@ public class ParameterizeFailedError internal constructor(
         else -> buildString {
             append("Failed with arguments:")
             arguments.forEach { (parameter, argument) ->
-                append("\n    ")
+                append("\n\t")
                 append(parameter.name)
                 append(" = ")
                 append(argument)
