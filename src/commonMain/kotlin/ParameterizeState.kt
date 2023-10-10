@@ -9,8 +9,8 @@ internal class ParameterizeState {
      * Parameter instances are re-used between iterations, so will never be removed.
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
-    private val parameterDelegates = ArrayList<ParameterDelegate<Nothing>>()
-    private val parameterDelegatesUsed = ArrayList<ParameterDelegate<*>>()
+    private val parameters = ArrayList<ParameterDelegate<Nothing>>()
+    private val parametersUsed = ArrayList<ParameterDelegate<*>>()
     private var parameterBeingUsed: KProperty<*>? = null
 
     private var parameterCount = 0
@@ -36,16 +36,16 @@ internal class ParameterizeState {
 
         val parameterIndex = parameterCount++
 
-        val parameterDelegate = if (parameterIndex in parameterDelegates.indices) {
-            parameterDelegates[parameterIndex]
+        val parameter = if (parameterIndex in parameters.indices) {
+            parameters[parameterIndex]
         } else {
             ParameterDelegate<Nothing>()
-                .also { parameterDelegates += it }
+                .also { parameters += it }
         }
 
-        parameterDelegate.declare(property, arguments)
+        parameter.declare(property, arguments)
 
-        return parameterDelegate
+        return parameter
     }
 
     private inline fun <T> KProperty<T>.trackNestedUsage(block: () -> T): T {
@@ -59,22 +59,22 @@ internal class ParameterizeState {
         }
     }
 
-    fun <T> getParameterArgument(parameterDelegate: ParameterDelegate<*>, property: KProperty<T>): T {
-        val isFirstUse = !parameterDelegate.hasBeenUsed
+    fun <T> getParameterArgument(parameter: ParameterDelegate<*>, property: KProperty<T>): T {
+        val isFirstUse = !parameter.hasBeenUsed
 
         return property
             .trackNestedUsage {
-                parameterDelegate.getArgument(property)
+                parameter.getArgument(property)
             }
             .also {
-                if (isFirstUse) trackUsedParameter(parameterDelegate)
+                if (isFirstUse) trackUsedParameter(parameter)
             }
     }
 
-    private fun trackUsedParameter(parameterDelegate: ParameterDelegate<*>) {
-        parameterDelegatesUsed += parameterDelegate
+    private fun trackUsedParameter(parameter: ParameterDelegate<*>) {
+        parametersUsed += parameter
 
-        if (!parameterDelegate.isLastArgument) {
+        if (!parameter.isLastArgument) {
             parameterCountAfterAllUsed = parameterCount
         }
     }
@@ -90,8 +90,8 @@ internal class ParameterizeState {
     private fun nextArgumentPermutationOrFalse(): Boolean {
         var iterated = false
 
-        val usedParameterIterator = parameterDelegatesUsed
-            .listIterator(parameterDelegatesUsed.lastIndex + 1)
+        val usedParameterIterator = parametersUsed
+            .listIterator(parametersUsed.lastIndex + 1)
 
         while (usedParameterIterator.hasPrevious()) {
             val parameter = usedParameterIterator.previous()
@@ -107,10 +107,10 @@ internal class ParameterizeState {
         }
 
         for (i in parameterCountAfterAllUsed..<parameterCount) {
-            val delegate = parameterDelegates[i]
+            val parameter = parameters[i]
 
-            if (!delegate.hasBeenUsed) {
-                delegate.reset()
+            if (!parameter.hasBeenUsed) {
+                parameter.reset()
             }
         }
 
@@ -121,7 +121,7 @@ internal class ParameterizeState {
     }
 
     fun getUsedParameters(): List<Pair<KProperty<*>, *>> =
-        parameterDelegates.take(parameterCount)
+        parameters.take(parameterCount)
             .filter { it.hasBeenUsed }
             .mapNotNull { it.getPropertyArgumentOrNull() }
 }

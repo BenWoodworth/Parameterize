@@ -6,17 +6,17 @@ class ParameterDelegateSpec {
     private val property: String get() = error("${::property.name} is not meant to be used")
     private val differentProperty: String get() = error("${::differentProperty.name} is not meant to be used")
 
-    private lateinit var delegate: ParameterDelegate<String>
+    private lateinit var parameter: ParameterDelegate<String>
 
     @BeforeTest
     fun beforeTest() {
-        delegate = ParameterDelegate()
+        parameter = ParameterDelegate()
     }
 
 
     @Test
     fun has_been_used_should_initially_be_false() {
-        assertFalse(delegate.hasBeenUsed)
+        assertFalse(parameter.hasBeenUsed)
     }
 
     @Test
@@ -25,13 +25,13 @@ class ParameterDelegateSpec {
             fail("Arguments should not be iterated")
         }
 
-        delegate.declare(::property, arguments)
+        parameter.declare(::property, arguments)
     }
 
     @Test
     fun getting_argument_before_declared_should_throw_IllegalStateException() {
         val failure = assertFailsWith<IllegalStateException> {
-            delegate.getArgument(::property)
+            parameter.getArgument(::property)
         }
 
         assertEquals("Cannot get argument before parameter delegate has been declared", failure.message)
@@ -39,10 +39,10 @@ class ParameterDelegateSpec {
 
     @Test
     fun getting_argument_with_the_wrong_property_should_throw_ParameterizeException() {
-        delegate.declare(::property, emptyList())
+        parameter.declare(::property, emptyList())
 
         val exception = assertFailsWith<ParameterizeException> {
-            delegate.getArgument(::differentProperty)
+            parameter.getArgument(::differentProperty)
         }
 
         assertEquals(
@@ -53,60 +53,60 @@ class ParameterDelegateSpec {
 
     @Test
     fun getting_argument_with_no_arguments_should_throw_ParameterizeContinue() {
-        delegate.declare(::property, emptyList())
+        parameter.declare(::property, emptyList())
 
         assertFailsWith<ParameterizeContinue> {
-            delegate.getArgument(::property)
+            parameter.getArgument(::property)
         }
     }
 
     @Test
     fun getting_argument_with_no_arguments_should_not_change_has_been_used() {
-        delegate.declare(::property, emptyList())
-        val expected = delegate.hasBeenUsed
+        parameter.declare(::property, emptyList())
+        val expected = parameter.hasBeenUsed
 
         runCatching {
-            delegate.getArgument(::property)
+            parameter.getArgument(::property)
         }
 
-        assertEquals(expected, delegate.hasBeenUsed)
+        assertEquals(expected, parameter.hasBeenUsed)
     }
 
     @Test
     fun getting_argument_should_initially_return_the_first_argument() {
-        delegate.declare(::property, listOf("first", "second"))
+        parameter.declare(::property, listOf("first", "second"))
 
-        assertEquals("first", delegate.getArgument(::property))
+        assertEquals("first", parameter.getArgument(::property))
     }
 
     @Test
     fun getting_argument_should_set_has_been_used_to_true() {
-        delegate.declare(::property, listOf("first", "second"))
-        delegate.getArgument(::property)
+        parameter.declare(::property, listOf("first", "second"))
+        parameter.getArgument(::property)
 
-        assertTrue(delegate.hasBeenUsed)
+        assertTrue(parameter.hasBeenUsed)
     }
 
     @Test
     fun getting_argument_with_one_argument_should_set_is_last_argument_to_true() {
-        delegate.declare(::property, listOf("first"))
-        delegate.getArgument(::property)
+        parameter.declare(::property, listOf("first"))
+        parameter.getArgument(::property)
 
-        assertTrue(delegate.isLastArgument)
+        assertTrue(parameter.isLastArgument)
     }
 
     @Test
     fun getting_argument_with_more_than_one_argument_should_set_is_last_argument_to_false() {
-        delegate.declare(::property, listOf("first", "second"))
-        delegate.getArgument(::property)
+        parameter.declare(::property, listOf("first", "second"))
+        parameter.getArgument(::property)
 
-        assertFalse(delegate.isLastArgument)
+        assertFalse(parameter.isLastArgument)
     }
 
     @Test
     fun next_before_declare_should_throw_IllegalStateException() {
         val failure = assertFailsWith<IllegalStateException> {
-            delegate.nextArgument()
+            parameter.nextArgument()
         }
 
         assertEquals("Cannot iterate arguments before parameter delegate has been declared", failure.message)
@@ -114,10 +114,10 @@ class ParameterDelegateSpec {
 
     @Test
     fun next_before_initialized_should_throw_IllegalStateException() {
-        delegate.declare(::property, emptyList())
+        parameter.declare(::property, emptyList())
 
         val failure = assertFailsWith<IllegalStateException> {
-            delegate.nextArgument()
+            parameter.nextArgument()
         }
 
         assertEquals("Cannot iterate arguments before parameter argument has been initialized", failure.message)
@@ -125,159 +125,157 @@ class ParameterDelegateSpec {
 
     @Test
     fun next_should_move_to_the_next_argument() {
-        delegate.declare(::property, listOf("first", "second", "third"))
-        delegate.getArgument(::property)
+        parameter.declare(::property, listOf("first", "second", "third"))
+        parameter.getArgument(::property)
 
-        delegate.nextArgument()
-        assertEquals("second", delegate.getArgument(::property))
+        parameter.nextArgument()
+        assertEquals("second", parameter.getArgument(::property))
 
-        delegate.nextArgument()
-        assertEquals("third", delegate.getArgument(::property))
+        parameter.nextArgument()
+        assertEquals("third", parameter.getArgument(::property))
     }
 
     @Test
     fun next_to_a_middle_argument_should_leave_is_last_argument_as_false() {
-        delegate.declare(::property, listOf("first", "second", "third", "fourth"))
-        delegate.getArgument(::property)
+        parameter.declare(::property, listOf("first", "second", "third", "fourth"))
+        parameter.getArgument(::property)
 
-        delegate.nextArgument()
-        assertFalse(delegate.isLastArgument, "second")
+        parameter.nextArgument()
+        assertFalse(parameter.isLastArgument, "second")
 
-        delegate.nextArgument()
-        assertFalse(delegate.isLastArgument, "third")
+        parameter.nextArgument()
+        assertFalse(parameter.isLastArgument, "third")
     }
 
     @Test
     fun next_to_the_last_argument_should_set_is_last_argument_to_true() {
-        delegate.declare(::property, listOf("first", "second", "third", "fourth"))
-        delegate.getArgument(::property)
-        delegate.nextArgument() // second
-        delegate.nextArgument() // third
-        delegate.nextArgument() // forth
+        parameter.declare(::property, listOf("first", "second", "third", "fourth"))
+        parameter.getArgument(::property)
+        parameter.nextArgument() // second
+        parameter.nextArgument() // third
+        parameter.nextArgument() // forth
 
-        assertTrue(delegate.isLastArgument)
+        assertTrue(parameter.isLastArgument)
     }
 
     @Test
     fun next_after_the_last_argument_should_loop_back_to_the_first() {
-        delegate.declare(::property, listOf("first", "second"))
-        delegate.getArgument(::property)
-        delegate.nextArgument() // second
-        delegate.nextArgument() // first
+        parameter.declare(::property, listOf("first", "second"))
+        parameter.getArgument(::property)
+        parameter.nextArgument() // second
+        parameter.nextArgument() // first
 
-        assertEquals("first", delegate.getArgument(::property))
+        assertEquals("first", parameter.getArgument(::property))
     }
 
     @Test
     fun next_after_the_last_argument_should_set_is_last_argument_to_false() {
-        delegate.declare(::property, listOf("first", "second"))
-        delegate.getArgument(::property)
-        delegate.nextArgument() // second
-        delegate.nextArgument() // first
+        parameter.declare(::property, listOf("first", "second"))
+        parameter.getArgument(::property)
+        parameter.nextArgument() // second
+        parameter.nextArgument() // first
 
-        assertFalse(delegate.isLastArgument)
+        assertFalse(parameter.isLastArgument)
     }
 
     @Test
     fun redeclare_should_not_change_current_argument() {
-        delegate.declare(::property, listOf("a", "b"))
+        parameter.declare(::property, listOf("a", "b"))
 
         val newArguments = Iterable<String> {
             fail("Re-declaring should keep the old arguments")
         }
-        delegate.declare(::property, newArguments)
+        parameter.declare(::property, newArguments)
     }
 
     @Test
     fun redeclare_arguments_should_keep_using_the_original_arguments() {
-        delegate.declare(::property, listOf("a"))
+        parameter.declare(::property, listOf("a"))
 
         val newArguments = Iterable<String> {
             fail("Re-declaring should keep the old arguments")
         }
-        delegate.declare(::property, newArguments)
+        parameter.declare(::property, newArguments)
     }
 
     @Test
     fun redeclare_with_different_parameter_should_throw_ParameterizeException() {
-        val delegate = delegate
-
-        delegate.declare(::property, emptyList())
+        parameter.declare(::property, emptyList())
 
         assertFailsWith<ParameterizeException> {
-            delegate.declare(::differentProperty, emptyList())
+            parameter.declare(::differentProperty, emptyList())
         }
     }
 
     @Test
     fun redeclare_with_different_parameter_should_not_change_has_been_used() {
-        delegate.declare(::property, listOf("a"))
-        delegate.getArgument(::property)
+        parameter.declare(::property, listOf("a"))
+        parameter.getArgument(::property)
 
         runCatching {
-            delegate.declare(::differentProperty, listOf("a"))
+            parameter.declare(::differentProperty, listOf("a"))
         }
 
-        assertTrue(delegate.hasBeenUsed)
+        assertTrue(parameter.hasBeenUsed)
     }
 
     @Test
     fun reset_should_set_has_been_used_to_false() {
-        delegate.declare(::property, listOf("a", "b"))
-        delegate.getArgument(::property)
-        delegate.reset()
+        parameter.declare(::property, listOf("a", "b"))
+        parameter.getArgument(::property)
+        parameter.reset()
 
-        assertFalse(delegate.hasBeenUsed)
+        assertFalse(parameter.hasBeenUsed)
     }
 
     @Test
     fun to_string_when_not_initialized_should_match_message_from_lazy() {
-        delegate.declare(::property, emptyList())
+        parameter.declare(::property, emptyList())
 
         val expectedToString = lazy { "unused" }
             .toString()
             .replace("Lazy value", "Parameter argument")
 
-        assertEquals(expectedToString, delegate.toString())
+        assertEquals(expectedToString, parameter.toString())
     }
 
     @Test
     fun to_string_when_initialized_should_equal_that_of_the_current_argument() {
-        delegate.declare(::property, listOf("a"))
+        parameter.declare(::property, listOf("a"))
 
-        val argument = delegate.getArgument(::property)
-        assertEquals(argument, delegate.toString())
+        val argument = parameter.getArgument(::property)
+        assertEquals(argument, parameter.toString())
     }
 
     @Test
     fun is_last_argument_before_initialized_should_throw() {
         val failure1 = assertFailsWith<IllegalStateException> {
-            delegate.isLastArgument
+            parameter.isLastArgument
         }
         assertEquals("Argument has not been initialized", failure1.message)
 
-        delegate.declare(::property, listOf("a"))
+        parameter.declare(::property, listOf("a"))
         val failure2 = assertFailsWith<IllegalStateException> {
-            delegate.isLastArgument
+            parameter.isLastArgument
         }
         assertEquals("Argument has not been initialized", failure2.message)
     }
 
     @Test
     fun get_property_argument_when_not_initialized_should_be_null() {
-        assertNull(delegate.getPropertyArgumentOrNull())
+        assertNull(parameter.getPropertyArgumentOrNull())
 
-        delegate.declare(::property, emptyList())
-        assertNull(delegate.getPropertyArgumentOrNull())
+        parameter.declare(::property, emptyList())
+        assertNull(parameter.getPropertyArgumentOrNull())
     }
 
     @Test
     fun get_property_argument_when_initialized_should_have_correct_property_and_argument() {
         val expectedArgument = "a"
-        delegate.declare(::property, listOf(expectedArgument))
-        delegate.getArgument(::property)
+        parameter.declare(::property, listOf(expectedArgument))
+        parameter.getArgument(::property)
 
-        val propertyArgument = delegate.getPropertyArgumentOrNull()
+        val propertyArgument = parameter.getPropertyArgumentOrNull()
         assertNotNull(propertyArgument)
 
         val (property, argument) = propertyArgument
