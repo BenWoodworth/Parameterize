@@ -28,7 +28,7 @@ import kotlin.reflect.KProperty
  *
  * ```
  * @Test
- * fun contains_with_the_substring_present_should_be_true = parameterize {
+ * fun contains_with_the_substring_present_should_be_true() = parameterize {
  *     val substring = "substring"
  *     val prefix by parameterOf("prefix-", "")
  *     val suffix by parameterOf("-suffix", "")
