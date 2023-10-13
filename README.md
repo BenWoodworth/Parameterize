@@ -22,7 +22,7 @@ parameterize {
 
 With parameterized testing being the motivating use case, `parameterize` can be used to cleanly and more idiomatically
 cover edge cases in tests. For example, succinctly covering all the possible ways a `substring` can be contained within
-a `string`, running the `parameterize` block once for each:
+a `string`, running the `parameterize` block once for each case:
 
 ```kotlin
 val string = "prefix-substring-suffix"  // in the middle
@@ -43,10 +43,10 @@ fun contains_with_the_substring_present_should_be_true() = parameterize {
 }
 ```
 
-And if the test fails, the cause will be wrapped into an `Error` detailing the
-arguments <u>*with parameter names*</u> that resulted in the failure:
+If the test fails, the cause will be wrapped into an `Error` detailing the <ins>*used*</ins> parameters with their
+arguments <ins>*and parameter names*</ins>:
 
-```stacktrace
+```java
 com.benwoodworth.parameterize.ParameterizeFailedError: Failed with arguments:
 	prefix = prefix-
 	suffix = -suffix
