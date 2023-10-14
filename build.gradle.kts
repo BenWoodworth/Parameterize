@@ -1,9 +1,7 @@
 plugins {
     kotlin("multiplatform") version "1.9.0"
+    id("parameterize.library-conventions")
 }
-
-group = "com.benwoodworth.parameterize"
-version = "0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
