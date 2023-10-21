@@ -1,0 +1,23 @@
+name: Test
+
+on: [ push, pull_request ]
+
+jobs:
+  publish:
+    strategy:
+      matrix:
+        runner: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    name: 'Test: ${{ matrix.runner }}'
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Test
+        run: ./gradlew ciTest

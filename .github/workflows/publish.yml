@@ -1,0 +1,33 @@
+name: Publish
+
+on:
+  push:
+    tags: [ 'v*' ]
+    branches: [ 'main' ]
+
+env:
+  OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+  OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+  SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+  SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+  SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+
+jobs:
+  publish:
+    strategy:
+      matrix:
+        runner: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    name: 'Publish: ${{ matrix.runner }}'
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Publish to Maven
+        run: ./gradlew ciPublish
