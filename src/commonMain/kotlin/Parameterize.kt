@@ -108,7 +108,7 @@ internal data object ParameterizeContinue : Throwable()
 internal class ParameterizeException(override val message: String) : Exception(message)
 
 @JvmInline
-public value class Parameter<T> internal constructor(
+public value class Parameter<out T> internal constructor(
     internal val arguments: Iterable<T>
 )
 
