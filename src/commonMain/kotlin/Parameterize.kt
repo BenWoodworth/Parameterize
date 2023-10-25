@@ -1,6 +1,8 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.DefaultParameterizeContext.parameterizeConfiguration
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
 import kotlin.reflect.KProperty
 
@@ -62,15 +64,25 @@ import kotlin.reflect.KProperty
  *   iterations, and all async code must be awaited before the [block] completes.
  *
  * @receiver [ParameterizeContext] provides the configuration for this function's default arguments.
- *           ***Note:** Should not be used as an extension function, as it will be changed to use a context receiver in the future.*
+ *
+ * ***Note:** Should not be used as an extension function, as it will be changed to use a context receiver in the future.*
+ *
+ * @param onFailure See [ParameterizeConfiguration.Builder.onFailure]
+ * @param onComplete See [ParameterizeConfiguration.Builder.onComplete]
+ *
  * @throws ParameterizeException when [block] executes nondeterministically, with different control flow for the same parameter arguments.
- * @throws ParameterizeFailedError when [block] throws. (Configurable with [throwHandler])
+ * @throws ParameterizeFailedError when [block] throws. (Configurable with [onComplete])
  */
 //context(ParameterizeContext) // TODO
 public fun ParameterizeContext.parameterize(
-    throwHandler: ParameterizeThrowHandler = parameterizeConfiguration.throwHandler,
+    onFailure: ParameterizeConfiguration.OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
+    onComplete: ParameterizeConfiguration.OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
     block: ParameterizeScope.() -> Unit
 ) {
+    contract {
+        callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
+    }
+
     val state = ParameterizeState()
     val scope = ParameterizeScope(state)
 
@@ -80,10 +92,12 @@ public fun ParameterizeContext.parameterize(
         } catch (_: ParameterizeContinue) {
         } catch (exception: ParameterizeException) {
             throw exception
-        } catch (cause: Throwable) {
-            ParameterizeThrowHandlerScope(state, cause).throwHandler(cause)
+        } catch (failure: Throwable) {
+            state.handleFailure(onFailure, failure)
         }
     }
+
+    state.handleComplete(onComplete)
 }
 
 /**
@@ -92,12 +106,19 @@ public fun ParameterizeContext.parameterize(
  * @see parameterize
  */
 public fun parameterize(
-    throwHandler: ParameterizeThrowHandler = parameterizeConfiguration.throwHandler,
+    onFailure: ParameterizeConfiguration.OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
+    onComplete: ParameterizeConfiguration.OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
     block: ParameterizeScope.() -> Unit
 ) {
+    contract {
+        callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
+    }
+
     with(DefaultParameterizeContext) {
+        // Leave arguments unnamed so this call errors when new options are added
         parameterize(
-            throwHandler,
+            onFailure,
+            onComplete,
             block
         )
     }

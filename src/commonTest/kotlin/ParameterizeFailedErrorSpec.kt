@@ -19,9 +19,15 @@ class ParameterizeFailedErrorSpec {
     private val argumentA = arguments[0]
     private val argumentB = arguments[1]
 
+    private fun createError(vararg arguments: ParameterizeArgument<*>) =
+        ParameterizeFailedError(
+            listOf(ParameterizeFailure(Throwable("I'm the cause"), arguments.toList())),
+            1, 1
+        )
+
     @Test
     fun message_with_no_arguments_should_say_failed_with_no_arguments() {
-        val error = ParameterizeFailedError(listOf(), Throwable("I'm the cause"))
+        val error = createError()
 
         assertEquals(
             "Failed with no arguments",
@@ -31,10 +37,7 @@ class ParameterizeFailedErrorSpec {
 
     @Test
     fun message_with_one_argument_should_show_argument_inline() {
-        val error = ParameterizeFailedError(
-            listOf(argumentA),
-            Throwable("I'm the cause")
-        )
+        val error = createError(argumentA)
 
         assertEquals(
             "Failed with argument: $argumentA",
@@ -44,10 +47,7 @@ class ParameterizeFailedErrorSpec {
 
     @Test
     fun message_with_multiple_arguments_should_show_arguments_on_separate_lines() {
-        val error = ParameterizeFailedError(
-            listOf(argumentA, argumentB),
-            Throwable("I'm the cause")
-        )
+        val error = createError(argumentA, argumentB)
 
         val expectedMessage = """
             Failed with arguments:
@@ -63,11 +63,7 @@ class ParameterizeFailedErrorSpec {
     fun stack_trace_should_only_include_calls_for_the_cause() {
         val cause = Throwable("Cause message")
 
-        val error = ParameterizeFailedError(
-            listOf(argumentA, argumentB),
-            cause
-        )
-
+        val error = createError(argumentA, argumentB)
         val actualStackTrace = error.stackTraceToString()
 
         val expectedStackTrace = run {

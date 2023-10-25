@@ -13,9 +13,7 @@ class ParameterizeExceptionSpec {
         val exception = ParameterizeException("test")
 
         val actualException = assertFailsWith<ParameterizeException> {
-            parameterize(
-                throwHandler = {} // continue on (normal) throw
-            ) {
+            parameterize {
                 iterations++
 
                 val parameter by parameterOf(1, 2)

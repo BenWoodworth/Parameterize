@@ -51,6 +51,10 @@ kotlin {
     mingwX64()
 
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.contracts.ExperimentalContracts")
+        }
+
         val commonMain by getting
         val commonTest by getting {
             dependencies {

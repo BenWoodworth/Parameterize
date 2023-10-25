@@ -1,5 +1,9 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
+import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import kotlin.reflect.KProperty
 
 internal class ParameterizeState {
@@ -16,18 +20,24 @@ internal class ParameterizeState {
     private var parameterCount = 0
     private var parameterCountAfterAllUsed = 0
 
-    private var isFirstIteration: Boolean = true
+    private var iterationCount = 0L
+    private var failureCount = 0L
+    private val recordedFailures = mutableListOf<ParameterizeFailure>()
+
+    private var breakEarly = false
+    private var hasNextIteration = true
 
     /**
      * Starts the next iteration, or returns `false` if there isn't one.
      */
-    fun startNextIteration(): Boolean =
-        if (isFirstIteration) {
-            isFirstIteration = false
-            true
-        } else {
-            nextArgumentPermutationOrFalse()
-        }
+    fun startNextIteration(): Boolean {
+        hasNextIteration = iterationCount == 0L || nextArgumentPermutationOrFalse()
+
+        val shouldContinue = hasNextIteration && !breakEarly
+        if (shouldContinue) iterationCount++
+
+        return shouldContinue
+    }
 
     fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<Nothing> {
         parameterBeingUsed.let {
@@ -124,4 +134,41 @@ internal class ParameterizeState {
         parameters.take(parameterCount)
             .filter { it.hasBeenUsed }
             .mapNotNull { it.getParameterizeArgumentOrNull() }
+
+    fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable) {
+        failureCount++
+
+        val scope = OnFailureScope(
+            state = this,
+            iterationCount,
+            failureCount,
+        )
+
+        with(scope) {
+            onFailure(failure)
+
+            this@ParameterizeState.breakEarly = breakEarly
+
+            if (recordFailure) {
+                recordedFailures += ParameterizeFailure(failure, arguments)
+            }
+        }
+    }
+
+    fun handleComplete(onComplete: OnCompleteScope.() -> Unit) {
+        contract {
+            callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
+        }
+
+        val scope = OnCompleteScope(
+            iterationCount,
+            failureCount,
+            completedEarly = hasNextIteration,
+            recordedFailures,
+        )
+
+        with(scope) {
+            onComplete()
+        }
+    }
 }

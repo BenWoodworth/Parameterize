@@ -1,14 +1,15 @@
 package com.benwoodworth.parameterize
 
 /**
- * Thrown from a parameterize [throw handler][ParameterizeConfiguration.throwHandler] to indicate that [parameterize]
- * failed with the given [arguments], and the thrown failure as the [cause].
+ * Thrown from a [parameterize] [onFailure][ParameterizeConfiguration.Builder.onComplete] handler to indicate that it failed with
+ * the given [arguments], and the thrown failure as the [cause].
  *
- * Can only be constructed within a [ParameterizeThrowHandlerScope].
+ * Can only be constructed from [ParameterizeConfiguration.Builder.onComplete].
  */
 public class ParameterizeFailedError internal constructor(
-    public val arguments: List<ParameterizeArgument<*>>,
-    override val cause: Throwable
+    internal val recordedFailures: List<ParameterizeFailure>,
+    internal val iterationCount: Long,
+    internal val failureCount: Long,
 ) : Error() {
     // TODO: Use context receiver instead of companion + pseudo constructor
     public companion object;
@@ -17,7 +18,11 @@ public class ParameterizeFailedError internal constructor(
         clearStackTrace()
     }
 
-    override val message: String = when (arguments.size) {
+    private val arguments = recordedFailures.firstOrNull()?.arguments
+
+    override val message: String = when (arguments?.size) {
+        null -> "No recorded failures"
+
         0 -> "Failed with no arguments"
 
         1 -> arguments.single().let { argument ->
