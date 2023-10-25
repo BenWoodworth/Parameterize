@@ -2,7 +2,6 @@
 
 package com.benwoodworth.parameterize
 
-import kotlin.reflect.KProperty
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -87,7 +86,7 @@ class ParameterizeThrowHandlerSpec {
 
     @Test
     fun should_be_called_with_used_arguments_in_declaration_order() {
-        lateinit var actualArguments: List<Pair<KProperty<*>, *>>
+        lateinit var actualArguments: List<ParameterizeArgument<*>>
 
         parameterize(
             throwHandler = {
@@ -131,7 +130,7 @@ class ParameterizeThrowHandlerSpec {
 
     @Test
     fun constructed_parameterize_failed_error_should_have_the_same_arguments() {
-        lateinit var expectedArguments: List<Pair<KProperty<*>, *>>
+        lateinit var expectedArguments: List<ParameterizeArgument<*>>
         lateinit var error: ParameterizeFailedError
 
         parameterize(

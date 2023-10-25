@@ -120,8 +120,8 @@ internal class ParameterizeState {
         return iterated
     }
 
-    fun getUsedParameters(): List<Pair<KProperty<*>, *>> =
+    fun getUsedArguments(): List<ParameterizeArgument<*>> =
         parameters.take(parameterCount)
             .filter { it.hasBeenUsed }
-            .mapNotNull { it.getPropertyArgumentOrNull() }
+            .mapNotNull { it.getParameterizeArgumentOrNull() }
 }

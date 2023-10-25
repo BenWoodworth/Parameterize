@@ -116,7 +116,7 @@ public class ParameterizeScope internal constructor(
     private val state: ParameterizeState,
 ) {
     override fun toString(): String =
-        state.getUsedParameters().joinToString(
+        state.getUsedArguments().joinToString(
             prefix = "ParameterizeScope(",
             separator = ", ",
             postfix = ")"

@@ -1,7 +1,5 @@
 package com.benwoodworth.parameterize
 
-import kotlin.reflect.KProperty
-
 /**
  * Thrown from a parameterize [throw handler][ParameterizeConfiguration.throwHandler] to indicate that [parameterize]
  * failed with the given [arguments], and the thrown failure as the [cause].
@@ -9,7 +7,7 @@ import kotlin.reflect.KProperty
  * Can only be constructed within a [ParameterizeThrowHandlerScope].
  */
 public class ParameterizeFailedError internal constructor(
-    public val arguments: List<Pair<KProperty<*>, *>>,
+    public val arguments: List<ParameterizeArgument<*>>,
     override val cause: Throwable
 ) : Error() {
     // TODO: Use context receiver instead of companion + pseudo constructor
@@ -22,19 +20,14 @@ public class ParameterizeFailedError internal constructor(
     override val message: String = when (arguments.size) {
         0 -> "Failed with no arguments"
 
-        1 -> arguments.single().let { (parameter, argument) ->
-            "Failed with argument: ${parameter.name} = $argument"
+        1 -> arguments.single().let { argument ->
+            "Failed with argument: $argument"
         }
 
-        else -> buildString {
-            append("Failed with arguments:")
-            arguments.forEach { (parameter, argument) ->
-                append("\n\t")
-                append(parameter.name)
-                append(" = ")
-                append(argument)
-            }
-        }
+        else -> arguments.joinToString(
+            prefix = "Failed with arguments:\n\t",
+            separator = "\n\t"
+        )
     }
 }
 

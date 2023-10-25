@@ -4,8 +4,20 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ParameterizeFailedErrorSpec {
-    private val parameterA = "argumentA"
-    private val parameterB = "argumentB"
+    private val arguments = run {
+        val parameters = object : Any() {
+            val parameterA = "argumentA"
+            val parameterB = "argumentB"
+        }
+
+        listOf(
+            ParameterizeArgument(parameters::parameterA, parameters.parameterA),
+            ParameterizeArgument(parameters::parameterB, parameters.parameterB)
+        )
+    }
+
+    private val argumentA = arguments[0]
+    private val argumentB = arguments[1]
 
     @Test
     fun message_with_no_arguments_should_say_failed_with_no_arguments() {
@@ -20,12 +32,12 @@ class ParameterizeFailedErrorSpec {
     @Test
     fun message_with_one_argument_should_show_argument_inline() {
         val error = ParameterizeFailedError(
-            listOf(::parameterA to parameterA),
+            listOf(argumentA),
             Throwable("I'm the cause")
         )
 
         assertEquals(
-            "Failed with argument: ${::parameterA.name} = $parameterA",
+            "Failed with argument: $argumentA",
             error.message
         )
     }
@@ -33,14 +45,14 @@ class ParameterizeFailedErrorSpec {
     @Test
     fun message_with_multiple_arguments_should_show_arguments_on_separate_lines() {
         val error = ParameterizeFailedError(
-            listOf(::parameterA to parameterA, ::parameterB to parameterB),
+            listOf(argumentA, argumentB),
             Throwable("I'm the cause")
         )
 
         val expectedMessage = """
             Failed with arguments:
-            ${'\t'}${::parameterA.name} = $parameterA
-            ${'\t'}${::parameterB.name} = $parameterB
+            ${'\t'}$argumentA
+            ${'\t'}$argumentB
         """.trimIndent()
 
         assertEquals(expectedMessage, error.message)
@@ -52,7 +64,7 @@ class ParameterizeFailedErrorSpec {
         val cause = Throwable("Cause message")
 
         val error = ParameterizeFailedError(
-            listOf(::parameterA to parameterA, ::parameterB to parameterB),
+            listOf(argumentA, argumentB),
             cause
         )
 
