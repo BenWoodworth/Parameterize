@@ -118,6 +118,6 @@ public class ParameterizeConfiguration private constructor(
         public val recordedFailures: List<ParameterizeFailure>
     ) {
         public operator fun ParameterizeFailedError.Companion.invoke(): ParameterizeFailedError =
-            ParameterizeFailedError(recordedFailures, iterationCount, failureCount)
+            ParameterizeFailedError(recordedFailures, failureCount, iterationCount, completedEarly)
     }
 }

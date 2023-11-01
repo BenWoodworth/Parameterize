@@ -163,6 +163,10 @@ class ParameterizeConfigurationSpec {
             }
         }
 
+        val expectedRecordedFailures = iterations
+            .mapNotNull { it.exceptionOrNull() }
+            .take(10)
+
         val actualIterations = mutableListOf<Result<Unit>>()
 
         // Test assumes this is the default type thrown failures
@@ -175,12 +179,8 @@ class ParameterizeConfigurationSpec {
             }
         }
 
-        val expectedRecordedFailures = iterations
-            .mapNotNull { it.exceptionOrNull() }
-            .take(10)
-
-        val actualRecordedFailures = failure.recordedFailures
-            .map { it.failure }
+        val actualRecordedFailures = failure.suppressedExceptions
+            .map { augmentedFailure -> augmentedFailure.cause }
 
         assertEquals(iterations, actualIterations, "Should not break")
         assertEquals(expectedRecordedFailures, actualRecordedFailures, "Should record first 10 failures")

@@ -9,6 +9,8 @@ import kotlin.test.Ignore
 @OptionalExpectation
 expect annotation class NativeIgnore()
 
+expect val Throwable.stackTraceLines: List<String>
+
 @Suppress("UNUSED_PARAMETER")
 fun <T> useParameter(parameter: T) {
 }

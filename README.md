@@ -39,7 +39,7 @@ fun contains_with_the_substring_present_should_be_true() = parameterize {
     val suffix by parameterOf("-suffix", "")
 
     val string = "$prefix$substring$suffix"
-    assertTrue(string.contains(substring))
+    assertTrue(string.contains(substring), "\"$string\".contains(\"$substring\")")
 }
 ```
 
@@ -47,16 +47,25 @@ If the test fails, the cause will be wrapped into an `Error` detailing the <ins>
 arguments <ins>*and parameter names*</ins>:
 
 ```java
-com.benwoodworth.parameterize.ParameterizeFailedError: Failed with arguments:
-	prefix = prefix-
-	suffix = -suffix
-Caused by: org.opentest4j.AssertionFailedError: Expected value to be true.
-	at org.junit.jupiter.api.Assertions.fail(Assertions.java:109)
-	at kotlin.test.junit5.JUnit5Asserter.fail(JUnitSupport.kt:56)
-	at kotlin.test.AssertionsKt__AssertionsKt.assertTrue(Assertions.kt:44)
-	at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:7)
-	at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:1)
-	at ContainsSpec.contains_with_the_substring_present_should_be_true(ContainsSpec.kt:1)
+com.benwoodworth.parameterize.ParameterizeFailedError: Failed 2/4 cases
+	AssertionFailedError: "prefix-substring-suffix".contains("substring")
+	AssertionFailedError: "prefix-substring".contains("substring")
+	Suppressed: com.benwoodworth.parameterize.Failure: Failed with arguments:
+		prefix = prefix-
+		suffix = -suffix
+	Caused by: org.opentest4j.AssertionFailedError: "prefix-substring-suffix".contains("substring")
+		at kotlin.test.AssertionsKt.assertTrue(Unknown Source)
+		at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:13)
+		at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:7)
+		at com.benwoodworth.parameterize.ParameterizeKt.parameterize(Parameterize.kt:91)
+	Suppressed: com.benwoodworth.parameterize.Failure: Failed with arguments:
+		prefix = prefix-
+		suffix = 
+	Caused by: org.opentest4j.AssertionFailedError: "prefix-substring".contains("substring")
+		at kotlin.test.AssertionsKt.assertTrue(Unknown Source)
+		at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:13)
+		at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:7)
+		at com.benwoodworth.parameterize.ParameterizeKt.parameterize(Parameterize.kt:91)
 ```
 
 Parameters are also designed to be flexible, depend on other parameters, be called conditionally, or even used a loop to

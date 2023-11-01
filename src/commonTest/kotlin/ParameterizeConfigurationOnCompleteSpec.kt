@@ -1,5 +1,6 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import kotlin.test.*
 
 class ParameterizeConfigurationOnCompleteSpec {
@@ -210,25 +211,27 @@ class ParameterizeConfigurationOnCompleteSpec {
     }
 
     @Test
-    fun error_constructor_should_build_error_with_correct_values() {
-        parameterize(
-            onFailure = {
-                    recordFailure = iterationCount % 3 == 0L
-            },
-            onComplete = {
-                val error = ParameterizeFailedError()
-
-                assertEquals(recordedFailures, error.recordedFailures, error::recordedFailures.name)
-                assertEquals(iterationCount, error.iterationCount, error::iterationCount.name)
-                assertEquals(failureCount, error.failureCount, error::failureCount.name)
-            }
-        ) {
-            val iterations = 0..100
-            val iteration by parameter(iterations)
-
-            if (iteration % 2 == 0 || iteration % 3 == 0) {
-                fail("$iteration")
-            }
+    fun error_constructor_should_build_error_with_correct_values() = testAll(
+        "base values" to OnCompleteScope(
+            recordedFailures = emptyList(),
+            failureCount = 1,
+            iterationCount = 1,
+            completedEarly = false
+        ),
+        "changed values" to OnCompleteScope(
+            recordedFailures = listOf(ParameterizeFailure(Throwable(), emptyList())),
+            failureCount = 2,
+            iterationCount = 2,
+            completedEarly = true
+        )
+    ) { scope ->
+        val error = with(scope) {
+            ParameterizeFailedError()
         }
+
+        assertEquals(scope.recordedFailures, error.recordedFailures, error::recordedFailures.name)
+        assertEquals(scope.failureCount, error.failureCount, error::failureCount.name)
+        assertEquals(scope.iterationCount, error.iterationCount, error::iterationCount.name)
+        assertEquals(scope.completedEarly, error.completedEarly, error::completedEarly.name)
     }
 }

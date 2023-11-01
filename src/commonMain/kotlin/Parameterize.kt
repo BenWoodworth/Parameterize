@@ -36,7 +36,7 @@ import kotlin.reflect.KProperty
  *     val suffix by parameterOf("-suffix", "")
  *
  *     val string = "$prefix$substring$suffix"
- *     assertTrue(string.contains(substring))
+ *     assertTrue(string.contains(substring), "\"$string\".contains(\"$substring\")")
  * }
  * ```
  *
