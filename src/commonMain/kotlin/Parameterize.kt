@@ -128,11 +128,6 @@ internal data object ParameterizeContinue : Throwable()
 
 internal class ParameterizeException(override val message: String) : Exception(message)
 
-@JvmInline
-public value class Parameter<out T> internal constructor(
-    internal val arguments: Iterable<T>
-)
-
 public class ParameterizeScope internal constructor(
     private val state: ParameterizeState,
 ) {
@@ -173,6 +168,12 @@ public class ParameterizeScope internal constructor(
     public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
         @Suppress("UNCHECKED_CAST")
         state.getParameterArgument(this, property as KProperty<T>)
+
+
+    @JvmInline
+    public value class Parameter<out T> internal constructor(
+        internal val arguments: Iterable<T>
+    )
 }
 
 /**
@@ -182,7 +183,7 @@ public class ParameterizeScope internal constructor(
  * val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
  * ```
  */
-public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> =
+public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): ParameterizeScope.Parameter<T> =
     parameter(arguments.asIterable())
 
 /**
@@ -205,7 +206,9 @@ public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> 
  * - The [lazyArguments] block should not have side effects. Since it's not run every iteration, side effects could make
  *   the execution different from future iterations, breaking [parameterize]'s determinism assumption.
  */
-public inline fun <T> ParameterizeScope.parameter(crossinline lazyArguments: () -> Iterable<T>): Parameter<T> =
+public inline fun <T> ParameterizeScope.parameter(
+    crossinline lazyArguments: () -> Iterable<T>
+): ParameterizeScope.Parameter<T> =
     parameter(object : Iterable<T> {
         private var arguments: Iterable<T>? = null
 

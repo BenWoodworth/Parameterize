@@ -223,7 +223,7 @@ class ParameterizeSpec {
     ) {
         fun <T> ParameterizeScope.customLazyParameter(
             lazyArguments: () -> Iterable<T>
-        ): Parameter<T> {
+        ): ParameterizeScope.Parameter<T> {
             val arguments by lazy(lazyArguments)
 
             class CustomLazyArguments : Iterable<T> {
