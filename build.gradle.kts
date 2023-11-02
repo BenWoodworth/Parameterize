@@ -1,9 +1,8 @@
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
 
 plugins {
-    kotlin("multiplatform") version "1.9.0"
+    kotlin("multiplatform") version "1.9.20"
     id("parameterize.library-conventions")
 }
 
@@ -11,10 +10,8 @@ repositories {
     mavenCentral()
 }
 
-@OptIn(ExperimentalKotlinGradlePluginApi::class)
 kotlin {
     explicitApi()
-    targetHierarchy.default()
 
     jvm {
         compilations.all {
@@ -49,6 +46,16 @@ kotlin {
     iosArm64()
     watchosDeviceArm64()
     mingwX64()
+
+    targets.configureEach {
+        compilations.configureEach {
+            compilerOptions.configure {
+                if (name == "test") {
+                    freeCompilerArgs.add("-Xexpect-actual-classes")
+                }
+            }
+        }
+    }
 
     sourceSets {
         all {
