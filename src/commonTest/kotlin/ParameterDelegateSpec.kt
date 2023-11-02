@@ -262,20 +262,20 @@ class ParameterDelegateSpec {
     }
 
     @Test
-    fun get_parameterize_argument_when_not_initialized_should_be_null() {
-        assertNull(parameter.getParameterizeArgumentOrNull())
+    fun get_failure_argument_when_not_initialized_should_be_null() {
+        assertNull(parameter.getFailureArgumentOrNull())
 
         parameter.declare(::property, emptyList())
-        assertNull(parameter.getParameterizeArgumentOrNull())
+        assertNull(parameter.getFailureArgumentOrNull())
     }
 
     @Test
-    fun get_parameter_argument_when_initialized_should_have_correct_property_and_argument() {
+    fun get_failure_argument_when_initialized_should_have_correct_property_and_argument() {
         val expectedArgument = "a"
         parameter.declare(::property, listOf(expectedArgument))
         parameter.getArgument(::property)
 
-        val propertyArgument = parameter.getParameterizeArgumentOrNull()
+        val propertyArgument = parameter.getFailureArgumentOrNull()
         assertNotNull(propertyArgument)
 
         val (property, argument) = propertyArgument

@@ -4,12 +4,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ParameterizeFailureSpec {
-    private val arguments = run {
-        val parameter = object : Any() {
-            val parameter = "argument"
+    private val argument = run {
+        val container = object : Any() {
+            val parameter = Any()
         }
 
-        listOf(ParameterizeArgument(parameter::parameter, parameter.parameter))
+        ParameterizeFailure.Argument(container::parameter, container.parameter)
     }
 
     @Test
@@ -18,7 +18,7 @@ class ParameterizeFailureSpec {
             "with message" to Throwable("failure"),
             "without message" to Throwable()
         ) { failure ->
-            val parameterizeFailure = ParameterizeFailure(failure, arguments)
+            val parameterizeFailure = ParameterizeFailure(failure, listOf(argument))
 
             val failureString = run {
                 val stdlibRepresentation = Result.failure<Unit>(parameterizeFailure.failure).toString()
@@ -39,4 +39,22 @@ class ParameterizeFailureSpec {
 
             assertEquals(expected, parameterizeFailure.toString())
         }
+
+    @Test
+    fun argument_string_representation_should_be_parameter_name_equalling_the_argument() {
+        val expected = with(argument) { "${parameter.name} = $argument" }
+        assertEquals(expected, argument.toString())
+    }
+
+    @Test
+    fun argument_component1_should_be_parameter() {
+        val (component1, _) = argument
+        assertEquals(argument.parameter, component1)
+    }
+
+    @Test
+    fun argument_component2_should_be_argument() {
+        val (_, component2) = argument
+        assertEquals(argument.argument, component2)
+    }
 }

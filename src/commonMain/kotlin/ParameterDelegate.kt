@@ -186,7 +186,7 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
     /**
      * Returns the property and argument if initialized, or `null` otherwise.
      */
-    internal fun getParameterizeArgumentOrNull(): ParameterizeArgument<*>? {
+    internal fun getFailureArgumentOrNull(): ParameterizeFailure.Argument<*>? {
         val argument = argument
         if (argument === Uninitialized) return null
 
@@ -194,7 +194,7 @@ public class ParameterDelegate<@Suppress("unused") out T> internal constructor()
             "Parameter delegate argument is initialized, but ${::property.name} is null"
         }
 
-        return ParameterizeArgument(property, argument)
+        return ParameterizeFailure.Argument(property, argument)
     }
 
     /**

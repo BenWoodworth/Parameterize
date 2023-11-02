@@ -183,7 +183,7 @@ class ParameterizeConfigurationOnCompleteSpec {
 
     @Test
     fun recorded_failures_should_be_correct() {
-        val expectedRecordedFailures = mutableListOf<Pair<Throwable, List<ParameterizeArgument<*>>>>()
+        val expectedRecordedFailures = mutableListOf<Pair<Throwable, List<ParameterizeFailure.Argument<*>>>>()
 
         var lastIteration = -1
         parameterize(

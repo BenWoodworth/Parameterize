@@ -130,10 +130,13 @@ internal class ParameterizeState {
         return iterated
     }
 
-    fun getUsedArguments(): List<ParameterizeArgument<*>> =
+    /**
+     * Get a list of used arguments for reporting a failure.
+     */
+    fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
         parameters.take(parameterCount)
             .filter { it.hasBeenUsed }
-            .mapNotNull { it.getParameterizeArgumentOrNull() }
+            .mapNotNull { it.getFailureArgumentOrNull() }
 
     fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable) {
         failureCount++

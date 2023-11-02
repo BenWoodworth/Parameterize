@@ -127,7 +127,7 @@ class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
     }
 
     @Test
-    fun parameter_arguments_should_be_those_from_the_last_iteration() {
+    fun failure_arguments_should_be_those_from_the_last_iteration() {
         val lastParameterArguments = mutableListOf<Pair<String, *>>()
 
         parameterize(

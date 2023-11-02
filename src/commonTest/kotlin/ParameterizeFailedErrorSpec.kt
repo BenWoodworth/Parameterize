@@ -12,8 +12,8 @@ class ParameterizeFailedErrorSpec {
         }
 
         listOf(
-            ParameterizeArgument(parameters::parameterA, parameters.parameterA),
-            ParameterizeArgument(parameters::parameterB, parameters.parameterB)
+            ParameterizeFailure.Argument(parameters::parameterA, parameters.parameterA),
+            ParameterizeFailure.Argument(parameters::parameterB, parameters.parameterB)
         )
     }
 

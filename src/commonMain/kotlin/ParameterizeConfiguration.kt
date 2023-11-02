@@ -82,8 +82,8 @@ public class ParameterizeConfiguration private constructor(
         /**
          * The parameter arguments that resulted in the failure.
          */
-        public val arguments: List<ParameterizeArgument<*>> by lazy {
-            state.getUsedArguments()
+        public val arguments: List<ParameterizeFailure.Argument<*>> by lazy {
+            state.getFailureArguments()
         }
 
         /**
