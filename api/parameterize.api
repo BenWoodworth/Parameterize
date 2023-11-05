@@ -1,0 +1,96 @@
+public final class com/benwoodworth/parameterize/ParameterDelegate {
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeConfiguration {
+	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeConfiguration$Companion;
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getOnComplete ()Lkotlin/jvm/functions/Function1;
+	public final fun getOnFailure ()Lkotlin/jvm/functions/Function2;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeConfiguration$Builder {
+	public final fun getOnComplete ()Lkotlin/jvm/functions/Function1;
+	public final fun getOnFailure ()Lkotlin/jvm/functions/Function2;
+	public final fun setOnComplete (Lkotlin/jvm/functions/Function1;)V
+	public final fun setOnFailure (Lkotlin/jvm/functions/Function2;)V
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeConfiguration$Companion {
+	public final fun invoke (Lcom/benwoodworth/parameterize/ParameterizeConfiguration;Lkotlin/jvm/functions/Function1;)Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
+	public static synthetic fun invoke$default (Lcom/benwoodworth/parameterize/ParameterizeConfiguration$Companion;Lcom/benwoodworth/parameterize/ParameterizeConfiguration;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeConfiguration$OnCompleteScope {
+	public final fun getCompletedEarly ()Z
+	public final fun getFailureCount ()J
+	public final fun getIterationCount ()J
+	public final fun getRecordedFailures ()Ljava/util/List;
+	public final fun invoke (Lcom/benwoodworth/parameterize/ParameterizeFailedError$Companion;)Lcom/benwoodworth/parameterize/ParameterizeFailedError;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeConfiguration$OnFailureScope {
+	public final fun getArguments ()Ljava/util/List;
+	public final fun getBreakEarly ()Z
+	public final fun getFailureCount ()J
+	public final fun getIterationCount ()J
+	public final fun getRecordFailure ()Z
+	public final fun setBreakEarly (Z)V
+	public final fun setRecordFailure (Z)V
+}
+
+public abstract interface class com/benwoodworth/parameterize/ParameterizeContext {
+	public abstract fun getParameterizeConfiguration ()Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeFailedError : java/lang/AssertionError {
+	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeFailedError$Companion;
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeFailedError$Companion {
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeFailure {
+	public final fun getArguments ()Ljava/util/List;
+	public final fun getFailure ()Ljava/lang/Throwable;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeFailure$Argument {
+	public final fun component1 ()Lkotlin/reflect/KProperty;
+	public final fun component2 ()Ljava/lang/Object;
+	public final fun getArgument ()Ljava/lang/Object;
+	public final fun getParameter ()Lkotlin/reflect/KProperty;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeKt {
+	public static final fun parameter (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/jvm/functions/Function0;)Ljava/lang/Iterable;
+	public static final fun parameterOf (Lcom/benwoodworth/parameterize/ParameterizeScope;[Ljava/lang/Object;)Ljava/lang/Iterable;
+	public static final fun parameterize (Lcom/benwoodworth/parameterize/ParameterizeContext;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public static final fun parameterize (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun parameterize$default (Lcom/benwoodworth/parameterize/ParameterizeContext;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun parameterize$default (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeScope {
+	public final fun getValue (Lcom/benwoodworth/parameterize/ParameterDelegate;Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public final fun parameter-xl7Lxic (Ljava/lang/Iterable;)Ljava/lang/Iterable;
+	public final fun provideDelegate-13mUnGw (Ljava/lang/Iterable;Ljava/lang/Object;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/ParameterDelegate;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeScope$Parameter {
+	public static final synthetic fun box-impl (Ljava/lang/Iterable;)Lcom/benwoodworth/parameterize/ParameterizeScope$Parameter;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/Iterable;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/Iterable;Ljava/lang/Iterable;)Z
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/Iterable;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/Iterable;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/Iterable;
+}
+

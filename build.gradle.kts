@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
 
 plugins {
     kotlin("multiplatform") version "1.9.20"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.2"
     id("parameterize.library-conventions")
 }
 
