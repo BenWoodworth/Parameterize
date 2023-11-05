@@ -1,5 +1,6 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals

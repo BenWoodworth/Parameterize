@@ -179,6 +179,14 @@ public class ParameterizeScope internal constructor(
     public value class Parameter<out T> internal constructor(
         internal val arguments: Iterable<T>
     )
+
+    /** @suppress */
+    public class ParameterDelegate<out T> internal constructor(
+        internal val parameterState: ParameterState<T>
+    ) {
+        override fun toString(): String =
+            parameterState.toString()
+    }
 }
 
 /**

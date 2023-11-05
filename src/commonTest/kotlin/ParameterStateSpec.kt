@@ -2,15 +2,15 @@ package com.benwoodworth.parameterize
 
 import kotlin.test.*
 
-class ParameterDelegateSpec {
+class ParameterStateSpec {
     private val property: String get() = error("${::property.name} is not meant to be used")
     private val differentProperty: String get() = error("${::differentProperty.name} is not meant to be used")
 
-    private lateinit var parameter: ParameterDelegate<String>
+    private lateinit var parameter: ParameterState<String>
 
     @BeforeTest
     fun beforeTest() {
-        parameter = ParameterDelegate()
+        parameter = ParameterState()
     }
 
 
@@ -226,25 +226,6 @@ class ParameterDelegateSpec {
         parameter.reset()
 
         assertFalse(parameter.hasBeenUsed)
-    }
-
-    @Test
-    fun to_string_when_not_initialized_should_match_message_from_lazy() {
-        parameter.declare(::property, emptyList())
-
-        val expectedToString = lazy { "unused" }
-            .toString()
-            .replace("Lazy value", "Parameter argument")
-
-        assertEquals(expectedToString, parameter.toString())
-    }
-
-    @Test
-    fun to_string_when_initialized_should_equal_that_of_the_current_argument() {
-        parameter.declare(::property, listOf("a"))
-
-        val argument = parameter.getArgument(::property)
-        assertEquals(argument, parameter.toString())
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
+import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.reflect.KProperty
@@ -49,11 +50,11 @@ internal class ParameterizeState {
         val parameter = if (parameterIndex in parameters.indices) {
             parameters[parameterIndex]
         } else {
-            ParameterDelegate<Nothing>()
+            ParameterDelegate<Nothing>(ParameterState())
                 .also { parameters += it }
         }
 
-        parameter.declare(property, arguments)
+        parameter.parameterState.declare(property, arguments)
 
         return parameter
     }
@@ -70,11 +71,11 @@ internal class ParameterizeState {
     }
 
     fun <T> getParameterArgument(parameter: ParameterDelegate<*>, property: KProperty<T>): T {
-        val isFirstUse = !parameter.hasBeenUsed
+        val isFirstUse = !parameter.parameterState.hasBeenUsed
 
         return property
             .trackNestedUsage {
-                parameter.getArgument(property)
+                parameter.parameterState.getArgument(property)
             }
             .also {
                 if (isFirstUse) trackUsedParameter(parameter)
@@ -84,7 +85,7 @@ internal class ParameterizeState {
     private fun trackUsedParameter(parameter: ParameterDelegate<*>) {
         parametersUsed += parameter
 
-        if (!parameter.isLastArgument) {
+        if (!parameter.parameterState.isLastArgument) {
             parameterCountAfterAllUsed = parameterCount
         }
     }
@@ -106,21 +107,21 @@ internal class ParameterizeState {
         while (usedParameterIterator.hasPrevious()) {
             val parameter = usedParameterIterator.previous()
 
-            if (!parameter.isLastArgument) {
-                parameter.nextArgument()
+            if (!parameter.parameterState.isLastArgument) {
+                parameter.parameterState.nextArgument()
                 iterated = true
                 break
             }
 
             usedParameterIterator.remove()
-            parameter.reset()
+            parameter.parameterState.reset()
         }
 
         for (i in parameterCountAfterAllUsed..<parameterCount) {
             val parameter = parameters[i]
 
-            if (!parameter.hasBeenUsed) {
-                parameter.reset()
+            if (!parameter.parameterState.hasBeenUsed) {
+                parameter.parameterState.reset()
             }
         }
 
@@ -135,8 +136,8 @@ internal class ParameterizeState {
      */
     fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
         parameters.take(parameterCount)
-            .filter { it.hasBeenUsed }
-            .mapNotNull { it.getFailureArgumentOrNull() }
+            .filter { it.parameterState.hasBeenUsed }
+            .mapNotNull { it.parameterState.getFailureArgumentOrNull() }
 
     fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable) {
         failureCount++
