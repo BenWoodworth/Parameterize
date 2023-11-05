@@ -32,6 +32,7 @@ import kotlin.reflect.KProperty
  *   through the current iterator.
  */
 
+/** @suppress */
 public class ParameterDelegate<@Suppress("unused") out T> internal constructor() {
     /*
      * The internal state does not use the generic type, so T is purely for

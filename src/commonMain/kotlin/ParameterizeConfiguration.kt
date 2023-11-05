@@ -1,11 +1,21 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
 import kotlin.native.concurrent.ThreadLocal
 
+/**
+ * Reusable [parameterize] configuration options.
+ *
+ * Can be used with [ParameterizeContext] to provide defaults for all [parameterize] calls in scope.
+ */
 public class ParameterizeConfiguration private constructor(
+    /** @see Builder.onFailure */
     public val onFailure: OnFailureScope.(failure: Throwable) -> Unit,
+
+    /** @see Builder.onComplete */
     public val onComplete: OnCompleteScope.() -> Unit,
 ) {
+    /** @suppress */
     @ThreadLocal
     public companion object {
         internal val default: ParameterizeConfiguration = Builder(null).build()
@@ -17,11 +27,13 @@ public class ParameterizeConfiguration private constructor(
             Builder(from).apply(builderAction).build()
     }
 
+    /** @suppress */
     override fun toString(): String =
         "ParameterizeConfiguration(" +
             "onFailure=$onFailure, " +
             "onComplete=$onComplete)"
 
+    /** @see ParameterizeConfiguration */
     public class Builder internal constructor(from: ParameterizeConfiguration?) {
         /**
          * Invoked after each failing iteration to configure how a failure should be handled.
@@ -66,6 +78,7 @@ public class ParameterizeConfiguration private constructor(
         )
     }
 
+    /** @see Builder.onFailure */
     public class OnFailureScope internal constructor(
         private val state: ParameterizeState,
 
@@ -102,8 +115,16 @@ public class ParameterizeConfiguration private constructor(
         public var recordFailure: Boolean = false
     }
 
+    /** @see Builder.onComplete */
     public class OnCompleteScope internal constructor(
+        /**
+         * The total number of iterations completed.
+         */
         public val iterationCount: Long,
+
+        /**
+         * The number of failing iterations.
+         */
         public val failureCount: Long,
 
         /**
@@ -115,8 +136,10 @@ public class ParameterizeConfiguration private constructor(
          */
         public val completedEarly: Boolean,
 
+        /** @see OnFailureScope.recordFailure */
         public val recordedFailures: List<ParameterizeFailure>
     ) {
+        /** @see ParameterizeFailedError */
         public operator fun ParameterizeFailedError.Companion.invoke(): ParameterizeFailedError =
             ParameterizeFailedError(recordedFailures, failureCount, iterationCount, completedEarly)
     }

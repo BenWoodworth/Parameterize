@@ -20,6 +20,7 @@ public class ParameterizeFailedError internal constructor(
     internal val completedEarly: Boolean
 ) : AssertionError() {
     // TODO: Use context receiver instead of companion + pseudo constructor
+    /** @suppress */
     public companion object;
 
     init {
@@ -32,6 +33,7 @@ public class ParameterizeFailedError internal constructor(
         }
     }
 
+    /** @suppress */
     override val message: String = buildString {
         append("Failed ")
         append(failureCount)

@@ -1,14 +1,23 @@
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
 
 plugins {
     kotlin("multiplatform") version "1.9.20"
+    id("org.jetbrains.dokka") version "1.9.10"
     id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.2"
     id("parameterize.library-conventions")
 }
 
 repositories {
     mavenCentral()
+}
+
+tasks.withType<DokkaTask>().configureEach {
+    dokkaSourceSets.configureEach {
+        reportUndocumented = true
+        failOnWarning = true
+    }
 }
 
 kotlin {

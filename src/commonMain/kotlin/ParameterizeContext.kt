@@ -52,6 +52,7 @@ package com.benwoodworth.parameterize
  * implement it in the way that was described here.
  */
 public interface ParameterizeContext {
+    /** @see ParameterizeConfiguration */
     public val parameterizeConfiguration: ParameterizeConfiguration
 }
 

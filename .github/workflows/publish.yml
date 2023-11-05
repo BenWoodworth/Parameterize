@@ -13,12 +13,12 @@ env:
   SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
 
 jobs:
-  publish:
+  publish-maven:
     strategy:
       matrix:
         runner: [ ubuntu-latest, macos-latest, windows-latest ]
 
-    name: 'Publish: ${{ matrix.runner }}'
+    name: 'Publish to Maven: ${{ matrix.runner }}'
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v3
@@ -31,3 +31,37 @@ jobs:
 
       - name: Publish to Maven
         run: ./gradlew ciPublish
+
+  publish-kdoc:
+    name: 'Publish KDoc'
+    needs: publish-maven
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Build KDoc
+        run: ./gradlew dokkaHtml
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './build/dokka/html'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

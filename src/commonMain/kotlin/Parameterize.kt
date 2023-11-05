@@ -128,9 +128,11 @@ internal data object ParameterizeContinue : Throwable()
 
 internal class ParameterizeException(override val message: String) : Exception(message)
 
+/** @see parameterize */
 public class ParameterizeScope internal constructor(
     private val state: ParameterizeState,
 ) {
+    /** @suppress */
     override fun toString(): String =
         state.getFailureArguments().joinToString(
             prefix = "ParameterizeScope(",
@@ -161,15 +163,18 @@ public class ParameterizeScope internal constructor(
     public fun <T> parameter(arguments: Iterable<T>): Parameter<T> =
         Parameter(arguments)
 
+    /** @suppress */
     public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> =
         @Suppress("UNCHECKED_CAST")
         state.declareParameter(property as KProperty<T>, arguments)
 
+    /** @suppress */
     public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
         @Suppress("UNCHECKED_CAST")
         state.getParameterArgument(this, property as KProperty<T>)
 
 
+    /** @suppress */
     @JvmInline
     public value class Parameter<out T> internal constructor(
         internal val arguments: Iterable<T>
