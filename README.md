@@ -101,3 +101,22 @@ dependencies {
     implementation("com.benwoodworth.parameterize:parameterize:$parameterize_version") // or testImplementation(...)
 }
 ```
+
+### A note about stability
+
+While Parameterize is in beta, there may be source/binary/behavioral changes in new minor (v0.#.0) releases. Any
+breaking changes will be documented on release, with
+[automatic replacements](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-deprecated/replace-with.html)
+for source-breaking changes provided where possible.
+
+That said, the library is thoroughly tested, and the `parameter` DSL is unlikely to drastically change, with most of the
+library's evolution expected to be isolated to configuration. So in scenarios where binary compatibility isn't a
+concern, and changes to configuration are acceptable, I consider Parameterize ready to be used in the wild. Of course
+exercise caution with these earlier releases, as they have not yet been battle tested. But as a strong believer of
+dogfooding in software, I am already using it for testing in projects of my own. And in case of any major bugs, I will
+make sure they are addressed in a timely manner.
+
+I designed the library to address pain points I found in the rigidness of other parameterized/property-based testing
+libraries, and have been very happy with some new patterns that have emerged from the flexible code that Parameterize
+enables. I'm planning on documenting these at some point, and encourage discussion and code sharing in the Slack channel
+linked at the top :)
