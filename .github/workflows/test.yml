@@ -1,15 +1,16 @@
 name: Test
 
-on: [ push, pull_request ]
+on: push
 
 jobs:
-  publish:
+  test:
     strategy:
       matrix:
         runner: [ ubuntu-latest, macos-latest, windows-latest ]
 
     name: 'Test: ${{ matrix.runner }}'
     runs-on: ${{ matrix.runner }}
+
     steps:
       - uses: actions/checkout@v3
 
