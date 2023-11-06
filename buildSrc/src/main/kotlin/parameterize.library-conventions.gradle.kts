@@ -1,4 +1,4 @@
-val isSnapshot = version.toString().contains("SNAPSHOT", true)
+val ciVersion: String? = System.getenv("CI_VERSION")
 
 val ossrhUsername: String? = System.getenv("OSSRH_USERNAME")
 val ossrhPassword: String? = System.getenv("OSSRH_PASSWORD")
@@ -11,6 +11,9 @@ plugins {
     `maven-publish`
     signing
 }
+
+if (ciVersion != null) version = ciVersion
+val isSnapshot = version.toString().contains("SNAPSHOT", true)
 
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier = "javadoc"
