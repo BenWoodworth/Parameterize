@@ -128,7 +128,6 @@ tasks.create("ciTest") {
 tasks.create("ciPublish") {
     ciHostTargets
         .map { it.name.uppercaseFirstChar() }
-        .filter { !it.startsWith("Android") }
         .map { if (it == "Metadata") "KotlinMultiplatform" else it }
         .map { target -> "publish${target}PublicationToMavenRepository" }
         .forEach { publishTarget ->
