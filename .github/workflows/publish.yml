@@ -23,6 +23,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: 'Set CI_VERSION'
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        shell: bash
+        run: echo "CI_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
@@ -36,6 +41,9 @@ jobs:
     name: 'Publish KDoc'
     needs: publish-maven
 
+    # Only publish KDoc for tagged versions
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
     permissions:
       pages: write
       id-token: write
@@ -47,6 +55,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: 'Set CI_VERSION'
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        shell: bash
+        run: echo "CI_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
 
       - name: Set up JDK
         uses: actions/setup-java@v3
