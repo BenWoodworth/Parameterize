@@ -1,7 +1,3 @@
-public final class com/benwoodworth/parameterize/ParameterState {
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/benwoodworth/parameterize/ParameterizeConfiguration {
 	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeConfiguration$Companion;
 	public synthetic fun <init> (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -95,5 +91,6 @@ public final class com/benwoodworth/parameterize/ParameterizeScope$Parameter {
 }
 
 public final class com/benwoodworth/parameterize/ParameterizeScope$ParameterDelegate {
+	public fun toString ()Ljava/lang/String;
 }
 
