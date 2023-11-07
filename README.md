@@ -1,6 +1,6 @@
 # Parameterize
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.benwoodworth.parameterize/parameterize)](https://search.maven.org/search?q=g:com.benwoodworth.parameterize)
+[![Maven Central](https://img.shields.io/maven-central/v/com.benwoodworth.parameterize/parameterize)](https://central.sonatype.com/search?namespace=com.benwoodworth.parameterize&sort=name)
 [![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.benwoodworth.parameterize/parameterize?server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/content/repositories/snapshots/com/benwoodworth/parameterize/)
 [![KDoc](https://img.shields.io/badge/api-KDoc-blue)](https://benwoodworth.github.io/Parameterize/parameterize/com.benwoodworth.parameterize/parameterize.html)
 [![Kotlin](https://img.shields.io/badge/kotlin-1.9.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
