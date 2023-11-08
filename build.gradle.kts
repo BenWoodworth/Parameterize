@@ -1,6 +1,7 @@
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
+import java.net.URL
 
 plugins {
     kotlin("multiplatform") version "1.9.20"
@@ -11,13 +12,6 @@ plugins {
 
 repositories {
     mavenCentral()
-}
-
-tasks.withType<DokkaTask>().configureEach {
-    dokkaSourceSets.configureEach {
-        reportUndocumented = true
-        failOnWarning = true
-    }
 }
 
 kotlin {
@@ -100,6 +94,7 @@ val ciHostTargets = run {
         envCiHost != null -> envCiHost.also {
             require(envCiHost in hostTargets) { "Invalid CI_HOST: $envCiHost. Must be one of: ${hostTargets.keys}" }
         }
+
         osName == "Linux" -> "linux"
         osName == "Mac OS X" -> "macos"
         osName.startsWith("Windows") -> "windows"
@@ -133,4 +128,23 @@ tasks.create("ciPublish") {
         .forEach { publishTarget ->
             dependsOn(publishTarget)
         }
+}
+
+tasks.withType<DokkaTask>().configureEach {
+    dokkaSourceSets.configureEach {
+        reportUndocumented = true
+        failOnWarning = true
+
+        val releaseVersionRef = version.toString()
+            .takeIf { version -> version.matches(Regex("""\d+\.\d+\.\d+""")) }
+            ?.let { version -> "v$version" }
+
+        if (releaseVersionRef != null) {
+            sourceLink {
+                localDirectory = projectDir.resolve("src")
+                remoteUrl.set(URL("https://github.com/BenWoodworth/Parameterize/tree/$releaseVersionRef/src"))
+                remoteLineSuffix = "#L"
+            }
+        }
+    }
 }
