@@ -2,8 +2,8 @@ name: Publish
 
 on:
   push:
-    tags: [ 'v*' ]
-    branches: [ 'main' ]
+    tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]
+    branches: [ 'main', '[0-9]+.[0-9]+' ]
 
 env:
   OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
