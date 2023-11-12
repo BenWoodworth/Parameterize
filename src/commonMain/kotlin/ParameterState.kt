@@ -3,14 +3,14 @@ package com.benwoodworth.parameterize
 import kotlin.reflect.KProperty
 
 /*
- * Conceptually, a parameter delegate is a reusable source of arguments, and
- * is in one of three different states internally.
+ * Conceptually, a parameter is a reusable source of arguments, and is in one of
+ * three different states internally.
  *
  * Undeclared:
  *   Completely null state, waiting to be set up with property and arguments.
  *
- *   Parameter delegates can be reset to this state, enabling instances to
- *   be reused in the future.
+ *   Parameters can be reset to this state, enabling instances to be reused in
+ *   the future.
  *
  * Declared:
  *   Set up with a property and arguments, but has not been used yet.
@@ -131,7 +131,7 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
      */
     internal fun <T> getArgument(property: KProperty<T>): T {
         val declaredProperty = checkNotNull(this.property) {
-            "Cannot get argument before parameter delegate has been declared"
+            "Cannot get argument before parameter has been declared"
         }
 
         if (!property.equalsProperty(declaredProperty)) {
@@ -144,7 +144,7 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
             argument as T
         } else {
             val arguments = checkNotNull(arguments) {
-                "Parameter delegate is declared for ${property.name}, but ${::arguments.name} is null"
+                "Parameter is declared with ${property.name}, but ${::arguments.name} is null"
             }
 
             @Suppress("UNCHECKED_CAST") // The arguments are declared for property, so must be Iterable<T>
@@ -162,7 +162,7 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
      */
     internal fun nextArgument() {
         val arguments = checkNotNull(arguments) {
-            "Cannot iterate arguments before parameter delegate has been declared"
+            "Cannot iterate arguments before parameter has been declared"
         }
 
         check(argument != Uninitialized) {
@@ -191,7 +191,7 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
         if (argument === Uninitialized) return null
 
         val property = checkNotNull(property) {
-            "Parameter delegate argument is initialized, but ${::property.name} is null"
+            "Parameter argument is initialized, but ${::property.name} is null"
         }
 
         return ParameterizeFailure.Argument(property, argument)

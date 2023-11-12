@@ -34,7 +34,7 @@ class ParameterStateSpec {
             parameter.getArgument(::property)
         }
 
-        assertEquals("Cannot get argument before parameter delegate has been declared", failure.message)
+        assertEquals("Cannot get argument before parameter has been declared", failure.message)
     }
 
     @Test
@@ -109,7 +109,7 @@ class ParameterStateSpec {
             parameter.nextArgument()
         }
 
-        assertEquals("Cannot iterate arguments before parameter delegate has been declared", failure.message)
+        assertEquals("Cannot iterate arguments before parameter has been declared", failure.message)
     }
 
     @Test
