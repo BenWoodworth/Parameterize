@@ -184,6 +184,14 @@ public class ParameterizeScope internal constructor(
     public class ParameterDelegate<out T> internal constructor(
         internal val parameterState: ParameterState<T>
     ) {
+        /**
+         * Returns a string representation of the current argument.
+         *
+         * Useful while debugging, e.g. inline hints that show property values:
+         * ```
+         * val letter by parameter { 'a'..'z' }  //letter$delegate: b
+         * ```
+         */
         override fun toString(): String =
             parameterState.toString()
     }

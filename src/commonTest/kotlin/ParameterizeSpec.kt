@@ -4,7 +4,8 @@ package com.benwoodworth.parameterize
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class ParameterizeSpec {
     /**
@@ -40,6 +41,43 @@ class ParameterizeSpec {
     }
 
     @Test
+    fun parameter_arguments_iterator_should_be_computed_when_declared() = parameterize {
+        var computed = false
+
+        val parameter by parameter(Iterable {
+            computed = true
+            listOf(Unit).iterator()
+        })
+
+        assertTrue(computed, "computed")
+    }
+
+    @Test
+    fun second_parameter_argument_should_not_be_computed_until_the_next_iteration() {
+        var finishedFirstIteration = false
+
+        class AssertingIterator : Iterator<Unit> {
+            var nextArgument = 1
+
+            override fun hasNext(): Boolean =
+                nextArgument <= 2
+
+            override fun next() {
+                if (nextArgument == 2) {
+                    assertTrue(finishedFirstIteration, "finished first iteration before getting second argument")
+                }
+                nextArgument++
+            }
+        }
+
+        parameterize {
+            val parameter by parameter(Iterable(::AssertingIterator))
+
+            finishedFirstIteration = true
+        }
+    }
+
+    @Test
     fun parameter_with_lazy_arguments_should_create_parameter_correctly() = parameterize {
         val lazyParameter = parameter { 'a'..'z' }
 
@@ -47,19 +85,12 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun parameter_with_lazy_arguments_should_not_be_evaluated_before_used() = parameterize {
-        var evaluated = false
-
-        parameter<Nothing> {
-            evaluated = true
-            emptyList()
-        }
-
-        assertFalse(evaluated)
+    fun parameter_with_lazy_arguments_should_not_be_computed_before_declaring() = parameterize {
+        /*val undeclared by*/ parameter<Nothing> { fail("computed") }
     }
 
     @Test
-    fun parameter_with_lazy_arguments_should_only_be_evaluated_once() = parameterize {
+    fun parameter_with_lazy_arguments_should_only_be_computed_once() = parameterize {
         var evaluationCount = 0
 
         val lazyParameter = parameter {
@@ -149,8 +180,8 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun unused_parameter_with_no_arguments_should_not_finish_iteration_early() = testParameterize(
-        listOf("finished")
+    fun unused_parameter_with_no_arguments_should_finish_iteration_early() = testParameterize(
+        listOf(null)
     ) {
         val unused by parameterOf<Nothing>()
 
@@ -158,29 +189,22 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun parameter_that_depends_on_a_later_one() = testParameterize(
-        listOf("a1", "a2", "a3", "b1", "b2", "b3")
-    ) {
-        lateinit var laterValue: String
-
-        val earlier by parameter {
-            listOf("${laterValue}1", "${laterValue}2", "${laterValue}3")
-        }
-
-        val later by parameterOf("a", "b")
-        laterValue = later
-
-        earlier
-    }
-
-    @Test
-    fun parameters_that_are_used_out_of_order() = testParameterize(
+    fun parameters_that_are_used_out_of_order_should_iterate_in_declaration_order() = testParameterize(
         listOf("a1", "a2", "b1", "b2")
     ) {
-        val first by parameterOf(1, 2)
-        val second by parameterOf("a", "b")
+        // Because they should iterate in the order their arguments are calculated, and that happens at declaration.
 
-        "$second$first"
+        // Parameters that (potentially) depend on another parameter should iterate first, since if it were the other
+        // way around, and the depended on parameter iterates first, the dependent parameter's argument would be based
+        // on a now changed value and wouldn't be valid.
+
+        val first by parameterOf("a", "b")
+        val second by parameterOf(1, 2)
+
+        useParameter(second)
+        useParameter(first)
+
+        "$first$second"
     }
 
     @Test
@@ -189,16 +213,16 @@ class ParameterizeSpec {
     ) {
         val firstUsedParameter by parameterOf("a", "b")
         if (firstUsedParameter == "a") {
-            val unused1A by parameterOf<Nothing>()
+            val unused1A by parameterOf(Unit)
         } else {
-            val unused1B by parameterOf<Nothing>()
+            val unused1B by parameterOf(Unit)
         }
 
         val lastUsedParameter by parameterOf("1", "2")
         if (lastUsedParameter == "1") {
-            val unused2A by parameterOf<Nothing>()
+            val unused2A by parameterOf(Unit)
         } else {
-            val unused2B by parameterOf<Nothing>()
+            val unused2B by parameterOf(Unit)
         }
 
         "$firstUsedParameter$lastUsedParameter"

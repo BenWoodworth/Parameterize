@@ -45,7 +45,7 @@ internal class ParameterizeState {
             if (it != null) throw ParameterizeException("Nesting parameters is not currently supported: `${property.name}` was declared within `${it.name}`'s arguments")
         }
 
-        val parameterIndex = parameterCount++
+        val parameterIndex = parameterCount
 
         val parameter = if (parameterIndex in parameters.indices) {
             parameters[parameterIndex]
@@ -54,7 +54,10 @@ internal class ParameterizeState {
                 .also { parameters += it }
         }
 
-        parameter.parameterState.declare(property, arguments)
+        property.trackNestedUsage {
+            parameter.parameterState.declare(property, arguments)
+            parameterCount++ // After declaring, since the parameter shouldn't count if declare throws
+        }
 
         return parameter
     }
@@ -73,10 +76,7 @@ internal class ParameterizeState {
     fun <T> getParameterArgument(parameter: ParameterDelegate<*>, property: KProperty<T>): T {
         val isFirstUse = !parameter.parameterState.hasBeenUsed
 
-        return property
-            .trackNestedUsage {
-                parameter.parameterState.getArgument(property)
-            }
+        return parameter.parameterState.getArgument(property)
             .also {
                 if (isFirstUse) trackUsedParameter(parameter)
             }
@@ -91,21 +91,20 @@ internal class ParameterizeState {
     }
 
     /**
-     * Iterate the last parameter (by the order they're first used) that has a
-     * next argument, and reset all parameters that were first used after it
-     * (since they may depend on the now changed value, and may be computed
-     * differently).
+     * Iterate the last parameter that has a next argument (in order of when their arguments were calculated), and reset
+     * all parameters that were first used after it (since they may depend on the now changed value, and may be computed
+     * differently now that a previous argument changed).
      *
      * Returns `true` if the arguments are at a new permutation.
      */
     private fun nextArgumentPermutationOrFalse(): Boolean {
         var iterated = false
 
-        val usedParameterIterator = parametersUsed
-            .listIterator(parametersUsed.lastIndex + 1)
+        val declaredParameterIterator = parameters
+            .listIterator(parameterCount)
 
-        while (usedParameterIterator.hasPrevious()) {
-            val parameter = usedParameterIterator.previous()
+        while (declaredParameterIterator.hasPrevious()) {
+            val parameter = declaredParameterIterator.previous()
 
             if (!parameter.parameterState.isLastArgument) {
                 parameter.parameterState.nextArgument()
@@ -113,16 +112,7 @@ internal class ParameterizeState {
                 break
             }
 
-            usedParameterIterator.remove()
             parameter.parameterState.reset()
-        }
-
-        for (i in parameterCountAfterAllUsed..<parameterCount) {
-            val parameter = parameters[i]
-
-            if (!parameter.parameterState.hasBeenUsed) {
-                parameter.parameterState.reset()
-            }
         }
 
         parameterCount = 0
@@ -137,7 +127,7 @@ internal class ParameterizeState {
     fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
         parameters.take(parameterCount)
             .filter { it.parameterState.hasBeenUsed }
-            .mapNotNull { it.parameterState.getFailureArgumentOrNull() }
+            .map { it.parameterState.getFailureArgument() }
 
     fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable) {
         failureCount++

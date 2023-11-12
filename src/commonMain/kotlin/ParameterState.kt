@@ -77,15 +77,14 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
 
 
     /**
-     * Returns a string representation of the current argument, or a "not initialized" message.
-     *
-     * Useful while debugging, e.g. inline hints that show property values:
-     * ```
-     * val letter by parameter { 'a'..'z' }  //letter$delegate: b
-     * ```
+     * Returns a string representation of the current argument, or a "not declared" message.
      */
     override fun toString(): String =
-        argument.toString()
+        if (property == null) {
+            "Parameter not declared yet."
+        } else {
+            argument.toString()
+        }
 
     /**
      * Set up the delegate for a parameter [property] with the given [arguments].
@@ -95,11 +94,13 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
      * The new [arguments] will be ignored in favor of re-using the existing arguments, under the assumption that they're equal.
      *
      * @throws ParameterizeException if already declared for a different [property].
+     * @throws ParameterizeContinue if [arguments] is empty.
      */
     internal fun <T> declare(property: KProperty<T>, arguments: Iterable<T>) {
         val declaredProperty = this.property
 
         if (declaredProperty == null) {
+            initialize(arguments) // Before any state gets changed, in case arguments is empty
             this.property = property
             this.arguments = arguments
         } else if (!property.equalsProperty(declaredProperty)) {
@@ -109,6 +110,8 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
 
     /**
      * Initialize and return the argument.
+     *
+     * @throws ParameterizeContinue if [arguments] is empty.
      */
     private fun <T> initialize(arguments: Iterable<T>): T {
         val iterator = arguments.iterator()
@@ -184,14 +187,18 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
     }
 
     /**
-     * Returns the property and argument if initialized, or `null` otherwise.
+     * Returns the property and argument.
+     *
+     * @throws IllegalStateException if this parameter is not declared.
      */
-    internal fun getFailureArgumentOrNull(): ParameterizeFailure.Argument<*>? {
-        val argument = argument
-        if (argument === Uninitialized) return null
-
+    internal fun getFailureArgument(): ParameterizeFailure.Argument<*> {
         val property = checkNotNull(property) {
-            "Parameter argument is initialized, but ${::property.name} is null"
+            "Cannot get failure argument before parameter has been declared"
+        }
+
+        val argument = argument
+        check (argument !== Uninitialized) {
+            "Parameter delegate is declared with ${property.name}, but ${::argument.name} is uninitialized"
         }
 
         return ParameterizeFailure.Argument(property, argument)
