@@ -156,4 +156,22 @@ class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
             fail()
         }
     }
+
+    @Test
+    fun failure_arguments_should_only_include_used_parameters() = parameterize(
+        onFailure = {
+            val actualArguments = arguments.map { it.parameter.name }
+            assertEquals(listOf("used1", "used2"), actualArguments)
+        }
+    ) {
+        val used1 by parameterOf(Unit)
+        val unused1 by parameterOf(Unit)
+        val used2 by parameterOf(Unit)
+        val unused2 by parameterOf(Unit)
+
+        useParameter(used1)
+        useParameter(used2)
+
+        fail()
+    }
 }

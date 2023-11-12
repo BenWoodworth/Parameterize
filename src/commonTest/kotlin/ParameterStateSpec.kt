@@ -3,6 +3,10 @@ package com.benwoodworth.parameterize
 import kotlin.test.*
 
 class ParameterStateSpec {
+    private val getArgumentBeforeDeclaredMessage = "Cannot get argument before parameter has been declared"
+    private val getFailureArgumentBeforeDeclaredMessage =
+        "Cannot get failure argument before parameter has been declared"
+
     private val property: String get() = error("${::property.name} is not meant to be used")
     private val differentProperty: String get() = error("${::differentProperty.name} is not meant to be used")
 
@@ -14,18 +18,108 @@ class ParameterStateSpec {
     }
 
 
+    private fun assertUndeclared(parameter: ParameterState<*>) {
+        val failure = assertFailsWith<IllegalStateException> {
+            parameter.getArgument(::property)
+        }
+
+        assertEquals(getArgumentBeforeDeclaredMessage, failure.message, "message")
+    }
+
+    @Test
+    fun string_representation_when_not_declared_should_match_message_from_lazy() {
+        val messageFromLazy = lazy { error("unused") }.toString()
+
+        val replacements = listOf(
+            "Lazy value" to "Parameter",
+            "initialized" to "declared"
+        )
+
+        val expected = replacements
+            .onEach { (old) ->
+                check(old in messageFromLazy) { "'$old' in '$messageFromLazy'"}
+            }
+            .fold(messageFromLazy) { result, (old, new) ->
+                result.replace(old, new)
+            }
+
+        assertEquals(expected, parameter.toString())
+    }
+
+    @Test
+    fun string_representation_when_initialized_should_equal_that_of_the_current_argument() {
+        val argument = "argument"
+
+        parameter.declare(::property, listOf(argument))
+
+        assertSame(argument, parameter.toString())
+    }
+
     @Test
     fun has_been_used_should_initially_be_false() {
         assertFalse(parameter.hasBeenUsed)
     }
 
     @Test
-    fun declare_should_not_immediately_get_an_argument() {
-        val arguments = Iterable<String> {
-            fail("Arguments should not be iterated")
+    fun declaring_with_no_arguments_should_throw_ParameterizeContinue() {
+        assertFailsWith<ParameterizeContinue> {
+            parameter.declare(::property, emptyList())
+        }
+    }
+
+    @Test
+    fun declaring_with_no_arguments_should_leave_parameter_undeclared() {
+        runCatching {
+            parameter.declare(::property, emptyList())
+        }
+
+        assertUndeclared(parameter)
+    }
+
+    @Test
+    fun declare_should_immediately_get_the_first_argument() {
+        var gotFirstArgument = false
+
+        val arguments = Iterable {
+            gotFirstArgument = true
+            listOf(Unit).iterator()
         }
 
         parameter.declare(::property, arguments)
+        assertTrue(gotFirstArgument, "gotFirstArgument")
+    }
+
+    @Test
+    fun declare_should_not_immediately_get_the_second_argument() {
+        class AssertingIterator : Iterator<String> {
+            var nextArgument = 1
+
+            override fun hasNext(): Boolean =
+                nextArgument <= 2
+
+            override fun next(): String {
+                assertNotEquals(2, nextArgument, "should not get argument 2")
+
+                return "argument $nextArgument"
+                    .also { nextArgument++ }
+            }
+        }
+
+        parameter.declare(::property, Iterable(::AssertingIterator))
+    }
+
+    @Test
+    fun declare_with_one_argument_should_set_is_last_argument_to_true() {
+        parameter.declare(::property, listOf("first"))
+
+        assertTrue(parameter.isLastArgument)
+    }
+
+    @Test
+    fun declare_with_more_than_one_argument_should_set_is_last_argument_to_false() {
+        parameter.declare(::property, listOf("first", "second"))
+
+        assertFalse(parameter.isLastArgument)
     }
 
     @Test
@@ -34,12 +128,12 @@ class ParameterStateSpec {
             parameter.getArgument(::property)
         }
 
-        assertEquals("Cannot get argument before parameter has been declared", failure.message)
+        assertEquals(getArgumentBeforeDeclaredMessage, failure.message, "message")
     }
 
     @Test
     fun getting_argument_with_the_wrong_property_should_throw_ParameterizeException() {
-        parameter.declare(::property, emptyList())
+        parameter.declare(::property, listOf(Unit))
 
         val exception = assertFailsWith<ParameterizeException> {
             parameter.getArgument(::differentProperty)
@@ -49,27 +143,6 @@ class ParameterStateSpec {
             "Cannot use parameter delegate with `differentProperty`. Already declared for `property`.",
             exception.message
         )
-    }
-
-    @Test
-    fun getting_argument_with_no_arguments_should_throw_ParameterizeContinue() {
-        parameter.declare(::property, emptyList())
-
-        assertFailsWith<ParameterizeContinue> {
-            parameter.getArgument(::property)
-        }
-    }
-
-    @Test
-    fun getting_argument_with_no_arguments_should_not_change_has_been_used() {
-        parameter.declare(::property, emptyList())
-        val expected = parameter.hasBeenUsed
-
-        runCatching {
-            parameter.getArgument(::property)
-        }
-
-        assertEquals(expected, parameter.hasBeenUsed)
     }
 
     @Test
@@ -88,39 +161,12 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun getting_argument_with_one_argument_should_set_is_last_argument_to_true() {
-        parameter.declare(::property, listOf("first"))
-        parameter.getArgument(::property)
-
-        assertTrue(parameter.isLastArgument)
-    }
-
-    @Test
-    fun getting_argument_with_more_than_one_argument_should_set_is_last_argument_to_false() {
-        parameter.declare(::property, listOf("first", "second"))
-        parameter.getArgument(::property)
-
-        assertFalse(parameter.isLastArgument)
-    }
-
-    @Test
     fun next_before_declare_should_throw_IllegalStateException() {
         val failure = assertFailsWith<IllegalStateException> {
             parameter.nextArgument()
         }
 
         assertEquals("Cannot iterate arguments before parameter has been declared", failure.message)
-    }
-
-    @Test
-    fun next_before_initialized_should_throw_IllegalStateException() {
-        parameter.declare(::property, emptyList())
-
-        val failure = assertFailsWith<IllegalStateException> {
-            parameter.nextArgument()
-        }
-
-        assertEquals("Cannot iterate arguments before parameter argument has been initialized", failure.message)
     }
 
     @Test
@@ -186,6 +232,8 @@ class ParameterStateSpec {
             fail("Re-declaring should keep the old arguments")
         }
         parameter.declare(::property, newArguments)
+
+        assertEquals("a", parameter.getArgument(::property))
     }
 
     @Test
@@ -200,10 +248,10 @@ class ParameterStateSpec {
 
     @Test
     fun redeclare_with_different_parameter_should_throw_ParameterizeException() {
-        parameter.declare(::property, emptyList())
+        parameter.declare(::property, listOf(Unit))
 
         assertFailsWith<ParameterizeException> {
-            parameter.declare(::differentProperty, emptyList())
+            parameter.declare(::differentProperty, listOf(Unit))
         }
     }
 
@@ -229,25 +277,20 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun is_last_argument_before_initialized_should_throw() {
-        val failure1 = assertFailsWith<IllegalStateException> {
+    fun is_last_argument_before_declared_should_throw() {
+        val failure = assertFailsWith<IllegalStateException> {
             parameter.isLastArgument
         }
-        assertEquals("Argument has not been initialized", failure1.message)
-
-        parameter.declare(::property, listOf("a"))
-        val failure2 = assertFailsWith<IllegalStateException> {
-            parameter.isLastArgument
-        }
-        assertEquals("Argument has not been initialized", failure2.message)
+        assertEquals("Argument has not been initialized", failure.message)
     }
 
     @Test
-    fun get_failure_argument_when_not_initialized_should_be_null() {
-        assertNull(parameter.getFailureArgumentOrNull())
+    fun get_failure_argument_when_not_declared_should_throw_IllegalStateException() {
+        val failure = assertFailsWith<IllegalStateException> {
+            parameter.getFailureArgument()
+        }
 
-        parameter.declare(::property, emptyList())
-        assertNull(parameter.getFailureArgumentOrNull())
+        assertEquals(getFailureArgumentBeforeDeclaredMessage, failure.message, "message")
     }
 
     @Test
@@ -256,10 +299,7 @@ class ParameterStateSpec {
         parameter.declare(::property, listOf(expectedArgument))
         parameter.getArgument(::property)
 
-        val propertyArgument = parameter.getFailureArgumentOrNull()
-        assertNotNull(propertyArgument)
-
-        val (property, argument) = propertyArgument
+        val (property, argument) = parameter.getFailureArgument()
         assertTrue(property.equalsProperty(::property))
         assertSame(expectedArgument, argument)
     }
