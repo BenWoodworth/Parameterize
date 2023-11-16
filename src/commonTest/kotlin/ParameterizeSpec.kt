@@ -233,4 +233,21 @@ class ParameterizeSpec {
 
         letterNumber
     }
+
+    @Test
+    fun captured_parameters_should_be_usable_after_the_iteration_completes() {
+        val capturedParameters = mutableListOf<() -> Int>()
+
+        parameterize {
+            val iteration by parameter(0..10)
+
+            capturedParameters += { iteration }
+        }
+
+        testAll(
+            (0..10).map { "iteration $it" to it }
+        ) { iteration ->
+            assertEquals(iteration, capturedParameters[iteration]())
+        }
+    }
 }

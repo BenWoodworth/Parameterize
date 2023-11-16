@@ -84,9 +84,10 @@ public fun ParameterizeContext.parameterize(
     }
 
     val state = ParameterizeState()
-    val scope = ParameterizeScope(state)
 
     while (state.startNextIteration()) {
+        val scope = ParameterizeScope(state)
+
         try {
             scope.block()
         } catch (_: ParameterizeContinue) {
@@ -94,6 +95,8 @@ public fun ParameterizeContext.parameterize(
             throw exception
         } catch (failure: Throwable) {
             state.handleFailure(onFailure, failure)
+        } finally {
+            scope.iterationCompleted = true
         }
     }
 
@@ -132,6 +135,8 @@ internal class ParameterizeException(override val message: String) : Exception(m
 public class ParameterizeScope internal constructor(
     private val state: ParameterizeState,
 ) {
+    internal var iterationCompleted: Boolean = false
+
     /** @suppress */
     override fun toString(): String =
         state.getFailureArguments().joinToString(
@@ -164,14 +169,20 @@ public class ParameterizeScope internal constructor(
         Parameter(arguments)
 
     /** @suppress */
-    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> =
+    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
+        if (iterationCompleted) {
+            throw ParameterizeException("Cannot declare parameter `${property.name}` after its iteration has completed")
+        }
+
         @Suppress("UNCHECKED_CAST")
-        state.declareParameter(property as KProperty<T>, arguments)
+        return state.declareParameter(property as KProperty<T>, arguments)
+    }
 
     /** @suppress */
-    public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
-        @Suppress("UNCHECKED_CAST")
-        parameterState.getArgument(property as KProperty<T>)
+    public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T {
+        if (!iterationCompleted) parameterState.useArgument()
+        return argument
+    }
 
 
     /** @suppress */
@@ -181,8 +192,9 @@ public class ParameterizeScope internal constructor(
     )
 
     /** @suppress */
-    public class ParameterDelegate<@Suppress("unused") out T> internal constructor(
-        internal val parameterState: ParameterState
+    public class ParameterDelegate<out T> internal constructor(
+        internal val parameterState: ParameterState,
+        internal val argument: T
     ) {
         /**
          * Returns a string representation of the current argument.
@@ -193,7 +205,7 @@ public class ParameterizeScope internal constructor(
          * ```
          */
         override fun toString(): String =
-            parameterState.toString()
+            argument.toString()
     }
 }
 

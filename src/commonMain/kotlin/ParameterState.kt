@@ -113,10 +113,12 @@ internal class ParameterState {
             throw ParameterizeException("Cannot use parameter delegate with `${property.name}`, since it was declared with `${declaredProperty.name}`.")
         }
 
-        hasBeenUsed = true
-
         @Suppress("UNCHECKED_CAST") // Argument is declared with property's arguments, so must be T
         return argument as T
+    }
+
+    fun useArgument() {
+        hasBeenUsed = true
     }
 
     /**

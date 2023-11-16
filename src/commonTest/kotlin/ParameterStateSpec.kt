@@ -153,9 +153,9 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun getting_argument_should_set_has_been_used_to_true() {
+    fun use_argument_should_set_has_been_used_to_true() {
         parameter.declare(::property, listOf("first", "second"))
-        parameter.getArgument(::property)
+        parameter.useArgument()
 
         assertTrue(parameter.hasBeenUsed)
     }
@@ -258,7 +258,7 @@ class ParameterStateSpec {
     @Test
     fun redeclare_with_different_parameter_should_not_change_has_been_used() {
         parameter.declare(::property, listOf("a"))
-        parameter.getArgument(::property)
+        parameter.useArgument()
 
         runCatching {
             parameter.declare(::differentProperty, listOf("a"))

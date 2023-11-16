@@ -1,7 +1,5 @@
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
-import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -25,26 +23,6 @@ class ParameterizeExceptionSpec {
 
         assertSame(exception, actualException)
         assertEquals(1, iterations, "Should not continue after exception")
-    }
-
-    @Test
-    fun parameter_delegate_used_with_the_wrong_property() {
-        val exception = assertFailsWith<ParameterizeException> {
-            parameterize {
-                lateinit var interceptedDelegateFromA: ParameterDelegate<Int>
-
-                val a by PropertyDelegateProvider { thisRef: Any?, property ->
-                    parameterOf(1)
-                        .provideDelegate(thisRef, property)
-                        .also { interceptedDelegateFromA = it }
-                }
-
-                val b by interceptedDelegateFromA
-                useParameter(b)
-            }
-        }
-
-        assertEquals("Cannot use parameter delegate with `b`, since it was declared with `a`.", exception.message)
     }
 
     @Test
@@ -159,5 +137,22 @@ class ParameterizeExceptionSpec {
             "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
             exception.message
         )
+    }
+
+    @Test
+    fun declaring_parameter_after_iteration_completed() {
+        var declareParameter = {}
+
+        parameterize {
+            declareParameter = {
+                val parameter by parameterOf(Unit)
+            }
+        }
+
+        val failure = assertFailsWith<ParameterizeException> {
+            declareParameter()
+        }
+
+        assertEquals("Cannot declare parameter `parameter` after its iteration has completed", failure.message)
     }
 }
