@@ -171,7 +171,7 @@ public class ParameterizeScope internal constructor(
     /** @suppress */
     public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
         @Suppress("UNCHECKED_CAST")
-        state.getParameterArgument(this, property as KProperty<T>)
+        parameterState.getArgument(property as KProperty<T>)
 
 
     /** @suppress */
@@ -181,8 +181,8 @@ public class ParameterizeScope internal constructor(
     )
 
     /** @suppress */
-    public class ParameterDelegate<out T> internal constructor(
-        internal val parameterState: ParameterState<T>
+    public class ParameterDelegate<@Suppress("unused") out T> internal constructor(
+        internal val parameterState: ParameterState
     ) {
         /**
          * Returns a string representation of the current argument.

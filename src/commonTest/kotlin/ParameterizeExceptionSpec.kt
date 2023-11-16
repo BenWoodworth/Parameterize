@@ -18,7 +18,6 @@ class ParameterizeExceptionSpec {
                 iterations++
 
                 val parameter by parameterOf(1, 2)
-                useParameter(parameter)
 
                 throw exception
             }
@@ -45,7 +44,7 @@ class ParameterizeExceptionSpec {
             }
         }
 
-        assertEquals("Cannot use parameter delegate with `b`. Already declared for `a`.", exception.message)
+        assertEquals("Cannot use parameter delegate with `b`, since it was declared with `a`.", exception.message)
     }
 
     @Test
@@ -59,7 +58,6 @@ class ParameterizeExceptionSpec {
                 }
 
                 val b by parameterOf(1, 2)
-                useParameter(b)
 
                 shouldDeclareA = false
             }
@@ -79,7 +77,6 @@ class ParameterizeExceptionSpec {
                 }
 
                 val b by parameterOf(1, 2)
-                useParameter(b)
 
                 shouldDeclareA = true
             }
@@ -93,7 +90,6 @@ class ParameterizeExceptionSpec {
         fun ParameterizeScope.testArguments() = object : Iterable<Unit> {
             override fun iterator(): Iterator<Unit> {
                 val inner by parameterOf(Unit)
-                useParameter(inner)
 
                 return listOf(Unit).iterator()
             }
@@ -102,10 +98,8 @@ class ParameterizeExceptionSpec {
         val exception = assertFailsWith<ParameterizeException> {
             parameterize {
                 val outer by parameter(testArguments())
-                useParameter(outer)
 
                 val end by parameterOf(Unit, Unit)
-                useParameter(end)
             }
         }
 
@@ -125,10 +119,8 @@ class ParameterizeExceptionSpec {
             override fun next() {
                 if (index == 0) {
                     val innerA by parameterOf(Unit)
-                    useParameter(innerA)
                 } else {
                     val innerB by parameterOf(Unit)
-                    useParameter(innerB)
                 }
 
                 index++
@@ -138,10 +130,7 @@ class ParameterizeExceptionSpec {
         val exception = assertFailsWith<ParameterizeException> {
             parameterize {
                 val outer by parameter(Iterable(::testArgumentsIterator))
-                useParameter(outer)
-
                 val end by parameterOf(Unit, Unit)
-                useParameter(end)
             }
         }
 
@@ -158,17 +147,11 @@ class ParameterizeExceptionSpec {
                 val trackedNestingInterference by parameterOf(Unit)
 
                 val outer by parameter {
-                    useParameter(trackedNestingInterference)
-
                     val inner by parameterOf(Unit)
-                    useParameter(inner)
-
                     listOf(Unit)
                 }
-                useParameter(outer)
 
                 val end by parameterOf(Unit, Unit)
-                useParameter(end)
             }
         }
 

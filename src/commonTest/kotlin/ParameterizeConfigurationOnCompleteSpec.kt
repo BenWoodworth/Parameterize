@@ -83,7 +83,6 @@ class ParameterizeConfigurationOnCompleteSpec {
             }
         ) {
             val iteration by parameter(0..100)
-            useParameter(iteration)
 
             expectedIterationCount++
         }
@@ -102,7 +101,6 @@ class ParameterizeConfigurationOnCompleteSpec {
             }
         ) {
             val iteration by parameter(0..100)
-            useParameter(iteration)
 
             expectedIterationCount++
 
@@ -122,7 +120,6 @@ class ParameterizeConfigurationOnCompleteSpec {
             }
         ) {
             val iteration by parameter(0..100)
-            useParameter(iteration)
 
             if (iteration % 2 == 0 || iteration % 7 == 0) {
                 expectedFailureCount++
@@ -139,7 +136,6 @@ class ParameterizeConfigurationOnCompleteSpec {
             }
         ) {
             val iteration by parameter(0..100)
-            useParameter(iteration)
         }
     }
 

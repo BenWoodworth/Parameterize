@@ -2,76 +2,60 @@ package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
 
-/*
- * Conceptually, a parameter is a reusable source of arguments, and is in one of
- * three different states internally.
+/**
+ * The parameter state is responsible for managing a parameter in the
+ * [parameterize] DSL, maintaining an argument, and lazily loading the next ones
+ * in as needed.
  *
- * Undeclared:
- *   Completely null state, waiting to be set up with property and arguments.
+ * The state can also be reset for reuse later with another parameter, allowing
+ * the same instance to be shared, saving on unnecessary instantiations. Since
+ * this means the underlying argument type can change, this class doesn't have a
+ * generic type for it, and instead has each function pull a generic type from a
+ * provided property, and validates it against the property this parameter was
+ * declared with. This ensures that the argument type is correct at runtime, and
+ * also validates that the parameter is in fact being used with the expected
+ * property.
  *
- *   Parameters can be reset to this state, enabling instances to be reused in
- *   the future.
+ * When first declared, the parameter [property] and the [arguments] it was
+ * declared with will be stored, along with a new argument iterator and the
+ * first argument from it. The arguments are lazily read in from the iterator as
+ * they're needed, and will seamlessly continue with the start again after the
+ * last argument, using [isLastArgument] as an indicator. The stored iterator
+ * will always have a next argument available, and will be set to null when its
+ * last argument is read in to release its reference until the next iterator is
+ * created to begin from the start again.
  *
- * Declared:
- *   Set up with a property and arguments, but has not been used yet.
- *
- *   The argument and iterator are loaded lazily in case the parameter is not
- *   actually used, saving any potentially unnecessary computation.
- *
- * Initialized:
- *   The parameter has been used, and has an argument set from the iterator.
- *   Stays initialized until reset.
- *
- *   The stored argument iterator will always have a next argument. When there
- *   is no next argument, it will be set to null, and then lazily set to a new
- *   iterator again when the next argument is needed.
- *
- *   The delegate can be re-declared without being reset, marking it as unused
- *   again. The property will be checked to verify it's the same, but the new
- *   arguments will be assumed to be the same and ignored in favor of continuing
- *   through the current iterator.
+ * Since each [parameterize] iteration should declare the same parameters,
+ * in the same order with the same arguments, declared with the same
+ * already-declared state instance as the previous iteration. Calling [declare]
+ * again will leave the state unchanged, only serving to validate that the
+ * parameter was in fact declared the same as before. The new arguments are
+ * ignored since they're assumed to be the same, and the state remains unchanged
+ * in favor of continuing through the current iterator where it left off.
  */
-
-internal class ParameterState<@Suppress("unused") out T> internal constructor() {
-    /*
-     * The internal state does not use the generic type, so T is purely for
-     * syntax, helping Kotlin infer a property type from the parameter through
-     * provideDelegate. So because T is not used, it can be safely cast to a
-     * different generic type, despite it being an "unchecked cast".
-     * (e.g. the declared property's type when providing the delegate)
-     *
-     * Instead, methods have their own generic type, checked against a property
-     * that's passed in. Since the internal argument state is always of the same
-     * type as the currently declared property, checking that the property taken
-     * into the method is the same is enough to ensure that the argument
-     * returned is the correct type.
-     */
-
-    // Declared
+internal class ParameterState {
     private var property: KProperty<*>? = null
     private var arguments: Iterable<*>? = null
-
-    // Initialized
-    private var argument: Any? = Uninitialized // T | Uninitialized
+    private var argument: Any? = null // T
     private var argumentIterator: Iterator<*>? = null
 
-    internal var hasBeenUsed: Boolean = false
+    var hasBeenUsed: Boolean = false
         private set
 
     internal fun reset() {
         property = null
         arguments = null
+        argument = null
         argumentIterator = null
-        argument = Uninitialized
         hasBeenUsed = false
     }
 
     /**
-     * @throws IllegalStateException if used before the argument has been initialized.
+     * @throws IllegalStateException if used before the argument has been declared.
      */
-    internal val isLastArgument: Boolean
+    val isLastArgument: Boolean
         get() {
-            check(argument !== Uninitialized) { "Argument has not been initialized" }
+            checkNotNull(property) { "Parameter has not been declared" }
             return argumentIterator == null
         }
 
@@ -91,99 +75,64 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
      *
      * If this delegate is already [declare]d, [property] and [arguments] should be equal to those that were originally passed in.
      * The [property] will be checked to make sure it's the same, and the current argument will remain the same.
-     * The new [arguments] will be ignored in favor of re-using the existing arguments, under the assumption that they're equal.
+     * The new [arguments] will be ignored in favor of reusing the existing arguments, under the assumption that they're equal.
      *
      * @throws ParameterizeException if already declared for a different [property].
      * @throws ParameterizeContinue if [arguments] is empty.
      */
-    internal fun <T> declare(property: KProperty<T>, arguments: Iterable<T>) {
-        val declaredProperty = this.property
-
-        if (declaredProperty == null) {
-            initialize(arguments) // Before any state gets changed, in case arguments is empty
-            this.property = property
-            this.arguments = arguments
-        } else if (!property.equalsProperty(declaredProperty)) {
+    fun <T> declare(property: KProperty<T>, arguments: Iterable<T>) {
+        // Nothing to do if already declared (besides validating the property)
+        this.property?.let { declaredProperty ->
+            if (property.equalsProperty(declaredProperty)) return
             throw ParameterizeException("Expected to be declaring `${declaredProperty.name}`, but got `${property.name}`")
         }
-    }
 
-    /**
-     * Initialize and return the argument.
-     *
-     * @throws ParameterizeContinue if [arguments] is empty.
-     */
-    private fun <T> initialize(arguments: Iterable<T>): T {
         val iterator = arguments.iterator()
         if (!iterator.hasNext()) {
-            throw ParameterizeContinue
+            throw ParameterizeContinue // Before changing any state
         }
 
-        val argument = iterator.next()
-        this.argument = argument
-
-        if (iterator.hasNext()) {
-            argumentIterator = iterator
-        }
-
-        return argument
+        this.property = property
+        this.arguments = arguments
+        this.argument = iterator.next()
+        this.argumentIterator = iterator.takeIf { it.hasNext() }
     }
 
     /**
-     * Get the current argument, or initialize it from the arguments that were originally declared.
+     * Get the current argument, and set [hasBeenUsed] to true.
+     *
+     * @throws ParameterizeException if already declared for a different [property].
+     * @throws IllegalStateException if the argument has not been declared yet.
      */
-    internal fun <T> getArgument(property: KProperty<T>): T {
+    fun <T> getArgument(property: KProperty<T>): T {
         val declaredProperty = checkNotNull(this.property) {
             "Cannot get argument before parameter has been declared"
         }
 
         if (!property.equalsProperty(declaredProperty)) {
-            throw ParameterizeException("Cannot use parameter delegate with `${property.name}`. Already declared for `${declaredProperty.name}`.")
-        }
-
-        var argument = argument
-        if (argument !== Uninitialized) {
-            @Suppress("UNCHECKED_CAST") // Argument is initialized with property's arguments, so must be T
-            argument as T
-        } else {
-            val arguments = checkNotNull(arguments) {
-                "Parameter is declared with ${property.name}, but ${::arguments.name} is null"
-            }
-
-            @Suppress("UNCHECKED_CAST") // The arguments are declared for property, so must be Iterable<T>
-            argument = initialize(arguments as Iterable<T>)
+            throw ParameterizeException("Cannot use parameter delegate with `${property.name}`, since it was declared with `${declaredProperty.name}`.")
         }
 
         hasBeenUsed = true
-        return argument
+
+        @Suppress("UNCHECKED_CAST") // Argument is declared with property's arguments, so must be T
+        return argument as T
     }
 
     /**
      * Iterates the parameter argument.
      *
-     * @throws IllegalStateException if the argument has not been initialized yet.
+     * @throws IllegalStateException if the argument has not been declared yet.
      */
-    internal fun nextArgument() {
+    fun nextArgument() {
         val arguments = checkNotNull(arguments) {
             "Cannot iterate arguments before parameter has been declared"
         }
 
-        check(argument != Uninitialized) {
-            "Cannot iterate arguments before parameter argument has been initialized"
-        }
-
-        var iterator = argumentIterator
-        if (iterator == null) {
-            iterator = arguments.iterator()
-
-            argumentIterator = iterator
-        }
+        val iterator = argumentIterator ?: arguments.iterator()
 
         argument = iterator.next()
-
-        if (!iterator.hasNext()) {
-            argumentIterator = null
-        }
+        argumentIterator = iterator.takeIf { it.hasNext() }
     }
 
     /**
@@ -191,26 +140,11 @@ internal class ParameterState<@Suppress("unused") out T> internal constructor() 
      *
      * @throws IllegalStateException if this parameter is not declared.
      */
-    internal fun getFailureArgument(): ParameterizeFailure.Argument<*> {
+    fun getFailureArgument(): ParameterizeFailure.Argument<*> {
         val property = checkNotNull(property) {
             "Cannot get failure argument before parameter has been declared"
         }
 
-        val argument = argument
-        check (argument !== Uninitialized) {
-            "Parameter delegate is declared with ${property.name}, but ${::argument.name} is uninitialized"
-        }
-
         return ParameterizeFailure.Argument(property, argument)
-    }
-
-    /**
-     * A placeholder value for [argument] to signify that it is not initialized.
-     *
-     * Since the argument itself may be nullable, `null` can't be used instead,
-     * as that may actually be the argument's value.
-     */
-    private object Uninitialized {
-        override fun toString(): String = "Parameter argument not initialized yet."
     }
 }

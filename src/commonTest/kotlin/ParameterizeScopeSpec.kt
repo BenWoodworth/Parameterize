@@ -15,7 +15,7 @@ class ParameterizeScopeSpec {
         val unused2 by parameterOf(Unit)
         val c by parameterOf(3)
 
-        // used in a different order
+        // Used in a different order
         useParameter(c)
         useParameter(b)
         useParameter(a)
@@ -24,7 +24,7 @@ class ParameterizeScopeSpec {
     }
 
     @Test
-    fun parameter_delegate_string_representation_when_initialized_should_equal_that_of_the_current_argument() = parameterize {
+    fun parameter_delegate_string_representation_when_declared_should_equal_that_of_the_current_argument() = parameterize {
         lateinit var delegate: ParameterDelegate<String>
 
         val parameter by PropertyDelegateProvider { thisRef: Nothing?, property ->
@@ -32,8 +32,6 @@ class ParameterizeScopeSpec {
                 .provideDelegate(thisRef, property)
                 .also { delegate = it } // intercept delegate
         }
-
-        useParameter(parameter)
 
         assertSame(parameter, delegate.toString())
     }
