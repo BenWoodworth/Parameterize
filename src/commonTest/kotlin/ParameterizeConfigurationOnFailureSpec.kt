@@ -192,4 +192,29 @@ class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
             fail()
         }
     }
+
+    @Test
+    fun failure_arguments_should_not_include_captured_parameters_from_previous_iterations() = parameterize(
+        onFailure = {
+            val parameters = arguments.map { it.parameter.name }
+
+            assertFalse(
+                "neverUsedDuringTheCurrentIteration" in parameters,
+                "neverUsedDuringTheCurrentIteration in $parameters"
+            )
+        }
+    ) {
+        val neverUsedDuringTheCurrentIteration by parameterOf(Unit)
+
+        @Suppress("UNUSED_EXPRESSION")
+        val usePreviousIterationParameter by parameterOf(
+            { }, // Don't use it the first iteration
+            { neverUsedDuringTheCurrentIteration }
+        )
+
+        // On the 2nd iteration, use the parameter captured from the 1st iteration
+        usePreviousIterationParameter()
+
+        fail()
+    }
 }

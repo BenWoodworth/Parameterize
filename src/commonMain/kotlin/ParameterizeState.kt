@@ -14,7 +14,7 @@ internal class ParameterizeState {
      * Parameter instances are re-used between iterations, so will never be removed.
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
-    private val parameters = ArrayList<ParameterDelegate<Nothing>>()
+    private val parameters = ArrayList<ParameterState>()
     private var parameterBeingUsed: KProperty<*>? = null
     private var parameterCount = 0
 
@@ -37,7 +37,10 @@ internal class ParameterizeState {
         return shouldContinue
     }
 
-    fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<Nothing> {
+    fun <T> declareParameter(
+        property: KProperty<T>,
+        arguments: Iterable<T>
+    ): ParameterDelegate<T> {
         parameterBeingUsed?.let {
             throw ParameterizeException("Nesting parameters is not currently supported: `${property.name}` was declared within `${it.name}`'s arguments")
         }
@@ -47,16 +50,16 @@ internal class ParameterizeState {
         val parameter = if (parameterIndex in parameters.indices) {
             parameters[parameterIndex]
         } else {
-            ParameterDelegate<Nothing>(ParameterState())
+            ParameterState()
                 .also { parameters += it }
         }
 
         property.trackNestedUsage {
-            parameter.parameterState.declare(property, arguments)
+            parameter.declare(property, arguments)
             parameterCount++ // After declaring, since the parameter shouldn't count if declare throws
         }
 
-        return parameter
+        return ParameterDelegate(parameter, parameter.getArgument(property))
     }
 
     private inline fun <T> KProperty<T>.trackNestedUsage(block: () -> T): T {
@@ -81,13 +84,13 @@ internal class ParameterizeState {
         var iterated = false
 
         for (parameter in parameters.subList(0, parameterCount).asReversed()) {
-            if (!parameter.parameterState.isLastArgument) {
-                parameter.parameterState.nextArgument()
+            if (!parameter.isLastArgument) {
+                parameter.nextArgument()
                 iterated = true
                 break
             }
 
-            parameter.parameterState.reset()
+            parameter.reset()
         }
 
         parameterCount = 0
@@ -100,8 +103,8 @@ internal class ParameterizeState {
      */
     fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
         parameters.take(parameterCount)
-            .filter { it.parameterState.hasBeenUsed }
-            .map { it.parameterState.getFailureArgument() }
+            .filter { it.hasBeenUsed }
+            .map { it.getFailureArgument() }
 
     fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable) {
         failureCount++
