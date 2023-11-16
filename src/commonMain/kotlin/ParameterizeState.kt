@@ -15,11 +15,8 @@ internal class ParameterizeState {
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
     private val parameters = ArrayList<ParameterDelegate<Nothing>>()
-    private val parametersUsed = ArrayList<ParameterDelegate<*>>()
     private var parameterBeingUsed: KProperty<*>? = null
-
     private var parameterCount = 0
-    private var parameterCountAfterAllUsed = 0
 
     private var iterationCount = 0L
     private var failureCount = 0L
@@ -41,8 +38,8 @@ internal class ParameterizeState {
     }
 
     fun <T> declareParameter(property: KProperty<T>, arguments: Iterable<T>): ParameterDelegate<Nothing> {
-        parameterBeingUsed.let {
-            if (it != null) throw ParameterizeException("Nesting parameters is not currently supported: `${property.name}` was declared within `${it.name}`'s arguments")
+        parameterBeingUsed?.let {
+            throw ParameterizeException("Nesting parameters is not currently supported: `${property.name}` was declared within `${it.name}`'s arguments")
         }
 
         val parameterIndex = parameterCount
@@ -73,23 +70,6 @@ internal class ParameterizeState {
         }
     }
 
-    fun <T> getParameterArgument(parameter: ParameterDelegate<*>, property: KProperty<T>): T {
-        val isFirstUse = !parameter.parameterState.hasBeenUsed
-
-        return parameter.parameterState.getArgument(property)
-            .also {
-                if (isFirstUse) trackUsedParameter(parameter)
-            }
-    }
-
-    private fun trackUsedParameter(parameter: ParameterDelegate<*>) {
-        parametersUsed += parameter
-
-        if (!parameter.parameterState.isLastArgument) {
-            parameterCountAfterAllUsed = parameterCount
-        }
-    }
-
     /**
      * Iterate the last parameter that has a next argument (in order of when their arguments were calculated), and reset
      * all parameters that were first used after it (since they may depend on the now changed value, and may be computed
@@ -100,12 +80,7 @@ internal class ParameterizeState {
     private fun nextArgumentPermutationOrFalse(): Boolean {
         var iterated = false
 
-        val declaredParameterIterator = parameters
-            .listIterator(parameterCount)
-
-        while (declaredParameterIterator.hasPrevious()) {
-            val parameter = declaredParameterIterator.previous()
-
+        for (parameter in parameters.subList(0, parameterCount).asReversed()) {
             if (!parameter.parameterState.isLastArgument) {
                 parameter.parameterState.nextArgument()
                 iterated = true
@@ -116,7 +91,6 @@ internal class ParameterizeState {
         }
 
         parameterCount = 0
-        parameterCountAfterAllUsed = 0
 
         return iterated
     }

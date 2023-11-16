@@ -1,9 +1,6 @@
 package com.benwoodworth.parameterize
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.fail
+import kotlin.test.*
 
 class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
     override val parameterizeConfiguration = ParameterizeConfiguration {
@@ -100,7 +97,6 @@ class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
             }
         ) {
             val iteration by parameter(0..100)
-            useParameter(iteration)
 
             expectedIterationCount++
             fail(iteration.toString())
@@ -117,7 +113,6 @@ class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
             }
         ) {
             val iteration by parameter(0..100)
-            useParameter(iteration)
 
             if (iteration % 2 == 0 || iteration % 7 == 0) {
                 expectedFailureCount++
@@ -160,8 +155,8 @@ class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
     @Test
     fun failure_arguments_should_only_include_used_parameters() = parameterize(
         onFailure = {
-            val actualArguments = arguments.map { it.parameter.name }
-            assertEquals(listOf("used1", "used2"), actualArguments)
+            val actualUsedParameters = arguments.map { it.parameter.name }
+            assertEquals(listOf("used1", "used2"), actualUsedParameters)
         }
     ) {
         val used1 by parameterOf(Unit)
@@ -173,5 +168,28 @@ class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
         useParameter(used2)
 
         fail()
+    }
+
+    @Test
+    fun failure_arguments_should_include_lazily_used_parameters_that_were_only_used_in_previous_iterations() = parameterize(
+        onFailure = {
+            val actualUsedParameters = arguments.map { it.parameter.name }
+            assertContains(actualUsedParameters, "letter")
+        }
+    ) {
+        val letter by parameterOf('a', 'b')
+
+        var letterUsedThisIteration = false
+
+        val letterNumber by parameter {
+            letterUsedThisIteration = true
+            (1..2).map { "$letter$it" }
+        }
+
+        // Letter contributes to the failure, even though it wasn't used this iteration
+        if (letterNumber == "b2") {
+            check(!letterUsedThisIteration) { "Letter was actually used this iteration, so test is invalid" }
+            fail()
+        }
     }
 }

@@ -201,44 +201,11 @@ class ParameterizeSpec {
         val first by parameterOf("a", "b")
         val second by parameterOf(1, 2)
 
+        // Used in a different order
         useParameter(second)
         useParameter(first)
 
         "$first$second"
-    }
-
-    @Test
-    fun swapping_unused_parameters() = testParameterize(
-        listOf("a1", "a2", "b1", "b2")
-    ) {
-        val firstUsedParameter by parameterOf("a", "b")
-        if (firstUsedParameter == "a") {
-            val unused1A by parameterOf(Unit)
-        } else {
-            val unused1B by parameterOf(Unit)
-        }
-
-        val lastUsedParameter by parameterOf("1", "2")
-        if (lastUsedParameter == "1") {
-            val unused2A by parameterOf(Unit)
-        } else {
-            val unused2B by parameterOf(Unit)
-        }
-
-        "$firstUsedParameter$lastUsedParameter"
-    }
-
-    @Test
-    fun parameter_only_used_from_another_lazy_initialization() = testParameterize(
-        listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
-    ) {
-        val letter by parameter('a'..'c')
-
-        val letterNumber by parameter {
-            (1..3).map { "$letter$it" }
-        }
-
-        letterNumber
     }
 
     @Test

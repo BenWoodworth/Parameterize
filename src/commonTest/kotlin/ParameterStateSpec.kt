@@ -10,7 +10,7 @@ class ParameterStateSpec {
     private val property: String get() = error("${::property.name} is not meant to be used")
     private val differentProperty: String get() = error("${::differentProperty.name} is not meant to be used")
 
-    private lateinit var parameter: ParameterState<String>
+    private lateinit var parameter: ParameterState
 
     @BeforeTest
     fun beforeTest() {
@@ -18,7 +18,7 @@ class ParameterStateSpec {
     }
 
 
-    private fun assertUndeclared(parameter: ParameterState<*>) {
+    private fun assertUndeclared(parameter: ParameterState) {
         val failure = assertFailsWith<IllegalStateException> {
             parameter.getArgument(::property)
         }
@@ -140,7 +140,7 @@ class ParameterStateSpec {
         }
 
         assertEquals(
-            "Cannot use parameter delegate with `differentProperty`. Already declared for `property`.",
+            "Cannot use parameter delegate with `differentProperty`, since it was declared with `property`.",
             exception.message
         )
     }
@@ -281,7 +281,7 @@ class ParameterStateSpec {
         val failure = assertFailsWith<IllegalStateException> {
             parameter.isLastArgument
         }
-        assertEquals("Argument has not been initialized", failure.message)
+        assertEquals("Parameter has not been declared", failure.message)
     }
 
     @Test
@@ -294,7 +294,7 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun get_failure_argument_when_initialized_should_have_correct_property_and_argument() {
+    fun get_failure_argument_when_declared_should_have_correct_property_and_argument() {
         val expectedArgument = "a"
         parameter.declare(::property, listOf(expectedArgument))
         parameter.getArgument(::property)
