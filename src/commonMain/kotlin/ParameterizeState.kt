@@ -29,7 +29,7 @@ internal class ParameterizeState {
      * Starts the next iteration, or returns `false` if there isn't one.
      */
     fun startNextIteration(): Boolean {
-        hasNextIteration = iterationCount == 0L || nextArgumentPermutationOrFalse()
+        hasNextIteration = iterationCount == 0L || nextArgumentCombinationOrFalse()
 
         val shouldContinue = hasNextIteration && !breakEarly
         if (shouldContinue) iterationCount++
@@ -78,9 +78,9 @@ internal class ParameterizeState {
      * all parameters that were first used after it (since they may depend on the now changed value, and may be computed
      * differently now that a previous argument changed).
      *
-     * Returns `true` if the arguments are at a new permutation.
+     * Returns `true` if the arguments are at a new combination.
      */
-    private fun nextArgumentPermutationOrFalse(): Boolean {
+    private fun nextArgumentCombinationOrFalse(): Boolean {
         var iterated = false
 
         for (parameter in parameters.subList(0, parameterCount).asReversed()) {
