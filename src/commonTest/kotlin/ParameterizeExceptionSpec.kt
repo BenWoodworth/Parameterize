@@ -1,28 +1,60 @@
 package com.benwoodworth.parameterize
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertSame
+import kotlin.test.*
 
 class ParameterizeExceptionSpec {
+    /**
+     * [ParameterizeException] is thrown when [parameterize] is misused, so should cause it to immediately fail since
+     * its state and parameter tracking are invalid.
+     */
     @Test
-    fun should_rethrow_and_not_continue_after_ParameterizeException() {
-        var iterations = 0
-        val exception = ParameterizeException("test")
+    fun should_cause_parameterize_to_immediately_fail_without_or_triggering_handlers() {
+        lateinit var exception: ParameterizeException
 
         val actualException = assertFailsWith<ParameterizeException> {
-            parameterize {
-                iterations++
-
-                val parameter by parameterOf(1, 2)
-
+            parameterize(
+                onFailure = { fail("onFailure handler should not be invoked") },
+                onComplete = { fail("onComplete handler should not be invoked") }
+            ) {
+                exception = ParameterizeException(parameterizeState, "test")
                 throw exception
             }
         }
 
         assertSame(exception, actualException)
-        assertEquals(1, iterations, "Should not continue after exception")
+    }
+
+    /**
+     * When a different *inner* [parameterize] is misused, its should not cause other *outer* [parameterize] calls to
+     * fail, as the *inner* [parameterize] being invalid does not make the *outer* one invalid.
+     */
+    @Test
+    fun when_thrown_from_a_different_parameterize_call_it_should_be_handled_like_any_other_failure() {
+        lateinit var exceptionFromDifferentParameterize: ParameterizeException
+
+        var onFailureInvoked = false
+        var onCompleteInvoked = false
+
+        val result = runCatching {
+            parameterize(
+                onFailure = { failure ->
+                    onFailureInvoked = true
+                    assertSame(exceptionFromDifferentParameterize, failure, "onFailure handler should be invoked with the exception")
+                },
+                onComplete = {
+                    onCompleteInvoked = true
+                }
+            ) {
+                parameterize {
+                    exceptionFromDifferentParameterize = ParameterizeException(parameterizeState, "from different parameterize")
+                    throw exceptionFromDifferentParameterize
+                }
+            }
+        }
+
+        assertEquals(Result.success(Unit), result, "should have been handled and not thrown")
+        assertTrue(onFailureInvoked, "onFailure handler should be invoked")
+        assertTrue(onCompleteInvoked, "onComplete handler should be invoked")
     }
 
     @Test
