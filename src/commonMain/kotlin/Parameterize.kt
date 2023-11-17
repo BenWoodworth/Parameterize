@@ -83,24 +83,25 @@ public fun ParameterizeContext.parameterize(
         callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
     }
 
-    val state = ParameterizeState()
+    val parameterizeState = ParameterizeState()
 
-    while (state.startNextIteration()) {
-        val scope = ParameterizeScope(state)
+    while (parameterizeState.startNextIteration()) {
+        val scope = ParameterizeScope(parameterizeState)
 
         try {
             scope.block()
-        } catch (_: ParameterizeContinue) {
-        } catch (exception: ParameterizeException) {
-            throw exception
         } catch (failure: Throwable) {
-            state.handleFailure(onFailure, failure)
+            when {
+                failure is ParameterizeContinue -> {}
+                failure is ParameterizeException && failure.parameterizeState === parameterizeState -> throw failure
+                else -> parameterizeState.handleFailure(onFailure, failure)
+            }
         } finally {
             scope.iterationCompleted = true
         }
     }
 
-    state.handleComplete(onComplete)
+    parameterizeState.handleComplete(onComplete)
 }
 
 /**
@@ -129,17 +130,20 @@ public fun parameterize(
 
 internal data object ParameterizeContinue : Throwable()
 
-internal class ParameterizeException(override val message: String) : Exception(message)
+internal class ParameterizeException(
+    internal val parameterizeState: ParameterizeState,
+    override val message: String
+) : Exception(message)
 
 /** @see parameterize */
 public class ParameterizeScope internal constructor(
-    private val state: ParameterizeState,
+    internal val parameterizeState: ParameterizeState,
 ) {
     internal var iterationCompleted: Boolean = false
 
     /** @suppress */
     override fun toString(): String =
-        state.getFailureArguments().joinToString(
+        parameterizeState.getFailureArguments().joinToString(
             prefix = "ParameterizeScope(",
             separator = ", ",
             postfix = ")"
@@ -171,11 +175,14 @@ public class ParameterizeScope internal constructor(
     /** @suppress */
     public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
         if (iterationCompleted) {
-            throw ParameterizeException("Cannot declare parameter `${property.name}` after its iteration has completed")
+            throw ParameterizeException(
+                parameterizeState,
+                "Cannot declare parameter `${property.name}` after its iteration has completed"
+            )
         }
 
         @Suppress("UNCHECKED_CAST")
-        return state.declareParameter(property as KProperty<T>, arguments)
+        return parameterizeState.declareParameter(property as KProperty<T>, arguments)
     }
 
     /** @suppress */

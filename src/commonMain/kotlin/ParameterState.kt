@@ -33,7 +33,9 @@ import kotlin.reflect.KProperty
  * ignored since they're assumed to be the same, and the state remains unchanged
  * in favor of continuing through the current iterator where it left off.
  */
-internal class ParameterState {
+internal class ParameterState(
+    private val parameterizeState: ParameterizeState
+) {
     private var property: KProperty<*>? = null
     private var arguments: Iterable<*>? = null
     private var argument: Any? = null // T
@@ -84,7 +86,11 @@ internal class ParameterState {
         // Nothing to do if already declared (besides validating the property)
         this.property?.let { declaredProperty ->
             if (property.equalsProperty(declaredProperty)) return
-            throw ParameterizeException("Expected to be declaring `${declaredProperty.name}`, but got `${property.name}`")
+
+            throw ParameterizeException(
+                parameterizeState,
+                "Expected to be declaring `${declaredProperty.name}`, but got `${property.name}`"
+            )
         }
 
         val iterator = arguments.iterator()
@@ -110,7 +116,10 @@ internal class ParameterState {
         }
 
         if (!property.equalsProperty(declaredProperty)) {
-            throw ParameterizeException("Cannot use parameter delegate with `${property.name}`, since it was declared with `${declaredProperty.name}`.")
+            throw ParameterizeException(
+                parameterizeState,
+                "Cannot use parameter delegate with `${property.name}`, since it was declared with `${declaredProperty.name}`."
+            )
         }
 
         @Suppress("UNCHECKED_CAST") // Argument is declared with property's arguments, so must be T

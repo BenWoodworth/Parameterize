@@ -42,7 +42,7 @@ internal class ParameterizeState {
         arguments: Iterable<T>
     ): ParameterDelegate<T> {
         parameterBeingUsed?.let {
-            throw ParameterizeException("Nesting parameters is not currently supported: `${property.name}` was declared within `${it.name}`'s arguments")
+            throw ParameterizeException(this, "Nesting parameters is not currently supported: `${property.name}` was declared within `${it.name}`'s arguments")
         }
 
         val parameterIndex = parameterCount
@@ -50,7 +50,7 @@ internal class ParameterizeState {
         val parameter = if (parameterIndex in parameters.indices) {
             parameters[parameterIndex]
         } else {
-            ParameterState()
+            ParameterState(this)
                 .also { parameters += it }
         }
 

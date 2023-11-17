@@ -14,7 +14,7 @@ class ParameterStateSpec {
 
     @BeforeTest
     fun beforeTest() {
-        parameter = ParameterState()
+        parameter = ParameterState(ParameterizeState())
     }
 
 
