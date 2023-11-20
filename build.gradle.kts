@@ -54,9 +54,7 @@ kotlin {
     targets.configureEach {
         compilations.configureEach {
             compilerOptions.configure {
-                if (name == "test") {
-                    freeCompilerArgs.add("-Xexpect-actual-classes")
-                }
+                freeCompilerArgs.add("-Xexpect-actual-classes")
             }
         }
     }
@@ -70,6 +68,11 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+                implementation("org.opentest4j:opentest4j:1.3.0")
             }
         }
     }
