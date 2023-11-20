@@ -40,9 +40,11 @@ public abstract interface class com/benwoodworth/parameterize/ParameterizeContex
 	public abstract fun getParameterizeConfiguration ()Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
 }
 
-public final class com/benwoodworth/parameterize/ParameterizeFailedError : java/lang/AssertionError {
+public final class com/benwoodworth/parameterize/ParameterizeFailedError : org/opentest4j/MultipleFailuresError {
 	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeFailedError$Companion;
+	public synthetic fun getFailures ()Ljava/util/List;
 	public fun getMessage ()Ljava/lang/String;
+	public synthetic fun hasFailures ()Z
 }
 
 public final class com/benwoodworth/parameterize/ParameterizeFailedError$Companion {
