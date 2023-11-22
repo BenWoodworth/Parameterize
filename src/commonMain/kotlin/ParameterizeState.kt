@@ -5,6 +5,7 @@ import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
 import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
+import kotlin.jvm.JvmInline
 import kotlin.reflect.KProperty
 
 internal class ParameterizeState {
@@ -18,23 +19,31 @@ internal class ParameterizeState {
     private var parameterBeingUsed: KProperty<*>? = null
     private var parameterCount = 0
 
+    /**
+     * The parameter that will be iterated to the next argument during this iteration.
+     *
+     * Set to `null` once the parameter is iterated.
+     */
+    private var parameterToIterate: ParameterState? = null
+
+    /**
+     * The last parameter this iteration that has another argument after declaring, or `null` if there hasn't been one yet.
+     */
+    private var lastParameterWithNextArgument: ParameterState? = null
+
     private var iterationCount = 0L
     private var failureCount = 0L
     private val recordedFailures = mutableListOf<ParameterizeFailure>()
 
-    private var breakEarly = false
-    private var hasNextIteration = true
+    val hasNextArgumentCombination: Boolean
+        get() = lastParameterWithNextArgument != null || iterationCount == 0L
 
-    /**
-     * Starts the next iteration, or returns `false` if there isn't one.
-     */
-    fun startNextIteration(): Boolean {
-        hasNextIteration = iterationCount == 0L || nextArgumentCombinationOrFalse()
+    fun startNextIteration() {
+        iterationCount++
+        parameterCount = 0
 
-        val shouldContinue = hasNextIteration && !breakEarly
-        if (shouldContinue) iterationCount++
-
-        return shouldContinue
+        parameterToIterate = lastParameterWithNextArgument
+        lastParameterWithNextArgument = null
     }
 
     fun <T> declareParameter(
@@ -48,7 +57,11 @@ internal class ParameterizeState {
         val parameterIndex = parameterCount
 
         val parameter = if (parameterIndex in parameters.indices) {
-            parameters[parameterIndex]
+            parameters[parameterIndex].apply {
+                // If null, then a previous parameter's argument has already been iterated,
+                // so all subsequent parameters should be discarded in case they depended on it
+                if (parameterToIterate == null) reset()
+            }
         } else {
             ParameterState(this)
                 .also { parameters += it }
@@ -57,6 +70,15 @@ internal class ParameterizeState {
         property.trackNestedUsage {
             parameter.declare(property, arguments)
             parameterCount++ // After declaring, since the parameter shouldn't count if declare throws
+        }
+
+        if (parameter === parameterToIterate) {
+            parameter.nextArgument()
+            parameterToIterate = null
+        }
+
+        if (!parameter.isLastArgument) {
+            lastParameterWithNextArgument = parameter
         }
 
         return ParameterDelegate(parameter, parameter.getArgument(property))
@@ -74,31 +96,6 @@ internal class ParameterizeState {
     }
 
     /**
-     * Iterate the last parameter that has a next argument (in order of when their arguments were calculated), and reset
-     * all parameters that were first used after it (since they may depend on the now changed value, and may be computed
-     * differently now that a previous argument changed).
-     *
-     * Returns `true` if the arguments are at a new combination.
-     */
-    private fun nextArgumentCombinationOrFalse(): Boolean {
-        var iterated = false
-
-        for (parameter in parameters.subList(0, parameterCount).asReversed()) {
-            if (!parameter.isLastArgument) {
-                parameter.nextArgument()
-                iterated = true
-                break
-            }
-
-            parameter.reset()
-        }
-
-        parameterCount = 0
-
-        return iterated
-    }
-
-    /**
      * Get a list of used arguments for reporting a failure.
      */
     fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
@@ -106,7 +103,18 @@ internal class ParameterizeState {
             .filter { it.hasBeenUsed }
             .map { it.getFailureArgument() }
 
-    fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable) {
+    @JvmInline
+    value class HandleFailureResult(val breakEarly: Boolean)
+
+    fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable): HandleFailureResult {
+        parameterToIterate?.let {
+            throw ParameterizeException(
+                this,
+                "Block previously executed to this point successfully, but now failed with the same arguments",
+                failure
+            )
+        }
+
         failureCount++
 
         val scope = OnFailureScope(
@@ -118,11 +126,11 @@ internal class ParameterizeState {
         with(scope) {
             onFailure(failure)
 
-            this@ParameterizeState.breakEarly = breakEarly
-
             if (recordFailure) {
                 recordedFailures += ParameterizeFailure(failure, arguments)
             }
+
+            return HandleFailureResult(breakEarly)
         }
     }
 
@@ -134,7 +142,7 @@ internal class ParameterizeState {
         val scope = OnCompleteScope(
             iterationCount,
             failureCount,
-            completedEarly = hasNextIteration,
+            completedEarly = hasNextArgumentCombination,
             recordedFailures,
         )
 

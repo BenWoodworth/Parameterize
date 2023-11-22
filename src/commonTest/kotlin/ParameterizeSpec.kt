@@ -78,6 +78,38 @@ class ParameterizeSpec {
     }
 
     @Test
+    fun parameter_should_iterate_to_the_next_argument_while_declaring() {
+        var state: String
+
+        parameterize {
+            state = "creating arguments"
+            val iterationArguments = Iterable {
+                object : Iterator<Int> {
+                    var nextArgument = 0
+
+                    override fun hasNext(): Boolean = nextArgument <= 5
+
+                    override fun next(): Int {
+                        assertEquals("declaring parameter", state, "state (iteration $nextArgument)")
+                        return nextArgument++
+                    }
+                }
+            }
+
+            state = "creating parameter"
+            val iterationParameter = parameter(iterationArguments)
+
+            state = "declaring parameter"
+            val iteration by iterationParameter
+
+            state = "using parameter"
+            useParameter(iteration)
+
+            state = "between iterations"
+        }
+    }
+
+    @Test
     fun parameter_with_lazy_arguments_should_create_parameter_correctly() = parameterize {
         val lazyParameter = parameter { 'a'..'z' }
 

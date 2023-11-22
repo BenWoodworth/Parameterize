@@ -85,16 +85,20 @@ public fun ParameterizeContext.parameterize(
 
     val parameterizeState = ParameterizeState()
 
-    while (parameterizeState.startNextIteration()) {
-        val scope = ParameterizeScope(parameterizeState)
+    while (parameterizeState.hasNextArgumentCombination) {
+        parameterizeState.startNextIteration()
 
+        val scope = ParameterizeScope(parameterizeState)
         try {
             scope.block()
         } catch (failure: Throwable) {
             when {
-                failure is ParameterizeContinue -> {}
+                failure is ParameterizeContinue -> continue
                 failure is ParameterizeException && failure.parameterizeState === parameterizeState -> throw failure
-                else -> parameterizeState.handleFailure(onFailure, failure)
+                else -> {
+                    val result = parameterizeState.handleFailure(onFailure, failure)
+                    if (result.breakEarly) break
+                }
             }
         } finally {
             scope.iterationCompleted = true
@@ -132,8 +136,9 @@ internal data object ParameterizeContinue : Throwable()
 
 internal class ParameterizeException(
     internal val parameterizeState: ParameterizeState,
-    override val message: String
-) : Exception(message)
+    override val message: String,
+    override val cause: Throwable? = null
+) : Exception()
 
 /** @see parameterize */
 public class ParameterizeScope internal constructor(

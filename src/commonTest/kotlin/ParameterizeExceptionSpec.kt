@@ -187,4 +187,28 @@ class ParameterizeExceptionSpec {
 
         assertEquals("Cannot declare parameter `parameter` after its iteration has completed", failure.message)
     }
+
+    @Test
+    fun failing_earlier_than_the_previous_iteration() {
+        val nondeterministicFailure = Throwable("Unexpected failure")
+
+        val failure = assertFailsWith<ParameterizeException> {
+            var shouldFail = false
+
+            parameterize {
+                if (shouldFail) throw nondeterministicFailure
+
+                val iteration by parameter(1..2)
+
+                shouldFail = true
+            }
+        }
+
+        assertEquals(
+            "Block previously executed to this point successfully, but now failed with the same arguments",
+            failure.message,
+            "message"
+        )
+        assertSame(nondeterministicFailure, failure.cause, "cause")
+    }
 }
