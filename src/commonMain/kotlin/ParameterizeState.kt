@@ -53,8 +53,9 @@ internal class ParameterizeState {
         property: KProperty<T>,
         arguments: Iterable<T>
     ): ParameterDelegate<T> {
-        parameterBeingUsed?.let {
-            throw ParameterizeException(this, "Nesting parameters is not currently supported: `${property.name}` was declared within `${it.name}`'s arguments")
+        val declaringParameter = parameterBeingUsed
+        checkState(declaringParameter == null) {
+            "Nesting parameters is not currently supported: `${property.name}` was declared within `${declaringParameter!!.name}`'s arguments"
         }
 
         val parameterIndex = parameterCount
@@ -110,12 +111,8 @@ internal class ParameterizeState {
     value class HandleFailureResult(val breakEarly: Boolean)
 
     fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable): HandleFailureResult {
-        parameterToIterate?.let {
-            throw ParameterizeException(
-                this,
-                "Block previously executed to this point successfully, but now failed with the same arguments",
-                failure
-            )
+        checkState(parameterToIterate == null, failure) {
+            "Block previously executed to this point successfully, but now failed with the same arguments"
         }
 
         failureCount++

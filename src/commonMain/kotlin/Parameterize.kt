@@ -152,11 +152,8 @@ private inline fun ParameterizeState.runIterationWithDecorator(
     var iterationInvoked = false
 
     decorator {
-        if (iterationInvoked) {
-            throw ParameterizeException(
-                this@runIterationWithDecorator,
-                "Decorator must invoke the iteration function exactly once, but was invoked twice"
-            )
+        checkState(!iterationInvoked) {
+            "Decorator must invoke the iteration function exactly once, but was invoked twice"
         }
 
         iteration()
@@ -165,21 +162,12 @@ private inline fun ParameterizeState.runIterationWithDecorator(
         iterationInvoked = true
     }
 
-    if (!iterationInvoked) {
-        throw ParameterizeException(
-            this@runIterationWithDecorator,
-            "Decorator must invoke the iteration function exactly once, but was not invoked"
-        )
+    checkState(iterationInvoked) {
+        "Decorator must invoke the iteration function exactly once, but was not invoked"
     }
 }
 
 internal data object ParameterizeContinue : Throwable()
-
-internal class ParameterizeException(
-    internal val parameterizeState: ParameterizeState,
-    override val message: String,
-    override val cause: Throwable? = null
-) : Exception()
 
 /** @see parameterize */
 public class ParameterizeScope internal constructor(
@@ -220,11 +208,8 @@ public class ParameterizeScope internal constructor(
 
     /** @suppress */
     public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
-        if (iterationCompleted) {
-            throw ParameterizeException(
-                parameterizeState,
-                "Cannot declare parameter `${property.name}` after its iteration has completed"
-            )
+        parameterizeState.checkState(!iterationCompleted) {
+            "Cannot declare parameter `${property.name}` after its iteration has completed"
         }
 
         @Suppress("UNCHECKED_CAST")

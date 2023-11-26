@@ -1,6 +1,7 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
+import kotlin.jvm.JvmField
 import kotlin.native.concurrent.ThreadLocal
 
 /**
@@ -184,12 +185,11 @@ public class ParameterizeConfiguration private constructor(
          */
         public var isLastIteration: Boolean = false
             get() {
-                if (initializedIsLastIteration) return field
-
-                throw ParameterizeException(
-                    parameterizeState,
+                parameterizeState.checkState(initializedIsLastIteration) {
                     "Last iteration cannot be known until after the iteration function is invoked"
-                )
+                }
+
+                return field
             }
             internal set(value) {
                 field = value
