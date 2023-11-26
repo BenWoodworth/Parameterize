@@ -85,12 +85,10 @@ internal class ParameterState(
     fun <T> declare(property: KProperty<T>, arguments: Iterable<T>) {
         // Nothing to do if already declared (besides validating the property)
         this.property?.let { declaredProperty ->
-            if (property.equalsProperty(declaredProperty)) return
-
-            throw ParameterizeException(
-                parameterizeState,
+            parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
                 "Expected to be declaring `${declaredProperty.name}`, but got `${property.name}`"
-            )
+            }
+            return
         }
 
         val iterator = arguments.iterator()
@@ -115,11 +113,8 @@ internal class ParameterState(
             "Cannot get argument before parameter has been declared"
         }
 
-        if (!property.equalsProperty(declaredProperty)) {
-            throw ParameterizeException(
-                parameterizeState,
-                "Cannot use parameter delegate with `${property.name}`, since it was declared with `${declaredProperty.name}`."
-            )
+        parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
+            "Cannot use parameter delegate with `${property.name}`, since it was declared with `${declaredProperty.name}`."
         }
 
         @Suppress("UNCHECKED_CAST") // Argument is declared with property's arguments, so must be T
