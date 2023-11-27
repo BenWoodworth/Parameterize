@@ -6,7 +6,7 @@ internal class ParameterizeException(
     internal val parameterizeState: ParameterizeState,
     override val message: String,
     override val cause: Throwable? = null
-) : Exception()
+) : IllegalStateException()
 
 /**
  * Throws a [ParameterizeException] if the [value] is false.
