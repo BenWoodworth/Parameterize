@@ -209,11 +209,9 @@ class ParameterizeConfigurationSpec {
     fun on_complete_configuration_option_should_be_applied() = testConfiguredParameterize {
         var applied = false
 
-        runCatching {
-            configuredParameterize({
-                onComplete = { applied = true }
-            }) {
-            }
+        configuredParameterize({
+            onComplete = { applied = true }
+        }) {
         }
 
         assertTrue(applied, "applied")
