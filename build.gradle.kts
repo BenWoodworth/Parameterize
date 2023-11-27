@@ -1,10 +1,11 @@
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
 import java.net.URL
 
 plugins {
-    kotlin("multiplatform") version "1.9.20"
+    kotlin("multiplatform") version "1.9.21"
     id("org.jetbrains.dokka") version "1.9.10"
     id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.2"
     id("parameterize.library-conventions")
@@ -51,12 +52,9 @@ kotlin {
     watchosDeviceArm64()
     mingwX64()
 
-    targets.configureEach {
-        compilations.configureEach {
-            compilerOptions.configure {
-                freeCompilerArgs.add("-Xexpect-actual-classes")
-            }
-        }
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
     sourceSets {

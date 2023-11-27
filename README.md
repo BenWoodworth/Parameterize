@@ -89,7 +89,7 @@ fun int_should_not_equal_a_different_int() = parameterize {
 // build.gradle.kts
 
 plugins {
-    kotlin("jvm") version "1.9.20" // or kotlin("multiplatform"), etc.
+    kotlin("jvm") version "1.9.21" // or kotlin("multiplatform"), etc.
 }
 
 repositories {
