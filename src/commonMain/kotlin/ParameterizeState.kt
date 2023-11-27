@@ -16,7 +16,7 @@ internal class ParameterizeState {
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
     private val parameters = ArrayList<ParameterState>()
-    private var parameterBeingUsed: KProperty<*>? = null
+    private var declaringParameter: KProperty<*>? = null
     private var parameterCount = 0
 
     /**
@@ -52,12 +52,7 @@ internal class ParameterizeState {
     fun <T> declareParameter(
         property: KProperty<T>,
         arguments: Iterable<T>
-    ): ParameterDelegate<T> {
-        val declaringParameter = parameterBeingUsed
-        checkState(declaringParameter == null) {
-            "Nesting parameters is not currently supported: `${property.name}` was declared within `${declaringParameter!!.name}`'s arguments"
-        }
-
+    ): ParameterDelegate<T> = trackNestedDeclaration(property) {
         val parameterIndex = parameterCount
 
         val parameter = if (parameterIndex in parameters.indices) {
@@ -71,10 +66,8 @@ internal class ParameterizeState {
                 .also { parameters += it }
         }
 
-        property.trackNestedUsage {
-            parameter.declare(property, arguments)
-            parameterCount++ // After declaring, since the parameter shouldn't count if declare throws
-        }
+        parameter.declare(property, arguments)
+        parameterCount++ // After declaring, since the parameter shouldn't count if declare throws
 
         if (parameter === parameterToIterate) {
             parameter.nextArgument()
@@ -88,14 +81,17 @@ internal class ParameterizeState {
         return ParameterDelegate(parameter, parameter.getArgument(property))
     }
 
-    private inline fun <T> KProperty<T>.trackNestedUsage(block: () -> T): T {
-        val previousParameterBeingUsed = parameterBeingUsed
-        parameterBeingUsed = this
+    private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {
+        val outerParameter = declaringParameter
+        checkState(outerParameter == null) {
+            "Nesting parameters is not currently supported: `${property.name}` was declared within `${outerParameter!!.name}`'s arguments"
+        }
 
         try {
+            declaringParameter = property
             return block()
         } finally {
-            parameterBeingUsed = previousParameterBeingUsed
+            declaringParameter = outerParameter
         }
     }
 
