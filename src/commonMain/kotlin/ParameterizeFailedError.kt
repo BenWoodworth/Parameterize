@@ -1,17 +1,19 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
+import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
+
 /**
  * Thrown to indicate that [parameterize] has completed with failures.
  *
  * The [message] summarizes the number of failures and total iterations. A plus after the total indicates that
- * [completedEarly][ParameterizeConfiguration.OnCompleteScope.completedEarly] was true in
- * [onComplete][ParameterizeConfiguration.Builder.onComplete].
+ * [completedEarly][OnCompleteScope.completedEarly] was true in [onComplete][Builder.onComplete].
  *
- * The [suppressedExceptions] include [recordedFailures][ParameterizeConfiguration.OnCompleteScope.recordedFailures]
- * from the [onComplete][ParameterizeConfiguration.Builder.onComplete] handler, with each being decorated with a message to
- * include a list of the [arguments][ParameterizeFailure.arguments] that caused it.
+ * The [suppressedExceptions] include [recordedFailures][OnCompleteScope.recordedFailures] from the
+ * [onComplete][Builder.onComplete] handler, with each being decorated with a message to include a list of the
+ * [arguments][ParameterizeFailure.arguments] that caused it.
  *
- * Can only be constructed from [ParameterizeConfiguration.Builder.onComplete].
+ * Can only be constructed from [onComplete][Builder.onComplete].
  */
 public expect class ParameterizeFailedError internal constructor(
     recordedFailures: List<ParameterizeFailure>,
