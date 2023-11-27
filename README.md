@@ -3,7 +3,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.benwoodworth.parameterize/parameterize)](https://central.sonatype.com/search?namespace=com.benwoodworth.parameterize&sort=name)
 [![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.benwoodworth.parameterize/parameterize?server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/content/repositories/snapshots/com/benwoodworth/parameterize/)
 [![KDoc](https://img.shields.io/badge/api-KDoc-blue)](https://benwoodworth.github.io/Parameterize/parameterize/com.benwoodworth.parameterize/parameterize.html)
-[![Kotlin](https://img.shields.io/badge/kotlin-1.9.20-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-1.9.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![Slack channel](https://img.shields.io/badge/chat-slack-blue.svg?logo=slack)](https://kotlinlang.slack.com/messages/parameterize/)
 
 Parameterize is a multiplatform Kotlin library that brings a concise syntax for parameterizing code.
@@ -89,7 +89,7 @@ fun int_should_not_equal_a_different_int() = parameterize {
 // build.gradle.kts
 
 plugins {
-    kotlin("jvm") version "1.9.20" // or kotlin("multiplatform"), etc.
+    kotlin("jvm") version "1.9.21" // or kotlin("multiplatform"), etc.
 }
 
 repositories {
