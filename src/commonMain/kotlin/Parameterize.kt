@@ -4,6 +4,7 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.DefaultParameterizeContext.parameterizeConfiguration
+import com.benwoodworth.parameterize.ParameterizeConfiguration.*
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
@@ -81,9 +82,9 @@ import kotlin.reflect.KProperty
  */
 //context(ParameterizeContext) // TODO
 public fun ParameterizeContext.parameterize(
-    onFailure: ParameterizeConfiguration.OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
-    onComplete: ParameterizeConfiguration.OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
-    decorator: ParameterizeConfiguration.DecoratorScope.(iteration: () -> Unit) -> Unit = parameterizeConfiguration.decorator,
+    onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
+    onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
+    decorator: DecoratorScope.(iteration: () -> Unit) -> Unit = parameterizeConfiguration.decorator,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {
@@ -125,9 +126,9 @@ public fun ParameterizeContext.parameterize(
  * @see parameterize
  */
 public fun parameterize(
-    onFailure: ParameterizeConfiguration.OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
-    onComplete: ParameterizeConfiguration.OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
-    decorator: ParameterizeConfiguration.DecoratorScope.(iteration: () -> Unit) -> Unit = parameterizeConfiguration.decorator,
+    onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
+    onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
+    decorator: DecoratorScope.(iteration: () -> Unit) -> Unit = parameterizeConfiguration.decorator,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {
@@ -146,9 +147,9 @@ public fun parameterize(
 }
 
 private inline fun ParameterizeState.runIterationWithDecorator(
-    decorator: ParameterizeConfiguration.DecoratorScope.(iteration: () -> Unit) -> Unit,
+    decorator: DecoratorScope.(iteration: () -> Unit) -> Unit,
     crossinline iteration: () -> Unit
-) = with (ParameterizeConfiguration.DecoratorScope(this)) {
+) = with(DecoratorScope(this)) {
     var iterationInvoked = false
 
     decorator {

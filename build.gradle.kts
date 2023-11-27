@@ -150,4 +150,15 @@ tasks.withType<DokkaTask>().configureEach {
             }
         }
     }
+
+    doLast {
+        layout.buildDirectory.asFileTree.asSequence()
+            .filter { it.isFile && it.extension == "html" }
+            .forEach { file ->
+                file.readText()
+                    // Remove "ParameterizeConfiguration." prefix from link text for *Scope classes
+                    .replace(Regex("""(?<=>)ParameterizeConfiguration\.(?=\w+Scope</a>)"""), "")
+                    .let { file.writeText(it) }
+            }
+    }
 }
