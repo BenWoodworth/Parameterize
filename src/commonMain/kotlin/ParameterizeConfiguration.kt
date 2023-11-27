@@ -14,6 +14,9 @@ public class ParameterizeConfiguration private constructor(
 
     /** @see Builder.onComplete */
     public val onComplete: OnCompleteScope.() -> Unit,
+
+    /** @see Builder.decorator */
+    public val decorator: DecoratorScope.(iteration: () -> Unit) -> Unit
 ) {
     /** @suppress */
     @ThreadLocal
@@ -30,8 +33,9 @@ public class ParameterizeConfiguration private constructor(
     /** @suppress */
     override fun toString(): String =
         "ParameterizeConfiguration(" +
-            "onFailure=$onFailure, " +
-            "onComplete=$onComplete)"
+                "onFailure=$onFailure, " +
+                "onComplete=$onComplete, " +
+                "decorator=$decorator)"
 
     /** @see ParameterizeConfiguration */
     public class Builder internal constructor(from: ParameterizeConfiguration?) {
@@ -72,9 +76,27 @@ public class ParameterizeConfiguration private constructor(
                 if (failureCount > 0) throw ParameterizeFailedError()
             }
 
+        /**
+         * Decorates the [parameterize] iterations, enabling additional logic to be inserted around each. The provided
+         * `iteration` function must be invoked exactly once, and includes the [parameterize] block and the [onFailure]
+         * handler.
+         *
+         * Defaults to:
+         * ```
+         * decorator = { iteration ->
+         *     iteration()
+         * }
+         * ```
+         */
+        public var decorator: DecoratorScope.(iteration: () -> Unit) -> Unit = from?.decorator
+            ?: { iteration ->
+                iteration()
+            }
+
         internal fun build(): ParameterizeConfiguration = ParameterizeConfiguration(
             onFailure = onFailure,
             onComplete = onComplete,
+            decorator = decorator,
         )
     }
 
@@ -142,5 +164,36 @@ public class ParameterizeConfiguration private constructor(
         /** @see ParameterizeFailedError */
         public operator fun ParameterizeFailedError.Companion.invoke(): ParameterizeFailedError =
             ParameterizeFailedError(recordedFailures, failureCount, iterationCount, completedEarly)
+    }
+
+    /** @see Builder.decorator */
+    public class DecoratorScope internal constructor(
+        private val parameterizeState: ParameterizeState
+    ) {
+        private var initializedIsLastIteration = false
+
+        /**
+         * True if this is the first [parameterize] iteration.
+         */
+        public val isFirstIteration: Boolean = parameterizeState.isFirstIteration
+
+        /**
+         * True if this is the last [parameterize] iteration. Cannot be known until after the iteration runs.
+         *
+         * @throws ParameterizeException if accessed before the iteration function has been invoked.
+         */
+        public var isLastIteration: Boolean = false
+            get() {
+                if (initializedIsLastIteration) return field
+
+                throw ParameterizeException(
+                    parameterizeState,
+                    "Last iteration cannot be known until after the iteration function is invoked"
+                )
+            }
+            internal set(value) {
+                field = value
+                initializedIsLastIteration = true
+            }
     }
 }
