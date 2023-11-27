@@ -1,9 +1,14 @@
+@file:JvmMultifileClass
+@file:JvmName("ParameterizeKt")
+
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.DefaultParameterizeContext.parameterizeConfiguration
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
+import kotlin.jvm.JvmMultifileClass
+import kotlin.jvm.JvmName
 import kotlin.reflect.KProperty
 
 /**
@@ -69,6 +74,7 @@ import kotlin.reflect.KProperty
  *
  * @param onFailure See [ParameterizeConfiguration.Builder.onFailure]
  * @param onComplete See [ParameterizeConfiguration.Builder.onComplete]
+ * @param decorator See [ParameterizeConfiguration.Builder.decorator]
  *
  * @throws ParameterizeException when [block] executes nondeterministically, with different control flow for the same parameter arguments.
  * @throws ParameterizeFailedError when [block] throws. (Configurable with [onComplete])
@@ -77,6 +83,7 @@ import kotlin.reflect.KProperty
 public fun ParameterizeContext.parameterize(
     onFailure: ParameterizeConfiguration.OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
     onComplete: ParameterizeConfiguration.OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
+    decorator: ParameterizeConfiguration.DecoratorScope.(iteration: () -> Unit) -> Unit = parameterizeConfiguration.decorator,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {
@@ -84,24 +91,28 @@ public fun ParameterizeContext.parameterize(
     }
 
     val parameterizeState = ParameterizeState()
+    var breakEarly = false
 
-    while (parameterizeState.hasNextArgumentCombination) {
+    while (!breakEarly && parameterizeState.hasNextArgumentCombination) {
         parameterizeState.startNextIteration()
 
-        val scope = ParameterizeScope(parameterizeState)
-        try {
-            scope.block()
-        } catch (failure: Throwable) {
-            when {
-                failure is ParameterizeContinue -> continue
-                failure is ParameterizeException && failure.parameterizeState === parameterizeState -> throw failure
-                else -> {
-                    val result = parameterizeState.handleFailure(onFailure, failure)
-                    if (result.breakEarly) break
+        parameterizeState.runIterationWithDecorator(decorator) {
+            val scope = ParameterizeScope(parameterizeState)
+
+            try {
+                scope.block()
+            } catch (failure: Throwable) {
+                when {
+                    failure is ParameterizeContinue -> {} // continue
+                    failure is ParameterizeException && failure.parameterizeState === parameterizeState -> throw failure
+                    else -> {
+                        val result = parameterizeState.handleFailure(onFailure, failure)
+                        breakEarly = result.breakEarly
+                    }
                 }
+            } finally {
+                scope.iterationCompleted = true
             }
-        } finally {
-            scope.iterationCompleted = true
         }
     }
 
@@ -116,6 +127,7 @@ public fun ParameterizeContext.parameterize(
 public fun parameterize(
     onFailure: ParameterizeConfiguration.OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
     onComplete: ParameterizeConfiguration.OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
+    decorator: ParameterizeConfiguration.DecoratorScope.(iteration: () -> Unit) -> Unit = parameterizeConfiguration.decorator,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {
@@ -127,7 +139,36 @@ public fun parameterize(
         parameterize(
             onFailure,
             onComplete,
+            decorator,
             block
+        )
+    }
+}
+
+private inline fun ParameterizeState.runIterationWithDecorator(
+    decorator: ParameterizeConfiguration.DecoratorScope.(iteration: () -> Unit) -> Unit,
+    crossinline iteration: () -> Unit
+) = with (ParameterizeConfiguration.DecoratorScope(this)) {
+    var iterationInvoked = false
+
+    decorator {
+        if (iterationInvoked) {
+            throw ParameterizeException(
+                this@runIterationWithDecorator,
+                "Decorator must invoke the iteration function exactly once, but was invoked twice"
+            )
+        }
+
+        iteration()
+
+        isLastIteration = !hasNextArgumentCombination
+        iterationInvoked = true
+    }
+
+    if (!iterationInvoked) {
+        throw ParameterizeException(
+            this@runIterationWithDecorator,
+            "Decorator must invoke the iteration function exactly once, but was not invoked"
         )
     }
 }

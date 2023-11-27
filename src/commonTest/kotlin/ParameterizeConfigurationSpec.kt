@@ -26,6 +26,7 @@ class ParameterizeConfigurationSpec {
     private val configurationOptions = listOf(
         ConfigurationOption(ParameterizeConfiguration::onFailure, Builder::onFailure, distinctValue = {}),
         ConfigurationOption(ParameterizeConfiguration::onComplete, Builder::onComplete, distinctValue = {}),
+        ConfigurationOption(ParameterizeConfiguration::decorator, Builder::decorator, distinctValue = {}),
     ).map { it.property.name to it }
 
     @Test
@@ -92,6 +93,7 @@ class ParameterizeConfigurationSpec {
                     parameterize(
                         configuration.onFailure,
                         configuration.onComplete,
+                        configuration.decorator,
                         block
                     )
                 }
@@ -105,6 +107,7 @@ class ParameterizeConfigurationSpec {
                 parameterize(
                     configuration.onFailure,
                     configuration.onComplete,
+                    configuration.decorator,
                     block
                 )
             }
@@ -223,5 +226,31 @@ class ParameterizeConfigurationSpec {
                 fail()
             }
         }
+    }
+
+    @Test
+    fun decorator_configuration_option_should_be_applied() = testConfiguredParameterize {
+        var applied = false
+
+        configuredParameterize({
+            decorator = { iteration ->
+                applied = true
+                iteration()
+            }
+        }) {
+        }
+
+        assertTrue(applied, "applied")
+    }
+
+    @Test
+    fun decorator_default_should_invoke_iteration_function_once() = testDefaultParameterize {
+        var iterationInvocations = 0
+
+        defaultParameterize {
+            iterationInvocations++
+        }
+
+        assertEquals(1, iterationInvocations, "iterationInvocations")
     }
 }

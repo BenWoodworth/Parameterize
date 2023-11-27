@@ -38,6 +38,9 @@ internal class ParameterizeState {
     val hasNextArgumentCombination: Boolean
         get() = lastParameterWithNextArgument != null || iterationCount == 0L
 
+    val isFirstIteration: Boolean
+        get() = iterationCount == 1L
+
     fun startNextIteration() {
         iterationCount++
         parameterCount = 0
