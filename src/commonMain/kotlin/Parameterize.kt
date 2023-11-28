@@ -76,8 +76,8 @@ import kotlin.reflect.KProperty
  * @param onComplete See [ParameterizeConfiguration.Builder.onComplete]
  * @param decorator See [ParameterizeConfiguration.Builder.decorator]
  *
- * @throws ParameterizeException when [block] executes nondeterministically, with different control flow for the same parameter arguments.
- * @throws ParameterizeFailedError when [block] throws. (Configurable with [onComplete])
+ * @throws ParameterizeFailedError if there are any failing iterations. (Configurable with [onComplete])
+ * @throws ParameterizeException if the DSL is used incorrectly. (See restrictions)
  */
 //context(ParameterizeContext) // TODO
 public fun ParameterizeContext.parameterize(
