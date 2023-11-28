@@ -205,7 +205,7 @@ class ParameterizeExceptionSpec {
         }
 
         assertEquals(
-            "Block previously executed to this point successfully, but now failed with the same arguments",
+            "Previous iteration executed to this point successfully, but now failed with the same arguments",
             failure.message,
             "message"
         )

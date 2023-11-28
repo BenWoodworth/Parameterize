@@ -112,7 +112,7 @@ internal class ParameterizeState {
 
     fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable): HandleFailureResult {
         checkState(parameterToIterate == null, failure) {
-            "Block previously executed to this point successfully, but now failed with the same arguments"
+            "Previous iteration executed to this point successfully, but now failed with the same arguments"
         }
 
         failureCount++

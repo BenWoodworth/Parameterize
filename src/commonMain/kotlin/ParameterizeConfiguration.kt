@@ -1,7 +1,6 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
-import kotlin.jvm.JvmField
 import kotlin.native.concurrent.ThreadLocal
 
 /**
@@ -88,6 +87,8 @@ public class ParameterizeConfiguration private constructor(
          *     iteration()
          * }
          * ```
+         *
+         * @throws ParameterizeException if the `iteration` function is not called exactly once.
          */
         public var decorator: DecoratorScope.(iteration: () -> Unit) -> Unit = from?.decorator
             ?: { iteration ->
