@@ -1,6 +1,10 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.RestrictsSuspension
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.native.concurrent.ThreadLocal
 
 /**
@@ -16,7 +20,7 @@ public class ParameterizeConfiguration private constructor(
     public val onComplete: OnCompleteScope.() -> Unit,
 
     /** @see Builder.decorator */
-    public val decorator: DecoratorScope.(iteration: () -> Unit) -> Unit
+    public val decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit
 ) {
     /** @suppress */
     @ThreadLocal
@@ -90,10 +94,11 @@ public class ParameterizeConfiguration private constructor(
          *
          * @throws ParameterizeException if the `iteration` function is not called exactly once.
          */
-        public var decorator: DecoratorScope.(iteration: () -> Unit) -> Unit = from?.decorator
-            ?: { iteration ->
-                iteration()
-            }
+        public var decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit =
+            from?.decorator
+                ?: { iteration ->
+                    iteration()
+                }
 
         internal fun build(): ParameterizeConfiguration = ParameterizeConfiguration(
             onFailure = onFailure,
@@ -169,6 +174,7 @@ public class ParameterizeConfiguration private constructor(
     }
 
     /** @see Builder.decorator */
+    @RestrictsSuspension
     public class DecoratorScope internal constructor(
         private val parameterizeState: ParameterizeState
     ) {
@@ -195,6 +201,14 @@ public class ParameterizeConfiguration private constructor(
             internal set(value) {
                 field = value
                 initializedIsLastIteration = true
+            }
+
+        internal suspend inline fun suspendDecorator(
+            crossinline block: (Continuation<Unit>) -> Unit
+        ): Unit =
+            suspendCoroutineUninterceptedOrReturn { c ->
+                block(c)
+                COROUTINE_SUSPENDED
             }
     }
 }

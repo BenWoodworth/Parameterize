@@ -3,9 +3,6 @@
 
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
-import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
-import kotlin.DeprecationLevel.HIDDEN
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
 
@@ -21,21 +18,5 @@ import kotlin.jvm.JvmName
  *     - Add a test for the default behaviour
  * - Dump API, and confirm that the old signatures are the same (but with an added `synthetic` modifier)
  */
+@Suppress("unused")
 private const val binaryCompatibilityMessage = "Binary compatibility"
-
-
-@Deprecated(binaryCompatibilityMessage, level = HIDDEN)
-public fun ParameterizeContext.parameterize(
-    onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
-    onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
-    block: ParameterizeScope.() -> Unit
-): Unit =
-    parameterize(onFailure, onComplete, block = block)
-
-@Deprecated(binaryCompatibilityMessage, level = HIDDEN)
-public fun parameterize(
-    onFailure: OnFailureScope.(failure: Throwable) -> Unit = DefaultParameterizeContext.parameterizeConfiguration.onFailure,
-    onComplete: OnCompleteScope.() -> Unit = DefaultParameterizeContext.parameterizeConfiguration.onComplete,
-    block: ParameterizeScope.() -> Unit
-): Unit =
-    parameterize(onFailure, onComplete, block = block)
