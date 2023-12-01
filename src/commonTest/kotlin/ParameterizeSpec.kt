@@ -282,4 +282,42 @@ class ParameterizeSpec {
             assertEquals(iteration, capturedParameters[iteration]())
         }
     }
+
+    @Test
+    fun block_should_be_inline() = testAll(
+        "contextual overload" to {
+            with(DefaultParameterizeContext) {
+                parameterize {
+                    return@with // Return through the parameterize block
+                }
+            }
+        },
+        "non-contextual overload" to {
+            run {
+                parameterize {
+                    return@run // Return through the parameterize block
+                }
+            }
+        }
+    )
+
+    /**
+     * The motivating use case here is decorating a Kotest test group, in which the test declarations suspend.
+     */
+    @Test
+    fun should_be_able_to_decorate_a_suspend_block() {
+        val coordinates = sequence {
+            parameterize {
+                val letter by parameter('a'..'c')
+                val number by parameter(1..3)
+
+                yield("$letter$number")
+            }
+        }
+
+        assertEquals(
+            listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"),
+            coordinates.toList()
+        )
+    }
 }

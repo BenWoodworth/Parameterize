@@ -55,17 +55,13 @@ com.benwoodworth.parameterize.ParameterizeFailedError: Failed 2/4 cases
 		suffix = -suffix
 	Caused by: org.opentest4j.AssertionFailedError: "prefix-substring-suffix".contains("substring")
 		at kotlin.test.AssertionsKt.assertTrue(Unknown Source)
-		at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:13)
-		at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:7)
-		at com.benwoodworth.parameterize.ParameterizeKt.parameterize(Parameterize.kt:91)
+		at ContainsSpec.contains_with_the_substring_present_should_be_true(ContainsSpec.kt:13)
 	Suppressed: com.benwoodworth.parameterize.Failure: Failed with arguments:
 		prefix = prefix-
 		suffix = 
 	Caused by: org.opentest4j.AssertionFailedError: "prefix-substring".contains("substring")
 		at kotlin.test.AssertionsKt.assertTrue(Unknown Source)
-		at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:13)
-		at ContainsSpec$contains_with_the_substring_present_should_be_true$1.invoke(ContainsSpec.kt:7)
-		at com.benwoodworth.parameterize.ParameterizeKt.parameterize(Parameterize.kt:91)
+		at ContainsSpec.contains_with_the_substring_present_should_be_true(ContainsSpec.kt:13)
 ```
 
 Parameters are also designed to be flexible, depend on other parameters, be called conditionally, or even used a loop to
