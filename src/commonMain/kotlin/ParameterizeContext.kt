@@ -56,6 +56,7 @@ public interface ParameterizeContext {
     public val parameterizeConfiguration: ParameterizeConfiguration
 }
 
+@PublishedApi
 internal data object DefaultParameterizeContext : ParameterizeContext {
     override val parameterizeConfiguration: ParameterizeConfiguration
         get() = ParameterizeConfiguration.default

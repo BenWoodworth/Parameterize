@@ -81,43 +81,23 @@ import kotlin.reflect.KProperty
  * @throws ParameterizeException if the DSL is used incorrectly. (See restrictions)
  */
 //context(ParameterizeContext) // TODO
-public fun ParameterizeContext.parameterize(
-    onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
-    onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
-    decorator: DecoratorScope.(iteration: () -> Unit) -> Unit = parameterizeConfiguration.decorator,
+public inline fun ParameterizeContext.parameterize(
+    noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
+    noinline onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
+    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = parameterizeConfiguration.decorator,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {
         callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
     }
 
-    val parameterizeState = ParameterizeState()
-    var breakEarly = false
-
-    while (!breakEarly && parameterizeState.hasNextArgumentCombination) {
-        parameterizeState.startNextIteration()
-
-        parameterizeState.runIterationWithDecorator(decorator) {
-            val scope = ParameterizeScope(parameterizeState)
-
-            try {
-                scope.block()
-            } catch (failure: Throwable) {
-                when {
-                    failure is ParameterizeContinue -> {} // continue
-                    failure is ParameterizeException && failure.parameterizeState === parameterizeState -> throw failure
-                    else -> {
-                        val result = parameterizeState.handleFailure(onFailure, failure)
-                        breakEarly = result.breakEarly
-                    }
-                }
-            } finally {
-                scope.iterationCompleted = true
-            }
-        }
+    val configuration = ParameterizeConfiguration(parameterizeConfiguration) {
+        this.onFailure = onFailure
+        this.onComplete = onComplete
+        this.decorator = decorator
     }
 
-    parameterizeState.handleComplete(onComplete)
+    parameterize(configuration, block)
 }
 
 /**
@@ -125,50 +105,46 @@ public fun ParameterizeContext.parameterize(
  *
  * @see parameterize
  */
-public fun parameterize(
-    onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
-    onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
-    decorator: DecoratorScope.(iteration: () -> Unit) -> Unit = parameterizeConfiguration.decorator,
+public inline fun parameterize(
+    noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
+    noinline onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
+    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = parameterizeConfiguration.decorator,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {
         callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
     }
 
-    with(DefaultParameterizeContext) {
-        // Leave arguments unnamed so this call errors when new options are added
-        parameterize(
-            onFailure,
-            onComplete,
-            decorator,
-            block
-        )
+    val configuration = ParameterizeConfiguration {
+        this.onFailure = onFailure
+        this.onComplete = onComplete
+        this.decorator = decorator
     }
+
+    parameterize(configuration, block)
 }
 
-private inline fun ParameterizeState.runIterationWithDecorator(
-    decorator: DecoratorScope.(iteration: () -> Unit) -> Unit,
-    crossinline iteration: () -> Unit
-) = with(DecoratorScope(this)) {
-    var iterationInvoked = false
+@PublishedApi
+internal inline fun parameterize(
+    configuration: ParameterizeConfiguration,
+    block: ParameterizeScope.() -> Unit
+) {
+    // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
+    // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
+    // iterator of a later release, and would be major breaking change that's difficult to detect.
 
-    decorator {
-        checkState(!iterationInvoked) {
-            "Decorator must invoke the iteration function exactly once, but was invoked twice"
+    val iterator = ParameterizeIterator(configuration)
+
+    while (true) {
+        val scope = iterator.nextIteration() ?: break
+
+        try {
+            scope.block()
+        } catch (failure: Throwable) {
+            iterator.handleFailure(failure)
         }
-
-        iteration()
-
-        isLastIteration = !hasNextArgumentCombination
-        iterationInvoked = true
-    }
-
-    checkState(iterationInvoked) {
-        "Decorator must invoke the iteration function exactly once, but was not invoked"
     }
 }
-
-internal data object ParameterizeContinue : Throwable()
 
 /** @see parameterize */
 public class ParameterizeScope internal constructor(

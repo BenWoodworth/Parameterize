@@ -1,5 +1,9 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeConfiguration.DecoratorScope
+import kotlin.coroutines.RestrictsSuspension
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.test.*
 
 class ParameterizeConfigurationDecoratorSpec : ParameterizeContext {
@@ -32,37 +36,96 @@ class ParameterizeConfigurationDecoratorSpec : ParameterizeContext {
     fun failures_within_decorator_should_propagate_out_uncaught() {
         class FailureWithinDecorator : Throwable()
 
-        assertFailsWith<FailureWithinDecorator>("Before `iteration()`") {
-            parameterize(
-                decorator = {
-                    throw FailureWithinDecorator()
-                }
-            ) {}
-        }
-
-        assertFailsWith<FailureWithinDecorator>("After `iteration()`") {
-            parameterize(
-                decorator = { iteration ->
-                    iteration()
-                    throw FailureWithinDecorator()
-                }
-            ) {}
+        testAll<suspend DecoratorScope.(suspend DecoratorScope.() -> Unit) -> Unit>(
+            "Before `iteration()`" to {
+                throw FailureWithinDecorator()
+            },
+            "After `iteration()`" to { iteration ->
+                iteration()
+                throw FailureWithinDecorator()
+            },
+        ) { decorator ->
+            assertFailsWith<FailureWithinDecorator> {
+                parameterize(decorator = decorator) {}
+            }
         }
     }
 
     @Test
-    fun block_should_be_invoked_in_iteration_function() {
-        var blockInvoked = false
+    fun block_and_failure_handler_should_be_invoked_in_iteration_function() {
+        val order = mutableListOf<String>()
 
         parameterize(
             decorator = { iteration ->
-                assertFalse(blockInvoked, "blockInvoked, before invoking iteration")
+                order += "before iteration()"
                 iteration()
-                assertTrue(blockInvoked, "blockInvoked, after invoking iteration")
+                order += "after iteration()"
+            },
+            onFailure = {
+                order += "onFailure invoked"
+            },
+            onComplete = {} // Don't fail
+        ) {
+            order += "block invoked"
+            fail()
+        }
+
+        val expectedOrder = listOf(
+            "before iteration()",
+            "block invoked",
+            "onFailure invoked",
+            "after iteration()",
+        )
+        assertEquals(expectedOrder, order)
+    }
+
+    /**
+     * The decorator scope [RestrictsSuspension], so it shouldn't be possible for code outside the library to suspend
+     * without hacking around the type system like this. But a nice error should be provided just in case.
+     */
+    @Test
+    fun suspending_unexpectedly_should_fail() {
+        val suspendWithoutResuming: suspend Any.() -> Unit = {
+            suspendCoroutineUninterceptedOrReturn { COROUTINE_SUSPENDED }
+        }
+
+        val suspendDecoratorWithoutResuming: suspend DecoratorScope.() -> Unit = suspendWithoutResuming
+
+        testAll<suspend DecoratorScope.(suspend DecoratorScope.() -> Unit) -> Unit>(
+            "before iteration" to { iteration ->
+                suspendDecoratorWithoutResuming()
+                iteration()
+            },
+            "after iteration" to { iteration ->
+                iteration()
+                suspendDecoratorWithoutResuming()
+            },
+        ) { decorator ->
+            val failure = assertFailsWith<ParameterizeException> {
+                parameterize(
+                    decorator = decorator
+                ) {}
+            }
+
+            assertEquals("Decorator suspended unexpectedly", failure.message, "message")
+        }
+    }
+
+    @Test
+    fun should_evaluate_in_correct_order() {
+        val order = mutableListOf<String>()
+
+        parameterize(
+            decorator = { iteration ->
+                order += "before"
+                iteration()
+                order += "after"
             }
         ) {
-            blockInvoked = true
+            order += "iteration"
         }
+
+        assertEquals(listOf("before", "iteration", "after"), order)
     }
 
     @Test
