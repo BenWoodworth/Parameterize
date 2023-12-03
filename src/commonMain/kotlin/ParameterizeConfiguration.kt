@@ -12,7 +12,7 @@ import kotlin.native.concurrent.ThreadLocal
  *
  * Can be used with [ParameterizeContext] to provide defaults for all [parameterize] calls in scope.
  */
-public class ParameterizeConfiguration private constructor(
+public class ParameterizeConfiguration internal constructor(
     /** @see Builder.onFailure */
     public val onFailure: OnFailureScope.(failure: Throwable) -> Unit,
 
@@ -46,8 +46,11 @@ public class ParameterizeConfiguration private constructor(
         /**
          * Invoked after each failing iteration to configure how a failure should be handled.
          *
-         * **Note:** Throwing here will immediately abort [parameterize] without [onComplete] being executed, which
-         * may be desirable if failures aren't expected.
+         * This handler is executed after the [parameterize] block's [decorator] completes, and before [onComplete].
+         *
+         * **Note:** Failures from within [onFailure] will propagate out uncaught, terminating [parameterize] without
+         * [onComplete] being executed. Immediately re-throwing the provided failure in this way may be desirable if the
+         * [parameterize] block is not meant to fail.
          *
          * Defaults to:
          * ```
@@ -81,9 +84,13 @@ public class ParameterizeConfiguration private constructor(
             }
 
         /**
-         * Decorates the [parameterize] iterations, enabling additional logic to be inserted around each. The provided
-         * `iteration` function must be invoked exactly once, and includes the [parameterize] block and the [onFailure]
-         * handler.
+         * Decorates the [parameterize] block, enabling additional shared logic to be inserted around each iteration.
+         *
+         * The provided `iteration` function must be invoked exactly once. It will return without throwing even if the
+         * iteration fails, guaranteeing that any post-iteration cleanup will always be executed.
+         *
+         * **Note:** Failures from within the [decorator] will propagate out uncaught, terminating [parameterize]
+         * without [onFailure] or [onComplete] being executed.
          *
          * Defaults to:
          * ```
@@ -92,7 +99,10 @@ public class ParameterizeConfiguration private constructor(
          * }
          * ```
          *
-         * @throws ParameterizeException if the `iteration` function is not called exactly once.
+         * @throws ParameterizeException if the `iteration` function is not invoked exactly once.
+         *
+         * @see DecoratorScope.isFirstIteration
+         * @see DecoratorScope.isLastIteration
          */
         public var decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit =
             from?.decorator
