@@ -3,7 +3,8 @@ package com.benwoodworth.parameterize
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import kotlin.test.*
 
-class ParameterizeConfigurationOnCompleteSpec {
+@Suppress("ClassName")
+class ParameterizeConfigurationSpec_onComplete {
     @Test
     fun should_be_invoked_once_after_all_iterations() {
         var timesInvoked = 0

@@ -6,7 +6,18 @@ import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 import kotlin.test.*
 
+/**
+ * Specifies [ParameterizeConfiguration] creation, and how its options are applied to [parameterize].
+ *
+ * The behavior of the individual options is specified in their respective `ParameterizeConfigurationSpec_*` classes.
+ */
 class ParameterizeConfigurationSpec {
+    private val configurationOptions = listOf(
+        ConfigurationOption(ParameterizeConfiguration::onFailure, Builder::onFailure, distinctValue = {}),
+        ConfigurationOption(ParameterizeConfiguration::onComplete, Builder::onComplete, distinctValue = {}),
+        ConfigurationOption(ParameterizeConfiguration::decorator, Builder::decorator, distinctValue = {}),
+    ).map { it.property.name to it }
+
     private class ConfigurationOption<T>(
         val property: KProperty1<ParameterizeConfiguration, T>,
         val builderProperty: KMutableProperty1<Builder, T>,
@@ -23,11 +34,6 @@ class ParameterizeConfigurationSpec {
             builderProperty.set(builder, distinctValue)
     }
 
-    private val configurationOptions = listOf(
-        ConfigurationOption(ParameterizeConfiguration::onFailure, Builder::onFailure, distinctValue = {}),
-        ConfigurationOption(ParameterizeConfiguration::onComplete, Builder::onComplete, distinctValue = {}),
-        ConfigurationOption(ParameterizeConfiguration::decorator, Builder::decorator, distinctValue = {}),
-    ).map { it.property.name to it }
 
     @Test
     fun builder_should_apply_options_correctly() = testAll(configurationOptions) { option ->
