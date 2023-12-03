@@ -71,7 +71,7 @@ import kotlin.reflect.KProperty
  *
  * @receiver [ParameterizeContext] provides the configuration for this function's default arguments.
  *
- * ***Note:** Should not be used as an extension function, as it will be changed to use a context receiver in the future.*
+ * **Note:** Should not be used as an extension function, as it will be changed to use a context receiver in the future.
  *
  * @param onFailure See [ParameterizeConfiguration.Builder.onFailure]
  * @param onComplete See [ParameterizeConfiguration.Builder.onComplete]

@@ -15,7 +15,7 @@ internal class ParameterizeIterator(
     private val parameterizeState = ParameterizeState()
 
     private var breakEarly = false
-    private var currentIterationScope: ParameterizeScope? = null
+    private var currentIterationScope: ParameterizeScope? = null // Non-null if afterEach still needs to be called
     private var decoratorCoroutine: DecoratorCoroutine? = null
 
     /**
@@ -23,7 +23,7 @@ internal class ParameterizeIterator(
      */
     @PublishedApi
     internal fun nextIteration(): ParameterizeScope? {
-        currentIterationScope?.let { afterEach(it) }
+        if (currentIterationScope != null) afterEach()
 
         if (breakEarly || !parameterizeState.hasNextArgumentCombination) {
             handleComplete()
@@ -40,8 +40,15 @@ internal class ParameterizeIterator(
     @PublishedApi
     internal fun handleFailure(failure: Throwable): Unit = when {
         failure is ParameterizeContinue -> {}
-        failure is ParameterizeException && failure.parameterizeState === parameterizeState -> throw failure
+
+        failure is ParameterizeException && failure.parameterizeState === parameterizeState -> {
+            afterEach() // Since nextIteration() won't be called again to finalize the iteration
+            throw failure
+        }
+
         else -> {
+            afterEach() // Since the decorator should complete before onFailure is invoked
+
             val result = parameterizeState.handleFailure(configuration.onFailure, failure)
             breakEarly = result.breakEarly
         }
@@ -52,11 +59,15 @@ internal class ParameterizeIterator(
             .also { it.beforeIteration() }
     }
 
-    private fun afterEach(scope: ParameterizeScope) {
-        decoratorCoroutine?.afterIteration()
-            ?: error("Decorator continuation was null")
+    private fun afterEach() {
+        val currentIterationScope = checkNotNull(currentIterationScope) { "${::currentIterationScope.name} was null" }
+        val decoratorCoroutine = checkNotNull(decoratorCoroutine) { "${::decoratorCoroutine.name} was null" }
 
-        scope.iterationCompleted = true
+        currentIterationScope.iterationCompleted = true
+        decoratorCoroutine.afterIteration()
+
+        this.currentIterationScope = null
+        this.decoratorCoroutine = null
     }
 
     private fun handleComplete() {
