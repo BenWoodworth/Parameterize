@@ -1,6 +1,7 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.DecoratorScope
+import com.benwoodworth.parameterize.test.EdgeCases
 import kotlin.coroutines.RestrictsSuspension
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
@@ -33,7 +34,7 @@ class ParameterizeConfigurationDecoratorSpec : ParameterizeContext {
     }
 
     @Test
-    fun failures_within_decorator_should_propagate_out_uncaught() {
+    fun failures_within_decorator_should_immediately_terminate_parameterize() {
         class FailureWithinDecorator : Throwable()
 
         testAll<suspend DecoratorScope.(suspend DecoratorScope.() -> Unit) -> Unit>(
@@ -45,38 +46,27 @@ class ParameterizeConfigurationDecoratorSpec : ParameterizeContext {
                 throw FailureWithinDecorator()
             },
         ) { decorator ->
+            var iterationCount = 0
+            var onFailureInvoked = false
+            var onCompleteInvoked = false
+
             assertFailsWith<FailureWithinDecorator> {
-                parameterize(decorator = decorator) {}
+                parameterize(
+                    decorator = { iteration ->
+                        iterationCount++
+                        decorator(iteration)
+                    },
+                    onFailure = { onFailureInvoked = true },
+                    onComplete = { onCompleteInvoked = true }
+                ) {
+                    val iteration by parameterOf(1, 2)
+                }
             }
+
+            assertEquals(iterationCount, 1, "iterationCount")
+            assertFalse(onFailureInvoked, "onFailureInvoked")
+            assertFalse(onCompleteInvoked, "onCompleteInvoked")
         }
-    }
-
-    @Test
-    fun block_and_failure_handler_should_be_invoked_in_iteration_function() {
-        val order = mutableListOf<String>()
-
-        parameterize(
-            decorator = { iteration ->
-                order += "before iteration()"
-                iteration()
-                order += "after iteration()"
-            },
-            onFailure = {
-                order += "onFailure invoked"
-            },
-            onComplete = {} // Don't fail
-        ) {
-            order += "block invoked"
-            fail()
-        }
-
-        val expectedOrder = listOf(
-            "before iteration()",
-            "block invoked",
-            "onFailure invoked",
-            "after iteration()",
-        )
-        assertEquals(expectedOrder, order)
     }
 
     /**
@@ -112,39 +102,23 @@ class ParameterizeConfigurationDecoratorSpec : ParameterizeContext {
     }
 
     @Test
-    fun should_evaluate_in_correct_order() {
-        val order = mutableListOf<String>()
+    fun iteration_function_should_return_regardless_of_how_parameterize_block_fails() = testAll(
+        EdgeCases.iterationFailures
+    ) { getFailure ->
+        var returned = false
 
-        parameterize(
-            decorator = { iteration ->
-                order += "before"
-                iteration()
-                order += "after"
+        runCatching {
+            parameterize(
+                decorator = { iteration ->
+                    iteration()
+                    returned = true
+                }
+            ) {
+                throw getFailure(parameterizeState)
             }
-        ) {
-            order += "iteration"
         }
 
-        assertEquals(listOf("before", "iteration", "after"), order)
-    }
-
-    @Test
-    fun on_failure_should_be_invoked_in_iteration_function() {
-        var onFailureInvoked = false
-
-        parameterize(
-            onFailure = {
-                onFailureInvoked = true
-            },
-            onComplete = {}, // Don't throw because of the failure
-            decorator = { iteration ->
-                assertFalse(onFailureInvoked, "onFailureInvoked, before invoking iteration")
-                iteration()
-                assertTrue(onFailureInvoked, "onFailureInvoked, after invoking iteration")
-            }
-        ) {
-            throw Throwable("Test failure")
-        }
+        assertTrue(returned, "returned")
     }
 
     @Test
@@ -256,5 +230,23 @@ class ParameterizeConfigurationDecoratorSpec : ParameterizeContext {
             exception.message,
             "message"
         )
+    }
+
+    @Test
+    fun declaring_parameter_after_iteration_function_should_fail() {
+        assertFailsWith<ParameterizeException> {
+            lateinit var declareParameter: () -> Unit
+
+            parameterize(
+                decorator = { iteration ->
+                    iteration()
+                    declareParameter()
+                }
+            ) {
+                declareParameter = {
+                    val parameter by parameterOf(Unit)
+                }
+            }
+        }
     }
 }

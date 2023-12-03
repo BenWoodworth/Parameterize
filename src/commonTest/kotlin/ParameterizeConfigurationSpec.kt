@@ -68,6 +68,48 @@ class ParameterizeConfigurationSpec {
         assertEquals(expected, configuration.toString())
     }
 
+    /**
+     * The parameterize block and `decorator` should execute together, since it intuitively works as if the `decorator`
+     * logic were inlined into the block. Logic at the end of the block would still be executed before `onFailure` and
+     * `onComplete` are invoked.
+     *
+     * Having `onFailure` run *after* the `decorator` is also easier to reason about if the failure handler itself
+     * throws. The `decorator` has "always completes" semantics, and `onFailure` has "terminates immediately" semantics,
+     * and that's only possible if `onFailure` runs after. If `onFailure` were to run immediately for a failure in the
+     * parameterize block, then the `decorator`'s semantics with how it interacts with failures wouldn't be so
+     * straightforward.
+     */
+    @Test
+    fun options_should_be_executed_in_the_correct_order() {
+        val order = mutableListOf<String>()
+
+        // Non-builder constructor so all options must be specified
+        val configuration = ParameterizeConfiguration(
+            onFailure = { order += "onFailure" },
+            onComplete = { order += "onComplete" },
+            decorator = { iteration ->
+                order += "decorator (before)"
+                iteration()
+                order += "decorator (after)"
+            }
+        )
+
+        parameterize(configuration) {
+            order += "block"
+            fail()
+        }
+
+        val expectedOrder = listOf(
+            "decorator (before)",
+            "block",
+            "decorator (after)",
+            "onFailure",
+            "onComplete"
+        )
+
+        assertEquals(order, expectedOrder)
+    }
+
     private fun interface ConfiguredParameterize {
         fun configuredParameterize(configure: Builder.() -> Unit, block: ParameterizeScope.() -> Unit)
     }
