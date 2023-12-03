@@ -2,7 +2,8 @@ package com.benwoodworth.parameterize
 
 import kotlin.test.*
 
-class ParameterizeConfigurationOnFailureSpec : ParameterizeContext {
+@Suppress("ClassName")
+class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
     override val parameterizeConfiguration = ParameterizeConfiguration {
         onComplete = {} // Don't throw because of the tested failures
     }

@@ -1,5 +1,3 @@
-@file:Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
-
 package com.benwoodworth.parameterize
 
 import kotlin.test.Test
@@ -7,6 +5,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
+/**
+ * Specifies how default non-configured [parameterize] usage should behave.
+ */
 class ParameterizeSpec {
     /**
      * Run parameterize with the given block, and assert that each iteration
@@ -212,6 +213,7 @@ class ParameterizeSpec {
     }
 
     @Test
+    @Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
     fun unused_parameter_with_no_arguments_should_finish_iteration_early() = testParameterize(
         listOf(null)
     ) {
@@ -284,22 +286,19 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun block_should_be_inline() = testAll(
-        "contextual overload" to {
-            with(DefaultParameterizeContext) {
-                parameterize {
-                    return@with // Return through the parameterize block
-                }
-            }
-        },
-        "non-contextual overload" to {
-            run {
-                parameterize {
-                    return@run // Return through the parameterize block
-                }
+    fun should_be_able_to_return_from_an_outer_function_from_within_the_block() {
+        // Contextual overload
+        with(DefaultParameterizeContext) {
+            parameterize {
+                return@should_be_able_to_return_from_an_outer_function_from_within_the_block
             }
         }
-    )
+
+        // Non-contextual overload
+        parameterize {
+            return@should_be_able_to_return_from_an_outer_function_from_within_the_block
+        }
+    }
 
     /**
      * The motivating use case here is decorating a Kotest test group, in which the test declarations suspend.
