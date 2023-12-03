@@ -7,7 +7,8 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.test.*
 
-class ParameterizeConfigurationDecoratorSpec : ParameterizeContext {
+@Suppress("ClassName")
+class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
     override val parameterizeConfiguration = ParameterizeConfiguration {
         onFailure = {
             recordFailure = true
