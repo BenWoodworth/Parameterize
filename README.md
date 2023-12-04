@@ -6,23 +6,74 @@
 [![Kotlin](https://img.shields.io/badge/kotlin-1.9.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![Slack channel](https://img.shields.io/badge/chat-slack-blue.svg?logo=slack)](https://kotlinlang.slack.com/messages/parameterize/)
 
-Parameterize is a multiplatform Kotlin library that brings a concise syntax for parameterizing code.
-With the parameters defined inline, the `parameterize` block will be run for each combination of `parameter` arguments,
-simplifying the exhaustive exploration of code paths.
+Parameterize is a multiplatform Kotlin library introducing a concise, idiomatic style of parameterizing code. Having
+parameters be declared within the logic, potentially conditionally or with dynamic arguments, it's possible to model
+complicated control flow scenarios much more cleanly.
 
 ```kotlin
 parameterize {
     val letter by parameter('a'..'z')
     val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
-    val lazyValue by parameter { slowArgumentsComputation() }
+    val computedValue by parameter { slowArgumentsComputation() }
 
     // ...
 }
 ```
 
-With parameterized testing being the motivating use case, `parameterize` can be used to cleanly and more idiomatically
-cover edge cases in tests. For example, succinctly covering all the possible ways a `substring` can be contained within
-a `string`, running the `parameterize` block once for each case:
+With its default behavior, `parameterize` is strictly an alternative syntax to nested `for` loops, with loop variables
+defined within the body instead of up front, and without the indentation that's required for additional inner loops.
+
+<table>
+<tr>
+<th>Example <code>parameterize</code> loop</th>
+<th>Equivalent <code>for</code> loops</th>
+</tr>
+
+<tr>
+<td>
+
+```kotlin
+val reddishYellows = sequence {
+    parameterize {
+        val red by parameter(128..255)
+        val green by parameter(64..(red - 32))
+        val blue by parameter(0..(green - 64))
+
+        yield(Color(red, green, blue))
+    }
+}
+```
+
+</td>
+<td>
+
+```kotlin
+val reddishYellows = sequence {
+    for (red in 128..255) {
+        for (green in 64..(red - 32)) {
+            for (blue in 0..(green - 64)) {
+                yield(Color(red, green, blue))
+            }
+        }
+    }
+}
+```
+
+</td>
+</tr>
+</table>
+
+In addition to its default behavior, `parameterize` is also configurable with options to decorate its iterations, handle
+and record failures, and summarize the overall loop execution. The flexibility `parameterize` offers makes it suitable
+for many different specific use cases, including built in ways to access the named parameter arguments when a failure
+occurs, recording failures while continuing to the next iteration, and throwing comprehensive multi-failures that list
+recorded failures with parameter information.
+
+## Parameterized Testing
+
+With parameterized testing being the motivating use case for this library, `parameterize` can be used to cleanly and
+more idiomatically cover edge cases while testing. As an example, here is a test that succinctly covers all the possible
+ways a `substring` can be contained within a `string`, running the `parameterize` block once for each case:
 
 ```kotlin
 val string = "prefix-substring-suffix"  // in the middle
@@ -32,19 +83,30 @@ val string = "substring"                // the entire string
 ```
 
 ```kotlin
+// Shared configuration, pulled in from the context. (See full test suite examples below)
+override val parameterizeConfiguration = ParameterizeConfiguration {
+    onFailure = { recordFailure = true }
+}
+
 @Test
-fun contains_with_the_substring_present_should_be_true() = parameterize {
+fun a_string_should_contain_its_own_substring() = parameterize {
     val substring = "substring"
     val prefix by parameterOf("prefix-", "")
     val suffix by parameterOf("-suffix", "")
 
     val string = "$prefix$substring$suffix"
+
     assertTrue(string.contains(substring), "\"$string\".contains(\"$substring\")")
 }
 ```
 
-If the test fails, the cause will be wrapped into an `Error` detailing the <ins>*used*</ins> parameters with their
-arguments <ins>*and parameter names*</ins>:
+If any of the test cases don't pass, the failures will be wrapped into an `Error` detailing the <ins>*used*</ins>
+parameters with their arguments <ins>*and parameter names*</ins> for each, plus support for JVM tooling with
+[expected/actual value comparison](http://ota4j-team.github.io/opentest4j/docs/current/api/org/opentest4j/AssertionFailedError.html)
+and [multi-failures](http://ota4j-team.github.io/opentest4j/docs/current/api/org/opentest4j/MultipleFailuresError.html):
+
+<details>
+<summary><b>Multi-failure stack trace</b></summary>
 
 ```java
 com.benwoodworth.parameterize.ParameterizeFailedError: Failed 2/4 cases
@@ -54,28 +116,149 @@ com.benwoodworth.parameterize.ParameterizeFailedError: Failed 2/4 cases
 		prefix = prefix-
 		suffix = -suffix
 	Caused by: org.opentest4j.AssertionFailedError: "prefix-substring-suffix".contains("substring")
-		at kotlin.test.AssertionsKt.assertTrue(Unknown Source)
-		at ContainsSpec.contains_with_the_substring_present_should_be_true(ContainsSpec.kt:13)
+		at kotlin.test.AssertionsKt.assertTrue(Assertions.kt:44)
+		at ContainsSpec.a_string_should_contain_its_own_substring(ContainsSpec.kt:18)
+		at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:86)
 	Suppressed: com.benwoodworth.parameterize.Failure: Failed with arguments:
 		prefix = prefix-
 		suffix = 
 	Caused by: org.opentest4j.AssertionFailedError: "prefix-substring".contains("substring")
-		at kotlin.test.AssertionsKt.assertTrue(Unknown Source)
-		at ContainsSpec.contains_with_the_substring_present_should_be_true(ContainsSpec.kt:13)
+		at kotlin.test.AssertionsKt.assertTrue(Assertions.kt:44)
+		at ContainsSpec.a_string_should_contain_its_own_substring(ContainsSpec.kt:18)
+		at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:86)
 ```
 
-Parameters are also designed to be flexible, depend on other parameters, be called conditionally, or even used a loop to
-declare multiple parameters from the same property. Features which are especially useful for covering edge/corner cases:
+</details>
+
+The parameters are designed to be flexible, being able to depend on other parameters, be declared conditionally, or even
+used in a loop to declare multiple parameters from the same property. Features which are especially useful for covering
+edge/corner cases:
 
 ```kotlin
 @Test
-fun int_should_not_equal_a_different_int() = parameterize {
+fun an_int_should_not_equal_a_different_int() = parameterize {
     val int by parameterOf(0, 1, -1, Int.MAX_VALUE, Int.MIN_VALUE)
     val differentInt by parameterOf(int + 1, int - 1)
 
     assertNotEquals(int, differentInt)
 }
 ```
+
+### Test Suite Examples
+
+<details>
+<summary><b>
+    Annotation-based frameworks
+    (<a href="https://kotlinlang.org/api/latest/kotlin.test/">kotlin.test</a>,
+    <a href="https://junit.org/">JUnit</a>,
+    <a href="https://testng.org/">TestNG</a>,
+    ...)
+</b></summary>
+
+Using the `decorator` configuration option, `parameterize` can be configured to trigger a test framework's before/after
+hooks for each of its iterations. The `decorator` can be pre-configured by creating a `ParameterizeContext` to to share
+and reuse the configuration, instead of specifying a `decorator` with these hooks in every `parameterize` call. In this
+[kotlin.test](https://kotlinlang.org/api/latest/kotlin.test/) example, any class that extends the `TestingContext`
+will have its `parameterize` calls pull from the shared `parameterizeConfiguration`:
+
+```kotlin
+abstract class TestingContext : ParameterizeContext {
+    protected open fun beforeTest() {}
+    protected open fun afterTest() {}
+
+    // The annotations would be lost when overriding beforeTest/afterTest,
+    // so hook in here instead of relying on the subclasses to apply them.
+    @BeforeTest
+    fun beforeTestHook(): Unit = beforeTest()
+
+    @AfterTest
+    fun afterTestHook(): Unit = afterTest()
+
+
+    override val parameterizeConfiguration = ParameterizeConfiguration {
+        // Inserts before & after calls around each test case,
+        // except where already invoked by the test framework.
+        decorator = { testCase ->
+            if (!isFirstIteration) beforeTest()
+            testCase()
+            if (!isLastIteration) afterTest()
+        },
+        
+        // ...other shared configuration
+    }
+}
+```
+```kotlin
+class ContainsSpec : TestingContext() {
+    override fun beforeTest() {
+        // ...
+    }
+
+    override fun afterTest() {
+        // ...
+    }
+    
+    @Test
+    fun a_string_should_contain_its_own_substring() = parameterize {
+        val substring = "substring"
+        val prefix by parameterOf("prefix-", "")
+        val suffix by parameterOf("-suffix", "")
+
+        val string = "$prefix$substring$suffix"
+
+        assertTrue(string.contains(substring), "\"$string\".contains(\"$substring\")")
+    }
+}
+```
+
+In the future, this setup should be made easier with context receivers, only requiring a top-level
+`ParameterizeConfiguration` property and a `with val` bringing it into context.
+([See here](https://github.com/Kotlin/KEEP/blob/master/proposals/context-receivers.md#scope-properties))
+
+</details>
+
+<details>
+<summary><b>
+    DSL-based frameworks
+    (<a href="https://kotest.io/docs/framework/framework.html">Kotest</a>,
+    <a href="https://www.spekframework.org/">Spek</a>,
+    <a href="https://gitlab.com/opensavvy/prepared">Prepared</a>,
+    ...)
+</b></summary>
+
+With test frameworks that declare tests dynamically, it's possible to produce a suite of *separate* tests by declaring
+a single test within a parameterized group. With Kotest's [Fun Spec](https://kotest.io/docs/framework/testing-styles.html#fun-spec),
+for example, this code will register four tests that will be reported separately by the test runner when executed, all
+grouped together under the one test `context`:
+
+```kotlin
+└─ A string should contain its own substring
+   ├─ "prefix-substring-suffix".contains("substring")
+   ├─ "prefix-substring".contains("substring")
+   ├─ "substring-suffix".contains("substring")
+   └─ "substring".contains("substring")
+```
+```kotlin
+context("A string should contain its own substring") {
+    parameterize {
+        val substring = "substring"
+        val prefix by parameterOf("prefix-", "")
+        val suffix by parameterOf("-suffix", "")
+
+        val string = "$prefix$substring$suffix"
+
+        test("\"$string\".contains(\"$substring\")") {
+            string.contains(substring) shouldBe true
+        }
+    }
+}
+```
+
+In the future, it will likely be possible for this to be written more nicely once Kotlin supports decorators, removing
+the need for an extra level of nesting nesting inside the group of tests.
+([See here](https://youtrack.jetbrains.com/issue/KT-49904/Decorators#focus=Comments-27-8465650.0-0))
+
+</details>
 
 ## Setup
 
