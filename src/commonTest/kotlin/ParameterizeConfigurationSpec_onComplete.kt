@@ -4,7 +4,11 @@ import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import kotlin.test.*
 
 @Suppress("ClassName")
-class ParameterizeConfigurationSpec_onComplete {
+class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
+    override val parameterizeConfiguration = ParameterizeConfiguration {
+        onFailure = {} // Continue on failure
+    }
+
     @Test
     fun should_be_invoked_once_after_all_iterations() {
         var timesInvoked = 0

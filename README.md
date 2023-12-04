@@ -182,9 +182,12 @@ abstract class TestingContext : ParameterizeContext {
             if (!isFirstIteration) beforeTest()
             testCase()
             if (!isLastIteration) afterTest()
-        },
-        
-        // ...other shared configuration
+        }
+
+        // Only record the first # failures
+        onFailure = { failure ->
+            recordFailure = failureCount <= #
+        }
     }
 }
 ```
