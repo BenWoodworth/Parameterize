@@ -166,10 +166,20 @@ class ParameterizeConfigurationSpec {
         fun defaultParameterize(block: ParameterizeScope.() -> Unit)
     }
 
-    private fun testDefaultParameterize(test: DefaultParameterize.() -> Unit) = testAll(
+    /**
+     * Test a configuration option's default behavior.
+     *
+     * If it's not possible to test without changing another option from its default, [configureWithDefault] and
+     * [parameterizeWithDefault] can be used to change ***only*** that other option.
+     */
+    private fun testDefaultParameterize(
+        configureWithDefault: Builder.() -> Unit,
+        parameterizeWithDefault: (block: ParameterizeScope.() -> Unit) -> Unit,
+        test: DefaultParameterize.() -> Unit
+    ) = testAll(
         "with defaults from builder" to {
             val context = object : ParameterizeContext {
-                override val parameterizeConfiguration = ParameterizeConfiguration {}
+                override val parameterizeConfiguration = ParameterizeConfiguration { configureWithDefault() }
             }
 
             val defaultParameterize = DefaultParameterize { block ->
@@ -182,12 +192,20 @@ class ParameterizeConfigurationSpec {
         },
         "with defaults from non-contextual overload" to {
             val defaultParameterize = DefaultParameterize { block ->
-                parameterize(block = block)
+                parameterizeWithDefault(block)
             }
 
             test(defaultParameterize)
         },
     )
+
+    /** @see testDefaultParameterize */
+    private fun testDefaultParameterize(test: DefaultParameterize.() -> Unit): Unit =
+        testDefaultParameterize(
+            configureWithDefault = {},
+            parameterizeWithDefault = { block -> parameterize(block = block) },
+            test = test
+        )
 
     @Test
     fun on_failure_configuration_option_should_be_applied() = testConfiguredParameterize {
@@ -205,36 +223,21 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun on_failure_default_should_record_first_10_failures_and_never_break() = testDefaultParameterize {
-        val iterations = List(100) { i ->
-            if (i % 2 == 0 && i % 3 == 0) {
-                Result.failure(Throwable(i.toString()))
-            } else {
-                Result.success(Unit)
-            }
-        }
+    fun on_failure_default_should_rethrow_the_failure() = testDefaultParameterize {
+        var iterationCount = 0
 
-        val expectedRecordedFailures = iterations
-            .mapNotNull { it.exceptionOrNull() }
-            .take(10)
+        class RethrownFailure : Throwable()
 
-        val actualIterations = mutableListOf<Result<Unit>>()
-
-        // Test assumes this is the default type thrown failures
-        val failure = assertFailsWith<ParameterizeFailedError> {
+        assertFailsWith<RethrownFailure> {
             defaultParameterize {
-                val iteration by parameter(iterations)
+                val iteration by parameterOf(1..2)
 
-                actualIterations += iteration
-                iteration.getOrThrow()
+                iterationCount++
+                throw RethrownFailure()
             }
         }
 
-        val actualRecordedFailures = failure.suppressedExceptions
-            .map { augmentedFailure -> augmentedFailure.cause }
-
-        assertEquals(iterations, actualIterations, "Should not break")
-        assertEquals(expectedRecordedFailures, actualRecordedFailures, "Should record first 10 failures")
+        assertEquals(1, iterationCount, "iterationCount")
     }
 
     @Test
@@ -266,7 +269,11 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun on_complete_default_should_throw_ParameterizeFailedError() = testDefaultParameterize {
+    fun on_complete_default_should_throw_ParameterizeFailedError() = testDefaultParameterize(
+        // Continue on failure, so parameterize doesn't terminate before onComplete gets to run
+        configureWithDefault = { onFailure = {} },
+        parameterizeWithDefault = { block -> parameterize(onFailure = {}, block = block) }
+    ) {
         assertFailsWith<ParameterizeFailedError> {
             defaultParameterize {
                 fail()

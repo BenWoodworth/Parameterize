@@ -55,8 +55,7 @@ public class ParameterizeConfiguration internal constructor(
          * Defaults to:
          * ```
          * onFailure = { failure ->
-         *     // Only record the first 10 failures
-         *     recordFailure = failureCount <= 10
+         *     throw failure
          * }
          * ```
          *
@@ -64,12 +63,16 @@ public class ParameterizeConfiguration internal constructor(
          * @see OnFailureScope.recordFailure
          */
         public var onFailure: OnFailureScope.(failure: Throwable) -> Unit = from?.onFailure
-            ?: {
-                recordFailure = failureCount <= 10
+            ?: { failure ->
+                throw failure
             }
 
         /**
          * Invoked after [parameterize] has finished iterating, enabling the final results to be handled.
+         *
+         * **Note:** The default [onFailure] handler prevents [onComplete] from executing when there is a failure,
+         * immediately throwing instead of continuing and tracking failures to be handled here.
+         *
          *
          * Defaults to:
          * ```
