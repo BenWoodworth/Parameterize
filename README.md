@@ -107,8 +107,11 @@ abstract class TestingContext : ParameterizeContext {
             iteration()
             if (!isLastIteration) afterTest()
         }
-        
-        // ...other shared configuration
+
+        onFailure = { failure ->
+            // Only record the first 10 failures
+            recordFailure = failureCount <= 10
+        }
     }
 
     open fun beforeTest() {}
