@@ -19,43 +19,34 @@ import kotlin.reflect.KProperty
  * parameterize {
  *     val letter by parameter('a'..'z')
  *     val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
- *     val lazyValue by parameter { slowArgumentsComputation() }
+ *     val computedValue by parameter { slowArgumentsComputation() }
  *
  *     // ...
  * }
  * ```
  *
- * For example, [parameterize] can be used to succinctly cover edge cases in a test. Here the test will be run
- * once for each of the possible ways `substring` can be contained within `string`:
- * ```
- *  • val string = "prefix-substring-suffix"  // in the middle
- *  • val string = "substring-suffix"         // at the start
- *  • val string = "prefix-substring"         // at the end
- *  • val string = "substring"                // the entire string
- * ```
+ * With its default behavior, [parameterize] is strictly an alternative syntax to nested `for` loops, with loop
+ * variables defined within the body instead of up front, and without the indentation that's required for additional
+ * inner loops. For example, this `sequence` is equivalent to nested `red`/`green`/`blue` `for` loops with the same
+ * dependent ranges:
  *
- * ```
- * @Test
- * fun contains_with_the_substring_present_should_be_true() = parameterize {
- *     val substring = "substring"
- *     val prefix by parameterOf("prefix-", "")
- *     val suffix by parameterOf("-suffix", "")
+ * ```kotlin
+ * val reddishYellows = sequence {
+ *     parameterize {
+ *         val red by parameter(128..255)
+ *         val green by parameter(64..(red - 32))
+ *         val blue by parameter(0..(green - 64))
  *
- *     val string = "$prefix$substring$suffix"
- *     assertTrue(string.contains(substring), "\"$string\".contains(\"$substring\")")
+ *         yield(Color(red, green, blue))
+ *     }
  * }
  * ```
  *
- * Parameters may also depend on other parameters, which is especially useful be useful for testing edge/corner cases:
- * ```
- * @Test
- * fun int_should_not_equal_a_different_int() = parameterize {
- *     val int by parameterOf(0, 1, -1, Int.MAX_VALUE, Int.MIN_VALUE)
- *     val differentInt by parameterOf(int + 1, int - 1)
- *
- *     assertNotEquals(int, differentInt)
- * }
- * ```
+ * In addition to its default behavior, [parameterize] is also configurable with options to decorate its iterations,
+ * handle and record failures, and summarize the overall loop execution. The flexibility [parameterize] offers makes it
+ * suitable for many different specific use cases. Supported use cases include built in ways to access the named
+ * parameter arguments when a failure occurs, recording failures while continuing to the next iteration, and throwing a
+ * comprehensive multi-failure with the recorded failures and the arguments when each occurred.
  *
  * ### Restrictions
  *
@@ -167,17 +158,6 @@ public class ParameterizeScope internal constructor(
      *
      * ```
      * val letter by parameter('a'..'z')
-     * ```
-     *
-     * Parameters may also depend on other parameters, which is especially useful be useful for testing edge/corner cases:
-     * ```
-     * @Test
-     * fun int_should_not_equal_a_different_int() = parameterize {
-     *     val int by parameterOf(0, 1, -1, Int.MAX_VALUE, Int.MIN_VALUE)
-     *     val differentInt by parameterOf(int + 1, int - 1)
-     *
-     *     assertNotEquals(int, differentInt)
-     * }
      * ```
      */
     public fun <T> parameter(arguments: Iterable<T>): Parameter<T> =
