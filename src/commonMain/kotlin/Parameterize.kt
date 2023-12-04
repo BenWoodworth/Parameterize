@@ -36,12 +36,13 @@ import kotlin.reflect.KProperty
  *
  * ```
  * @Test
- * fun contains_with_the_substring_present_should_be_true() = parameterize {
+ * fun a_string_should_contain_its_own_substring() = parameterize {
  *     val substring = "substring"
  *     val prefix by parameterOf("prefix-", "")
  *     val suffix by parameterOf("-suffix", "")
  *
  *     val string = "$prefix$substring$suffix"
+ *
  *     assertTrue(string.contains(substring), "\"$string\".contains(\"$substring\")")
  * }
  * ```
@@ -49,7 +50,7 @@ import kotlin.reflect.KProperty
  * Parameters may also depend on other parameters, which is especially useful be useful for testing edge/corner cases:
  * ```
  * @Test
- * fun int_should_not_equal_a_different_int() = parameterize {
+ * fun an_int_should_not_equal_a_different_int() = parameterize {
  *     val int by parameterOf(0, 1, -1, Int.MAX_VALUE, Int.MIN_VALUE)
  *     val differentInt by parameterOf(int + 1, int - 1)
  *
@@ -172,7 +173,7 @@ public class ParameterizeScope internal constructor(
      * Parameters may also depend on other parameters, which is especially useful be useful for testing edge/corner cases:
      * ```
      * @Test
-     * fun int_should_not_equal_a_different_int() = parameterize {
+     * fun an_int_should_not_equal_a_different_int() = parameterize {
      *     val int by parameterOf(0, 1, -1, Int.MAX_VALUE, Int.MIN_VALUE)
      *     val differentInt by parameterOf(int + 1, int - 1)
      *
