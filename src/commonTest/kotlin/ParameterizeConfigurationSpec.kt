@@ -11,10 +11,11 @@ import kotlin.test.*
  * The behavior of the individual options is specified in their respective `ParameterizeConfigurationSpec_*` classes.
  */
 class ParameterizeConfigurationSpec {
+    // Keep options sorted by the order they're executed, where relevant
     private val configurationOptions = listOf(
+        ConfigurationOption(ParameterizeConfiguration::decorator, Builder::decorator, distinctValue = {}),
         ConfigurationOption(ParameterizeConfiguration::onFailure, Builder::onFailure, distinctValue = {}),
         ConfigurationOption(ParameterizeConfiguration::onComplete, Builder::onComplete, distinctValue = {}),
-        ConfigurationOption(ParameterizeConfiguration::decorator, Builder::decorator, distinctValue = {}),
     ).map { it.property.name to it }
 
     private class ConfigurationOption<T>(
@@ -90,13 +91,13 @@ class ParameterizeConfigurationSpec {
 
         // Non-builder constructor so all options must be specified
         val configuration = ParameterizeConfiguration(
-            onFailure = { order += "onFailure" },
-            onComplete = { order += "onComplete" },
             decorator = { iteration ->
                 order += "decorator (before)"
                 iteration()
                 order += "decorator (after)"
-            }
+            },
+            onFailure = { order += "onFailure" },
+            onComplete = { order += "onComplete" }
         )
 
         parameterize(configuration) {
@@ -138,9 +139,9 @@ class ParameterizeConfigurationSpec {
                 with(DefaultParameterizeContext) {
                     // Leave arguments unnamed so this call errors when new options are added
                     parameterize(
+                        configuration.decorator,
                         configuration.onFailure,
                         configuration.onComplete,
-                        configuration.decorator,
                         block
                     )
                 }
@@ -152,9 +153,9 @@ class ParameterizeConfigurationSpec {
 
                 // Leave arguments unnamed so this call errors when new options are added
                 parameterize(
+                    configuration.decorator,
                     configuration.onFailure,
                     configuration.onComplete,
-                    configuration.decorator,
                     block
                 )
             }
@@ -205,6 +206,32 @@ class ParameterizeConfigurationSpec {
             parameterizeWithDefault = { block -> parameterize(block = block) },
             test = test
         )
+
+    @Test
+    fun decorator_configuration_option_should_be_applied() = testConfiguredParameterize {
+        var applied = false
+
+        configuredParameterize({
+            decorator = { iteration ->
+                applied = true
+                iteration()
+            }
+        }) {
+        }
+
+        assertTrue(applied, "applied")
+    }
+
+    @Test
+    fun decorator_default_should_invoke_iteration_function_once() = testParameterizeWithOptionDefault {
+        var iterationInvocations = 0
+
+        parameterizeWithOptionDefault {
+            iterationInvocations++
+        }
+
+        assertEquals(1, iterationInvocations, "iterationInvocations")
+    }
 
     @Test
     fun on_failure_configuration_option_should_be_applied() = testConfiguredParameterize {
@@ -278,31 +305,5 @@ class ParameterizeConfigurationSpec {
                 fail()
             }
         }
-    }
-
-    @Test
-    fun decorator_configuration_option_should_be_applied() = testConfiguredParameterize {
-        var applied = false
-
-        configuredParameterize({
-            decorator = { iteration ->
-                applied = true
-                iteration()
-            }
-        }) {
-        }
-
-        assertTrue(applied, "applied")
-    }
-
-    @Test
-    fun decorator_default_should_invoke_iteration_function_once() = testParameterizeWithOptionDefault {
-        var iterationInvocations = 0
-
-        parameterizeWithOptionDefault {
-            iterationInvocations++
-        }
-
-        assertEquals(1, iterationInvocations, "iterationInvocations")
     }
 }
