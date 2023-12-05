@@ -64,18 +64,17 @@ import kotlin.reflect.KProperty
  *
  * **Note:** Should not be used as an extension function, as it will be changed to use a context receiver in the future.
  *
+ * @throws ParameterizeException if the DSL is used incorrectly. (See restrictions)
+ *
+ * @param decorator See [ParameterizeConfiguration.Builder.decorator]
  * @param onFailure See [ParameterizeConfiguration.Builder.onFailure]
  * @param onComplete See [ParameterizeConfiguration.Builder.onComplete]
- * @param decorator See [ParameterizeConfiguration.Builder.decorator]
- *
- * @throws ParameterizeFailedError if there are any failing iterations. (Configurable with [onComplete])
- * @throws ParameterizeException if the DSL is used incorrectly. (See restrictions)
  */
 //context(ParameterizeContext) // TODO
 public inline fun ParameterizeContext.parameterize(
+    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = parameterizeConfiguration.decorator,
     noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
     noinline onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
-    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = parameterizeConfiguration.decorator,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {
@@ -83,9 +82,9 @@ public inline fun ParameterizeContext.parameterize(
     }
 
     val configuration = ParameterizeConfiguration(parameterizeConfiguration) {
+        this.decorator = decorator
         this.onFailure = onFailure
         this.onComplete = onComplete
-        this.decorator = decorator
     }
 
     parameterize(configuration, block)
@@ -97,9 +96,9 @@ public inline fun ParameterizeContext.parameterize(
  * @see parameterize
  */
 public inline fun parameterize(
+    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = parameterizeConfiguration.decorator,
     noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
     noinline onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
-    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = parameterizeConfiguration.decorator,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {
@@ -107,9 +106,9 @@ public inline fun parameterize(
     }
 
     val configuration = ParameterizeConfiguration {
+        this.decorator = decorator
         this.onFailure = onFailure
         this.onComplete = onComplete
-        this.decorator = decorator
     }
 
     parameterize(configuration, block)
