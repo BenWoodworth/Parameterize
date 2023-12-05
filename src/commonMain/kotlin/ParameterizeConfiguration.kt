@@ -13,14 +13,14 @@ import kotlin.native.concurrent.ThreadLocal
  * Can be used with [ParameterizeContext] to provide defaults for all [parameterize] calls in scope.
  */
 public class ParameterizeConfiguration internal constructor(
+    /** @see Builder.decorator */
+    public val decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit,
+
     /** @see Builder.onFailure */
     public val onFailure: OnFailureScope.(failure: Throwable) -> Unit,
 
     /** @see Builder.onComplete */
-    public val onComplete: OnCompleteScope.() -> Unit,
-
-    /** @see Builder.decorator */
-    public val decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit
+    public val onComplete: OnCompleteScope.() -> Unit
 ) {
     /** @suppress */
     @ThreadLocal
@@ -37,12 +37,39 @@ public class ParameterizeConfiguration internal constructor(
     /** @suppress */
     override fun toString(): String =
         "ParameterizeConfiguration(" +
+                "decorator=$decorator, " +
                 "onFailure=$onFailure, " +
-                "onComplete=$onComplete, " +
-                "decorator=$decorator)"
+                "onComplete=$onComplete)"
 
     /** @see ParameterizeConfiguration */
     public class Builder internal constructor(from: ParameterizeConfiguration?) {
+        /**
+         * Decorates the [parameterize] block, enabling additional shared logic to be inserted around each iteration.
+         *
+         * The provided `iteration` function must be invoked exactly once. It will return without throwing even if the
+         * iteration fails, guaranteeing that any post-iteration cleanup will always be executed.
+         *
+         * **Note:** Failures from within the [decorator] will propagate out uncaught, terminating [parameterize]
+         * without [onFailure] or [onComplete] being executed.
+         *
+         * Defaults to:
+         * ```
+         * decorator = { iteration ->
+         *     iteration()
+         * }
+         * ```
+         *
+         * @throws ParameterizeException if the `iteration` function is not invoked exactly once.
+         *
+         * @see DecoratorScope.isFirstIteration
+         * @see DecoratorScope.isLastIteration
+         */
+        public var decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit =
+            from?.decorator
+                ?: { iteration ->
+                    iteration()
+                }
+
         /**
          * Invoked after each failing iteration to configure how a failure should be handled.
          *
@@ -86,38 +113,50 @@ public class ParameterizeConfiguration internal constructor(
                 if (failureCount > 0) throw ParameterizeFailedError()
             }
 
-        /**
-         * Decorates the [parameterize] block, enabling additional shared logic to be inserted around each iteration.
-         *
-         * The provided `iteration` function must be invoked exactly once. It will return without throwing even if the
-         * iteration fails, guaranteeing that any post-iteration cleanup will always be executed.
-         *
-         * **Note:** Failures from within the [decorator] will propagate out uncaught, terminating [parameterize]
-         * without [onFailure] or [onComplete] being executed.
-         *
-         * Defaults to:
-         * ```
-         * decorator = { iteration ->
-         *     iteration()
-         * }
-         * ```
-         *
-         * @throws ParameterizeException if the `iteration` function is not invoked exactly once.
-         *
-         * @see DecoratorScope.isFirstIteration
-         * @see DecoratorScope.isLastIteration
-         */
-        public var decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit =
-            from?.decorator
-                ?: { iteration ->
-                    iteration()
-                }
-
         internal fun build(): ParameterizeConfiguration = ParameterizeConfiguration(
+            decorator = decorator,
             onFailure = onFailure,
             onComplete = onComplete,
-            decorator = decorator,
         )
+    }
+
+    /** @see Builder.decorator */
+    @RestrictsSuspension
+    public class DecoratorScope internal constructor(
+        private val parameterizeState: ParameterizeState
+    ) {
+        private var initializedIsLastIteration = false
+
+        /**
+         * True if this is the first [parameterize] iteration.
+         */
+        public val isFirstIteration: Boolean = parameterizeState.isFirstIteration
+
+        /**
+         * True if this is the last [parameterize] iteration. Cannot be known until after the iteration runs.
+         *
+         * @throws ParameterizeException if accessed before the iteration function has been invoked.
+         */
+        public var isLastIteration: Boolean = false
+            get() {
+                parameterizeState.checkState(initializedIsLastIteration) {
+                    "Last iteration cannot be known until after the iteration function is invoked"
+                }
+
+                return field
+            }
+            internal set(value) {
+                field = value
+                initializedIsLastIteration = true
+            }
+
+        internal suspend inline fun suspendDecorator(
+            crossinline block: (Continuation<Unit>) -> Unit
+        ): Unit =
+            suspendCoroutineUninterceptedOrReturn { c ->
+                block(c)
+                COROUTINE_SUSPENDED
+            }
     }
 
     /** @see Builder.onFailure */
@@ -184,44 +223,5 @@ public class ParameterizeConfiguration internal constructor(
         /** @see ParameterizeFailedError */
         public operator fun ParameterizeFailedError.Companion.invoke(): ParameterizeFailedError =
             ParameterizeFailedError(recordedFailures, failureCount, iterationCount, completedEarly)
-    }
-
-    /** @see Builder.decorator */
-    @RestrictsSuspension
-    public class DecoratorScope internal constructor(
-        private val parameterizeState: ParameterizeState
-    ) {
-        private var initializedIsLastIteration = false
-
-        /**
-         * True if this is the first [parameterize] iteration.
-         */
-        public val isFirstIteration: Boolean = parameterizeState.isFirstIteration
-
-        /**
-         * True if this is the last [parameterize] iteration. Cannot be known until after the iteration runs.
-         *
-         * @throws ParameterizeException if accessed before the iteration function has been invoked.
-         */
-        public var isLastIteration: Boolean = false
-            get() {
-                parameterizeState.checkState(initializedIsLastIteration) {
-                    "Last iteration cannot be known until after the iteration function is invoked"
-                }
-
-                return field
-            }
-            internal set(value) {
-                field = value
-                initializedIsLastIteration = true
-            }
-
-        internal suspend inline fun suspendDecorator(
-            crossinline block: (Continuation<Unit>) -> Unit
-        ): Unit =
-            suspendCoroutineUninterceptedOrReturn { c ->
-                block(c)
-                COROUTINE_SUSPENDED
-            }
     }
 }
