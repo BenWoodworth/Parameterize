@@ -212,7 +212,7 @@ public class ParameterizeConfiguration internal constructor(
          * True if [parameterize] completed with more combinations of arguments left to iterate, because of
          * [onFailure]'s [breakEarly][OnFailureScope.breakEarly] being set.
          *
-         * **Note:** Setting [breakEarly][OnFailureScope.breakEarly] on the last iteration will make this property
+         * **Note:** Setting [breakEarly][OnFailureScope.breakEarly] on the last iteration will not make this property
          * true, since all combinations have been iterated through.
          */
         public val completedEarly: Boolean,
