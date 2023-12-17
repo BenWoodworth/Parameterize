@@ -114,8 +114,12 @@ public inline fun parameterize(
     parameterize(configuration, block)
 }
 
-@PublishedApi
-internal inline fun parameterize(
+/**
+ * Calls [parameterize] with the given [configuration]'s options.
+ *
+ * @see parameterize
+ */
+public inline fun parameterize(
     configuration: ParameterizeConfiguration,
     block: ParameterizeScope.() -> Unit
 ) {
