@@ -160,6 +160,12 @@ class ParameterizeConfigurationSpec {
                     block
                 )
             }
+        },
+        "with a provided configuration" to {
+            test { configure, block ->
+                val configuration = ParameterizeConfiguration { configure() }
+                parameterize(configuration, block)
+            }
         }
     )
 
