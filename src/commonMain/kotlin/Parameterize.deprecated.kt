@@ -7,11 +7,11 @@ import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
 
 /**
- * Binary compatibility for the [parameterize] functions after adding new arguments.
+ * Binary compatibility for [parameterize] after adding new options.
  *
  * When adding new arguments to [parameterize]:
- * - Copy the old contextual and non-contextual function signatures to this file, marking them as deprecated and hidden,
- *   and have them delegate to the new [parameterize] function signatures.
+ * - Copy the old [parameterize] signature to this file, marking it as deprecated and hidden,
+ *   and have it delegate to the new [parameterize] function signature.
  * - Update the [ParameterizeConfiguration] spec:
  *     - Update the list of configuration options
  *     - Add a test for the option being applied

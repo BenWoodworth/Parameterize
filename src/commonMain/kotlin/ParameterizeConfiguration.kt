@@ -9,8 +9,6 @@ import kotlin.native.concurrent.ThreadLocal
 
 /**
  * Reusable [parameterize] configuration options.
- *
- * Can be used with [ParameterizeContext] to provide defaults for all [parameterize] calls in scope.
  */
 public class ParameterizeConfiguration internal constructor(
     /** @see Builder.decorator */
@@ -25,6 +23,7 @@ public class ParameterizeConfiguration internal constructor(
     /** @suppress */
     @ThreadLocal
     public companion object {
+        @PublishedApi
         internal val default: ParameterizeConfiguration = Builder(null).build()
 
         public operator fun invoke(
