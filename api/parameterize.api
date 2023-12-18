@@ -1,11 +1,3 @@
-public final class com/benwoodworth/parameterize/DefaultParameterizeContext : com/benwoodworth/parameterize/ParameterizeContext {
-	public static final field INSTANCE Lcom/benwoodworth/parameterize/DefaultParameterizeContext;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun getParameterizeConfiguration ()Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/benwoodworth/parameterize/ParameterizeConfiguration {
 	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeConfiguration$Companion;
 	public final fun getDecorator ()Lkotlin/jvm/functions/Function3;
@@ -24,6 +16,7 @@ public final class com/benwoodworth/parameterize/ParameterizeConfiguration$Build
 }
 
 public final class com/benwoodworth/parameterize/ParameterizeConfiguration$Companion {
+	public final fun getDefault ()Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
 	public final fun invoke (Lcom/benwoodworth/parameterize/ParameterizeConfiguration;Lkotlin/jvm/functions/Function1;)Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
 	public static synthetic fun invoke$default (Lcom/benwoodworth/parameterize/ParameterizeConfiguration$Companion;Lcom/benwoodworth/parameterize/ParameterizeConfiguration;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
 }
@@ -49,10 +42,6 @@ public final class com/benwoodworth/parameterize/ParameterizeConfiguration$OnFai
 	public final fun getRecordFailure ()Z
 	public final fun setBreakEarly (Z)V
 	public final fun setRecordFailure (Z)V
-}
-
-public abstract interface class com/benwoodworth/parameterize/ParameterizeContext {
-	public abstract fun getParameterizeConfiguration ()Lcom/benwoodworth/parameterize/ParameterizeConfiguration;
 }
 
 public final class com/benwoodworth/parameterize/ParameterizeFailedError : org/opentest4j/MultipleFailuresError {
@@ -89,9 +78,7 @@ public final class com/benwoodworth/parameterize/ParameterizeKt {
 	public static final fun parameter (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/jvm/functions/Function0;)Ljava/lang/Iterable;
 	public static final fun parameterOf (Lcom/benwoodworth/parameterize/ParameterizeScope;[Ljava/lang/Object;)Ljava/lang/Iterable;
 	public static final fun parameterize (Lcom/benwoodworth/parameterize/ParameterizeConfiguration;Lkotlin/jvm/functions/Function1;)V
-	public static final fun parameterize (Lcom/benwoodworth/parameterize/ParameterizeContext;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public static final fun parameterize (Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
-	public static synthetic fun parameterize$default (Lcom/benwoodworth/parameterize/ParameterizeContext;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 	public static synthetic fun parameterize$default (Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }
 

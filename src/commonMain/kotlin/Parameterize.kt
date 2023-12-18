@@ -3,7 +3,6 @@
 
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.DefaultParameterizeContext.parameterizeConfiguration
 import com.benwoodworth.parameterize.ParameterizeConfiguration.*
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -13,8 +12,9 @@ import kotlin.jvm.JvmName
 import kotlin.reflect.KProperty
 
 /**
- * With configuration defaults pulled in from the [ParameterizeContext], the parameterized [block] will be run for each
- * combination of arguments as declared by [parameter][ParameterizeScope.parameter] functions:
+ * Executes the [block] for each combination of arguments, as declared with the [parameter][ParameterizeScope.parameter]
+ * functions:
+ *
  * ```
  * parameterize {
  *     val letter by parameter('a'..'z')
@@ -60,45 +60,16 @@ import kotlin.reflect.KProperty
  * - Care should be taken with any asynchronous code, since the order that parameters are used must be the same between
  *   iterations, and all async code must be awaited before the [block] completes.
  *
- * @receiver [ParameterizeContext] provides the configuration for this function's default arguments.
- *
- * **Note:** Should not be used as an extension function, as it will be changed to use a context receiver in the future.
- *
  * @throws ParameterizeException if the DSL is used incorrectly. (See restrictions)
  *
  * @param decorator See [ParameterizeConfiguration.Builder.decorator]
  * @param onFailure See [ParameterizeConfiguration.Builder.onFailure]
  * @param onComplete See [ParameterizeConfiguration.Builder.onComplete]
  */
-//context(ParameterizeContext) // TODO
-public inline fun ParameterizeContext.parameterize(
-    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = parameterizeConfiguration.decorator,
-    noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
-    noinline onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
-    block: ParameterizeScope.() -> Unit
-) {
-    contract {
-        callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
-    }
-
-    val configuration = ParameterizeConfiguration(parameterizeConfiguration) {
-        this.decorator = decorator
-        this.onFailure = onFailure
-        this.onComplete = onComplete
-    }
-
-    parameterize(configuration, block)
-}
-
-/**
- * Calls [parameterize] with the default [ParameterizeContext].
- *
- * @see parameterize
- */
 public inline fun parameterize(
-    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = parameterizeConfiguration.decorator,
-    noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = parameterizeConfiguration.onFailure,
-    noinline onComplete: OnCompleteScope.() -> Unit = parameterizeConfiguration.onComplete,
+    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = ParameterizeConfiguration.default.decorator,
+    noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = ParameterizeConfiguration.default.onFailure,
+    noinline onComplete: OnCompleteScope.() -> Unit = ParameterizeConfiguration.default.onComplete,
     block: ParameterizeScope.() -> Unit
 ) {
     contract {

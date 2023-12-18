@@ -121,33 +121,7 @@ class ParameterizeConfigurationSpec {
     }
 
     private fun testConfiguredParameterize(test: ConfiguredParameterize.() -> Unit) = testAll(
-        "with context" to {
-            test { configure, block ->
-                val context = object : ParameterizeContext {
-                    override val parameterizeConfiguration = ParameterizeConfiguration { configure() }
-                }
-
-                with(context) {
-                    parameterize(block = block)
-                }
-            }
-        },
         "with function parameters" to {
-            test { configure, block ->
-                val configuration = ParameterizeConfiguration { configure() }
-
-                with(DefaultParameterizeContext) {
-                    // Leave arguments unnamed so this call errors when new options are added
-                    parameterize(
-                        configuration.decorator,
-                        configuration.onFailure,
-                        configuration.onComplete,
-                        block
-                    )
-                }
-            }
-        },
-        "with function parameters of non-contextual overload" to {
             test { configure, block ->
                 val configuration = ParameterizeConfiguration { configure() }
 
@@ -175,43 +149,19 @@ class ParameterizeConfigurationSpec {
     /**
      * Test a configuration option's default behavior.
      *
-     * If it's not possible to test without changing another option from its default, [configureWithDefault] and
-     * [parameterizeWithDefault] can be used to change ***only*** that other option.
+     * If it's not possible to test without changing another option from its default, [parameterizeWithDefault] can be
+     * used to change ***only*** that other option.
      */
     private fun testParameterizeWithOptionDefault(
-        configureWithDefault: Builder.() -> Unit,
-        parameterizeWithDefault: (block: ParameterizeScope.() -> Unit) -> Unit,
+        parameterizeWithDefault: (block: ParameterizeScope.() -> Unit) -> Unit = { block -> parameterize(block = block) },
         test: ParameterizeWithOptionDefault.() -> Unit
-    ) = testAll(
-        "with defaults from builder" to {
-            val context = object : ParameterizeContext {
-                override val parameterizeConfiguration = ParameterizeConfiguration { configureWithDefault() }
-            }
+    ) {
+        val defaultParameterize = ParameterizeWithOptionDefault { block ->
+            parameterizeWithDefault(block)
+        }
 
-            val defaultParameterize = ParameterizeWithOptionDefault { block ->
-                with(context) {
-                    parameterize(block = block)
-                }
-            }
-
-            test(defaultParameterize)
-        },
-        "with defaults from non-contextual overload" to {
-            val defaultParameterize = ParameterizeWithOptionDefault { block ->
-                parameterizeWithDefault(block)
-            }
-
-            test(defaultParameterize)
-        },
-    )
-
-    /** @see testParameterizeWithOptionDefault */
-    private fun testParameterizeWithOptionDefault(test: ParameterizeWithOptionDefault.() -> Unit): Unit =
-        testParameterizeWithOptionDefault(
-            configureWithDefault = {},
-            parameterizeWithDefault = { block -> parameterize(block = block) },
-            test = test
-        )
+        test(defaultParameterize)
+    }
 
     @Test
     fun decorator_configuration_option_should_be_applied() = testConfiguredParameterize {
@@ -275,17 +225,17 @@ class ParameterizeConfigurationSpec {
     @Test
     fun on_complete_should_be_marked_as_being_called_in_place_exactly_once() {
         // Must be assigned exactly once
-        val contextualValue: Any
-        val nonContextualValue: Any
+        val lateAssignedValue: Any
 
-        with(DefaultParameterizeContext) {
-            parameterize(onComplete = { contextualValue = 0 }) {}
-        }
-        parameterize(onComplete = { nonContextualValue = 0 }) {}
+        parameterize(
+            onComplete = {
+                // Compile-time error if Kotlin thinks this could be run more than once
+                lateAssignedValue = 0
+            }
+        ) {}
 
-        // Compile-time test which will error if incorrect
-        useParameter(contextualValue)
-        useParameter(nonContextualValue)
+        // Compile-time error if Kotlin thinks the variable might not be assigned
+        useParameter(lateAssignedValue)
     }
 
     @Test
@@ -303,7 +253,6 @@ class ParameterizeConfigurationSpec {
     @Test
     fun on_complete_default_should_throw_ParameterizeFailedError() = testParameterizeWithOptionDefault(
         // Continue on failure, so parameterize doesn't terminate before onComplete gets to run
-        configureWithDefault = { onFailure = {} },
         parameterizeWithDefault = { block -> parameterize(onFailure = {}, block = block) }
     ) {
         assertFailsWith<ParameterizeFailedError> {
