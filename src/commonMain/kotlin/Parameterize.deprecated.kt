@@ -14,7 +14,7 @@ import kotlin.jvm.JvmName
  *   and have it delegate to the new [parameterize] function signature.
  * - Update the [ParameterizeConfiguration] spec:
  *     - Update the list of configuration options
- *     - Add a test for the option being applied
+ *     - Add a test for the option being applied TODO
  *     - Add a test for the default behaviour
  * - Dump API, and confirm that the old signatures are the same (but with an added `synthetic` modifier)
  */

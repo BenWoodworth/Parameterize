@@ -128,6 +128,7 @@ class ParameterizeConfigurationSpec {
 
                 // Leave arguments unnamed so this call errors when new options are added
                 parameterize(
+                    configuration,
                     configuration.decorator,
                     configuration.onFailure,
                     configuration.onComplete,

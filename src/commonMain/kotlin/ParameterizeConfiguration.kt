@@ -8,7 +8,11 @@ import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.native.concurrent.ThreadLocal
 
 /**
- * Reusable [parameterize] configuration options.
+ * Configuration options for [parameterize].
+ *
+ * @property decorator See [Builder.decorator]
+ * @property onFailure See [Builder.onFailure]
+ * @property onComplete See [Builder.onComplete]
  */
 public class ParameterizeConfiguration internal constructor(
     /** @see Builder.decorator */
