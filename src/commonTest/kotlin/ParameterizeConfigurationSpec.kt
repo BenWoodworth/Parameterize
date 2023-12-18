@@ -13,15 +13,39 @@ import kotlin.test.*
 class ParameterizeConfigurationSpec {
     // Keep options sorted by the order they're executed, where relevant
     private val configurationOptions = listOf(
-        ConfigurationOption(ParameterizeConfiguration::decorator, Builder::decorator, distinctValue = {}),
-        ConfigurationOption(ParameterizeConfiguration::onFailure, Builder::onFailure, distinctValue = {}),
-        ConfigurationOption(ParameterizeConfiguration::onComplete, Builder::onComplete, distinctValue = {}),
+        ConfigurationOption(
+            ParameterizeConfiguration::decorator,
+            Builder::decorator,
+            distinctValue = {},
+            parameterizeWithConfigurationAndOptionPassed = { configuration, block ->
+                parameterize(configuration, decorator = configuration.decorator) { block() }
+            }
+        ),
+        ConfigurationOption(
+            ParameterizeConfiguration::onFailure,
+            Builder::onFailure,
+            distinctValue = {},
+            parameterizeWithConfigurationAndOptionPassed = { configuration, block ->
+                parameterize(configuration, onFailure = configuration.onFailure) { block() }
+            }
+        ),
+        ConfigurationOption(
+            ParameterizeConfiguration::onComplete,
+            Builder::onComplete,
+            distinctValue = {},
+            parameterizeWithConfigurationAndOptionPassed = { configuration, block ->
+                parameterize(configuration, onComplete = configuration.onComplete) { block() }
+            }
+        ),
     ).map { it.property.name to it }
 
     private class ConfigurationOption<T>(
         val property: KProperty1<ParameterizeConfiguration, T>,
         val builderProperty: KMutableProperty1<Builder, T>,
-        val distinctValue: T
+        val distinctValue: T,
+        val parameterizeWithConfigurationAndOptionPassed: (
+            configuration: ParameterizeConfiguration, block: ParameterizeScope.() -> Unit
+        ) -> Unit
     ) {
         init {
             // In case compiler optimizations break equality assumptions (e.g. shared empty lambda instances or interned strings)
@@ -30,9 +54,26 @@ class ParameterizeConfigurationSpec {
             check(distinctValue == distinctValue) { "Distinct value can't be checked by equality: ${property.name} = $distinctValue" }
         }
 
+        override fun toString(): String = property.name
+
         fun setDistinctValue(builder: Builder): Unit =
             builderProperty.set(builder, distinctValue)
     }
+
+    /**
+     * Whether all the options are unchanged from their defaults.
+     *
+     * This exists instead of implementing [ParameterizeConfiguration.equals] and comparing with
+     * [ParameterizeConfiguration.default], since comparing configurations by instance seems to be the precedent set by
+     * first party Kotlin libraries (e.g. kotlinx.serialization's `JsonConfiguration`).
+     */
+    private val ParameterizeConfiguration.hasDefaultOptions: Boolean
+        get() = configurationOptions.all { (_, option) ->
+            val configuredOption = option.property.get(this)
+            val defaultOption = option.property.get(ParameterizeConfiguration.default)
+
+            configuredOption == defaultOption
+        }
 
 
     @Test
@@ -121,12 +162,19 @@ class ParameterizeConfigurationSpec {
     }
 
     private fun testConfiguredParameterize(test: ConfiguredParameterize.() -> Unit) = testAll(
-        "with function parameters" to {
+        "configuration-only overload" to {
+            test { configure, block ->
+                val configuration = ParameterizeConfiguration { configure() }
+                parameterize(configuration, block)
+            }
+        },
+        "options overload with passed arguments" to {
             test { configure, block ->
                 val configuration = ParameterizeConfiguration { configure() }
 
                 // Leave arguments unnamed so this call errors when new options are added
                 parameterize(
+                    ParameterizeConfiguration {}, // Should be redundant, since the passed-in options should be used.
                     configuration.decorator,
                     configuration.onFailure,
                     configuration.onComplete,
@@ -134,12 +182,19 @@ class ParameterizeConfigurationSpec {
                 )
             }
         },
-        "with a provided configuration" to {
-            test { configure, block ->
-                val configuration = ParameterizeConfiguration { configure() }
-                parameterize(configuration, block)
+        // Ideally this case would call the options overload with all the options using their default argument, but it's
+        // not possible to resolve to it without passing at least one of the options. So instead, add multiple cases
+        // such that each option will eventually have a case where its default argument is used.
+        // (It is possible to achieve with reflection using `KFunction.callBy()`, but only on the JVM at the moment)
+        *configurationOptions.map<_, Pair<String, TestAllScope.() -> Unit>> { (_, option) ->
+            "options overload with default arguments taken from the `configuration` (except `$option`)" to {
+                test { configure, block ->
+                    val configuration = ParameterizeConfiguration { configure() }
+                    option.parameterizeWithConfigurationAndOptionPassed(configuration, block)
+                }
             }
-        }
+
+        }.toTypedArray<Pair<String, TestAllScope.() -> Unit>>()
     )
 
     private fun interface ParameterizeWithOptionDefault {
@@ -149,19 +204,56 @@ class ParameterizeConfigurationSpec {
     /**
      * Test a configuration option's default behavior.
      *
-     * If it's not possible to test without changing another option from its default, [parameterizeWithDefault] can be
-     * used to change ***only*** that other option.
+     * If it's not possible to test the option without changing others from their default, [configure] can be used to
+     * change ***only*** those other options. The option under test should not be changed, since it's the default it's
+     * changed from that is being evaluated. Otherwise, leave [configure] empty.
+     *
+     * [parameterizeWithDifferentOptionPassed] is necessary to target the [parameterize] options overload. The lambda
+     * should call [parameterize] without passing a configuration, and passing the same options set in [configure]
+     * (accessible from the configuration provided to the lambda). And if no options were changed in [configure], at
+     * least one different option should still be set from the provided configuration, that way the options overload is
+     * used instead of the configuration-only overload.
      */
     private fun testParameterizeWithOptionDefault(
-        parameterizeWithDefault: (block: ParameterizeScope.() -> Unit) -> Unit = { block -> parameterize(block = block) },
+        configure: Builder.() -> Unit,
+        parameterizeWithDifferentOptionPassed: (
+            configuration: ParameterizeConfiguration,
+            block: ParameterizeScope.() -> Unit
+        ) -> Unit,
         test: ParameterizeWithOptionDefault.() -> Unit
-    ) {
-        val defaultParameterize = ParameterizeWithOptionDefault { block ->
-            parameterizeWithDefault(block)
-        }
+    ) = testAll(
+        "with default from builder" to {
+            val configuration = ParameterizeConfiguration { configure() }
 
-        test(defaultParameterize)
-    }
+            val defaultParameterize = ParameterizeWithOptionDefault { block ->
+                parameterize(configuration, block)
+            }
+
+            test(defaultParameterize)
+        },
+        "with default `configuration` argument of configuration-only overload" to {
+            val configuration = ParameterizeConfiguration { configure() }
+
+            if (!configuration.hasDefaultOptions) {
+                skip("This test case can only be performed with an entirely default configuration, since that's what this overload's default uses")
+            }
+
+            val defaultParameterize = ParameterizeWithOptionDefault { block ->
+                parameterize(block = block)
+            }
+
+            test(defaultParameterize)
+        },
+        "with default `configuration` argument of options overload" to {
+            val configuration = ParameterizeConfiguration { configure() }
+
+            val defaultParameterize = ParameterizeWithOptionDefault { block ->
+                parameterizeWithDifferentOptionPassed(configuration, block)
+            }
+
+            test(defaultParameterize)
+        }
+    )
 
     @Test
     fun decorator_configuration_option_should_be_applied() = testConfiguredParameterize {
@@ -179,7 +271,12 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun decorator_default_should_invoke_iteration_function_once() = testParameterizeWithOptionDefault {
+    fun decorator_default_should_invoke_iteration_function_once() = testParameterizeWithOptionDefault(
+        configure = {},
+        parameterizeWithDifferentOptionPassed = { configuration, block ->
+            parameterize(onFailure = configuration.onFailure, block = block)
+        }
+    ) {
         var iterationInvocations = 0
 
         parameterizeWithOptionDefault {
@@ -205,7 +302,12 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun on_failure_default_should_rethrow_the_failure() = testParameterizeWithOptionDefault {
+    fun on_failure_default_should_rethrow_the_failure() = testParameterizeWithOptionDefault(
+        configure = {},
+        parameterizeWithDifferentOptionPassed = { configuration, block ->
+            parameterize(decorator = configuration.decorator, block = block)
+        }
+    ) {
         var iterationCount = 0
 
         class RethrownFailure : Throwable()
@@ -253,7 +355,10 @@ class ParameterizeConfigurationSpec {
     @Test
     fun on_complete_default_should_throw_ParameterizeFailedError() = testParameterizeWithOptionDefault(
         // Continue on failure, so parameterize doesn't terminate before onComplete gets to run
-        parameterizeWithDefault = { block -> parameterize(onFailure = {}, block = block) }
+        configure = { onFailure = {} },
+        parameterizeWithDifferentOptionPassed = { configuration, block ->
+            parameterize(onFailure = configuration.onFailure, block = block)
+        }
     ) {
         assertFailsWith<ParameterizeFailedError> {
             parameterizeWithOptionDefault {

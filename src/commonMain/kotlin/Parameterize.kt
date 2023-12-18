@@ -42,7 +42,7 @@ import kotlin.reflect.KProperty
  * }
  * ```
  *
- * In addition to its default behavior, [parameterize] is also configurable with options to decorate its iterations,
+ * In addition to its default behavior, [parameterize] has a [configuration] with options to decorate its iterations,
  * handle and record failures, and summarize the overall loop execution. The flexibility [parameterize] offers makes it
  * suitable for many different specific use cases. Supported use cases include built in ways to access the named
  * parameter arguments when a failure occurs, recording failures while continuing to the next iteration, and throwing a
@@ -61,37 +61,9 @@ import kotlin.reflect.KProperty
  *   iterations, and all async code must be awaited before the [block] completes.
  *
  * @throws ParameterizeException if the DSL is used incorrectly. (See restrictions)
- *
- * @param decorator See [ParameterizeConfiguration.Builder.decorator]
- * @param onFailure See [ParameterizeConfiguration.Builder.onFailure]
- * @param onComplete See [ParameterizeConfiguration.Builder.onComplete]
  */
 public inline fun parameterize(
-    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = ParameterizeConfiguration.default.decorator,
-    noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = ParameterizeConfiguration.default.onFailure,
-    noinline onComplete: OnCompleteScope.() -> Unit = ParameterizeConfiguration.default.onComplete,
-    block: ParameterizeScope.() -> Unit
-) {
-    contract {
-        callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
-    }
-
-    val configuration = ParameterizeConfiguration {
-        this.decorator = decorator
-        this.onFailure = onFailure
-        this.onComplete = onComplete
-    }
-
-    parameterize(configuration, block)
-}
-
-/**
- * Calls [parameterize] with the given [configuration]'s options.
- *
- * @see parameterize
- */
-public inline fun parameterize(
-    configuration: ParameterizeConfiguration,
+    configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
     block: ParameterizeScope.() -> Unit
 ) {
     // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
@@ -109,6 +81,35 @@ public inline fun parameterize(
             iterator.handleFailure(failure)
         }
     }
+}
+
+/**
+ * Calls [parameterize] with a copy of the [configuration] that has options overridden.
+ *
+ * @param decorator See [ParameterizeConfiguration.Builder.decorator]
+ * @param onFailure See [ParameterizeConfiguration.Builder.onFailure]
+ * @param onComplete See [ParameterizeConfiguration.Builder.onComplete]
+ *
+ * @see parameterize
+ */
+public inline fun parameterize(
+    configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
+    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = configuration.decorator,
+    noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = configuration.onFailure,
+    noinline onComplete: OnCompleteScope.() -> Unit = configuration.onComplete,
+    block: ParameterizeScope.() -> Unit
+) {
+    contract {
+        callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
+    }
+
+    val newConfiguration = ParameterizeConfiguration(configuration) {
+        this.decorator = decorator
+        this.onFailure = onFailure
+        this.onComplete = onComplete
+    }
+
+    parameterize(newConfiguration, block)
 }
 
 /** @see parameterize */

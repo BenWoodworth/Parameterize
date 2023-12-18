@@ -15,27 +15,42 @@ expect val Throwable.stackTraceLines: List<String>
 fun <T> useParameter(parameter: T) {
 }
 
+private class TestAllSkip(
+    message: String
+) : Throwable(message)
+
+object TestAllScope {
+    fun skip(message: String): Nothing =
+        throw TestAllSkip(message)
+}
+
 fun <T> testAll(
     testCases: Iterable<Pair<String, T>>,
-    test: (testCase: T) -> Unit
+    test: TestAllScope.(testCase: T) -> Unit
 ) {
     val results = testCases
         .map { (description, testCase) ->
-            description to runCatching { test(testCase) }
+            description to runCatching { TestAllScope.test(testCase) }
         }
 
     val passed = results.count { (_, result) -> result.isSuccess }
-    val total = results.count()
+    val skipped = results.count { (_, result) -> result.exceptionOrNull() is TestAllSkip }
+    val failed = results.count() - passed - skipped
 
-    if (passed < total) {
+    if (failed > 0) {
         val message = buildString {
-            append("Test cases failed ($passed/$total passed):")
+            append("Test completed with failures ($failed/${passed + failed} failed")
+            if (skipped > 0) append(", and $skipped skipped")
+            append("):")
 
             results.forEach { (description, result) ->
-                append("\n[")
-                append(if (result.isSuccess) "PASS" else "FAIL")
-                append("] ")
-                append(description)
+                val label = when (result.exceptionOrNull()) {
+                    is TestAllSkip -> "SKIP"
+                    null -> "PASS"
+                    else -> "FAIL"
+                }
+
+                append("\n[$label] $description")
 
                 val failure = result.exceptionOrNull()
                 if (failure != null) {
@@ -55,11 +70,11 @@ fun <T> testAll(
 
 fun <T> testAll(
     vararg testCases: Pair<String, T>,
-    test: (testCase: T) -> Unit
+    test: TestAllScope.(testCase: T) -> Unit
 ): Unit =
     testAll(testCases.toList(), test)
 
-fun testAll(vararg testCases: Pair<String, () -> Unit>): Unit =
+fun testAll(vararg testCases: Pair<String, TestAllScope.() -> Unit>): Unit =
     testAll(testCases.toList()) { testCase ->
         testCase()
     }

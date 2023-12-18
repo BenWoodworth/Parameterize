@@ -63,7 +63,7 @@ val reddishYellows = sequence {
 </tr>
 </table>
 
-In addition to its default behavior, `parameterize` is also configurable with options to decorate its iterations, handle
+In addition to its default behavior, `parameterize` has a configuration with options to decorate its iterations, handle
 and record failures, and summarize the overall loop execution. The flexibility `parameterize` offers makes it suitable
 for many different specific use cases, including built in ways to access the named parameter arguments when a failure
 occurs, recording failures while continuing to the next iteration, and throwing comprehensive multi-failures that list
