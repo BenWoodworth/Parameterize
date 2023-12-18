@@ -83,13 +83,8 @@ val string = "substring"                // the entire string
 ```
 
 ```kotlin
-// Shared configuration, pulled in from the context. (See full test suite examples below)
-override val parameterizeConfiguration = ParameterizeConfiguration {
-    onFailure = { recordFailure = true }
-}
-
-@Test
-fun a_string_should_contain_its_own_substring() = parameterize {
+// See full test suite examples below, with `parameterizeTest {...}` configured for testing
+fun a_string_should_contain_its_own_substring() = parameterizeTest {
     val substring = "substring"
     val prefix by parameterOf("prefix-", "")
     val suffix by parameterOf("-suffix", "")
@@ -136,7 +131,7 @@ edge/corner cases:
 
 ```kotlin
 @Test
-fun an_int_should_not_equal_a_different_int() = parameterize {
+fun an_int_should_not_equal_a_different_int() = parameterizeTest {
     val int by parameterOf(0, 1, -1, Int.MAX_VALUE, Int.MIN_VALUE)
     val differentInt by parameterOf(int + 1, int - 1)
 
@@ -156,15 +151,16 @@ fun an_int_should_not_equal_a_different_int() = parameterize {
 </b></summary>
 
 Using the `decorator` configuration option, `parameterize` can be configured to trigger a test framework's before/after
-hooks for each of its iterations. The `decorator` can be pre-configured by creating a `ParameterizeContext` to to share
-and reuse the configuration, instead of specifying a `decorator` with these hooks in every `parameterize` call. In this
-[kotlin.test](https://kotlinlang.org/api/latest/kotlin.test/) example, any class that extends the `TestingContext`
-will have its `parameterize` calls pull from the shared `parameterizeConfiguration`:
+hooks for each of its iterations. Additionally the `onFailure` handler can be used to record failures and continue to
+the next iteration, making `parameterize` report a comprehensive multi-failure instead of just throwing. In this
+[kotlin.test](https://kotlinlang.org/api/latest/kotlin.test/) example, `parameterizeTest` wraps a pre-configured
+`parameterize` call to avoid the boilerplate, and have it be easily accessible to any test suite by extending the
+`TestingContext` class:
 
 ```kotlin
-abstract class TestingContext : ParameterizeContext {
-    protected open fun beforeTest() {}
-    protected open fun afterTest() {}
+abstract class TestingContext {
+    open fun beforeTest() {}
+    open fun afterTest() {}
 
     // The annotations would be lost when overriding beforeTest/afterTest,
     // so hook in here instead of relying on the subclasses to apply them.
@@ -175,19 +171,25 @@ abstract class TestingContext : ParameterizeContext {
     fun afterTestHook(): Unit = afterTest()
 
 
-    override val parameterizeConfiguration = ParameterizeConfiguration {
+    protected inline fun parameterizeTest(
+        recordFailures: Long = someDefault, // Example of how `parameterize` could get wrapped,
+        maxFailures: Long = Long.MAX_VALUE, // exposing options according to the testing needs.
+        block: ParameterizeScope.() -> Unit
+    ): Unit = parameterize(
         // Inserts before & after calls around each test case,
         // except where already invoked by the test framework.
         decorator = { testCase ->
             if (!isFirstIteration) beforeTest()
             testCase()
             if (!isLastIteration) afterTest()
-        }
+        },
 
-        // Only record the first # failures
         onFailure = { failure ->
-            recordFailure = failureCount <= #
+            recordFailure = failureCount <= recordFailures
+            breakEarly = failureCount >= maxFailures
         }
+    ) {
+        block()
     }
 }
 ```
@@ -202,7 +204,7 @@ class ContainsSpec : TestingContext() {
     }
     
     @Test
-    fun a_string_should_contain_its_own_substring() = parameterize {
+    fun a_string_should_contain_its_own_substring() = parameterizeTest {
         val substring = "substring"
         val prefix by parameterOf("prefix-", "")
         val suffix by parameterOf("-suffix", "")
@@ -213,10 +215,6 @@ class ContainsSpec : TestingContext() {
     }
 }
 ```
-
-In the future, this setup should be made easier with context receivers, only requiring a top-level
-`ParameterizeConfiguration` property and a `with val` bringing it into context.
-([See here](https://github.com/Kotlin/KEEP/blob/master/proposals/context-receivers.md#scope-properties))
 
 </details>
 

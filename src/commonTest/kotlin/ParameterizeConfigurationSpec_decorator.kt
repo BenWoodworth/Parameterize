@@ -1,6 +1,6 @@
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.ParameterizeConfiguration.DecoratorScope
+import com.benwoodworth.parameterize.ParameterizeConfiguration.*
 import com.benwoodworth.parameterize.test.EdgeCases
 import kotlin.coroutines.RestrictsSuspension
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
@@ -8,20 +8,29 @@ import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.test.*
 
 @Suppress("ClassName")
-class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
-    override val parameterizeConfiguration = ParameterizeConfiguration {
-        onFailure = {
+class ParameterizeConfigurationSpec_decorator {
+    private inline fun testParameterize(
+        noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit,
+        noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = {
             recordFailure = true
             breakEarly = true
-        }
-    }
+        },
+        noinline onComplete: OnCompleteScope.() -> Unit = ParameterizeConfiguration.default.onComplete,
+        block: ParameterizeScope.() -> Unit
+    ): Unit =
+        parameterize(
+            decorator = decorator,
+            onFailure = onFailure,
+            onComplete = onComplete,
+            block = block
+        )
 
     @Test
     fun should_be_invoked_once_per_iteration() {
         var iterationCount = 0
         var timesInvoked = 0
 
-        parameterize(
+        testParameterize(
             decorator = { iteration ->
                 timesInvoked++
                 iteration()
@@ -52,7 +61,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
             var onCompleteInvoked = false
 
             assertFailsWith<FailureWithinDecorator> {
-                parameterize(
+                testParameterize(
                     decorator = { iteration ->
                         iterationCount++
                         decorator(iteration)
@@ -93,7 +102,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
             },
         ) { decorator ->
             val failure = assertFailsWith<ParameterizeException> {
-                parameterize(
+                testParameterize(
                     decorator = decorator
                 ) {}
             }
@@ -109,7 +118,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
         var returned = false
 
         runCatching {
-            parameterize(
+            testParameterize(
                 decorator = { iteration ->
                     iteration()
                     returned = true
@@ -125,7 +134,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
     @Test
     fun should_throw_if_iteration_function_is_not_invoked() {
         val exception = assertFailsWith<ParameterizeException> {
-            parameterize(
+            testParameterize(
                 decorator = {
                     // not invoked
                 }
@@ -142,7 +151,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
     @Test
     fun should_throw_if_iteration_function_is_invoked_more_than_once() {
         val exception = assertFailsWith<ParameterizeException> {
-            parameterize(
+            testParameterize(
                 decorator = { iteration ->
                     iteration()
                     iteration()
@@ -167,7 +176,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
         val after = beforeOrAfter == "after"
 
         var iterationNumber = 1
-        parameterize(
+        testParameterize(
             decorator = { iteration ->
                 val shouldCheck = inIteration == iterationNumber
 
@@ -189,7 +198,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
     ){ inIteration ->
         var currentIteration = 1
 
-        parameterize(
+        testParameterize(
             decorator = { iteration ->
                 iteration()
 
@@ -211,7 +220,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
         var iterationNumber = 1
 
         val exception = assertFailsWith<ParameterizeException> {
-            parameterize(
+            testParameterize(
                 decorator = { iteration ->
                     if (inIteration == iterationNumber) {
                         isLastIteration
@@ -238,7 +247,7 @@ class ParameterizeConfigurationSpec_decorator : ParameterizeContext {
         assertFailsWith<ParameterizeException> {
             lateinit var declareParameter: () -> Unit
 
-            parameterize(
+            testParameterize(
                 decorator = { iteration ->
                     iteration()
                     declareParameter()

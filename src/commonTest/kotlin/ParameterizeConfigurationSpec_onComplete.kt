@@ -1,20 +1,28 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
+import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
 import kotlin.test.*
 
 @Suppress("ClassName")
-class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
-    override val parameterizeConfiguration = ParameterizeConfiguration {
-        onFailure = {} // Continue on failure
-    }
+class ParameterizeConfigurationSpec_onComplete {
+    private inline fun testParameterize(
+        noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = {}, // Continue on failure
+        noinline onComplete: OnCompleteScope.() -> Unit,
+        block: ParameterizeScope.() -> Unit
+    ): Unit =
+        parameterize(
+            onFailure = onFailure,
+            onComplete = onComplete,
+            block = block
+        )
 
     @Test
     fun should_be_invoked_once_after_all_iterations() {
         var timesInvoked = 0
         var invokedBeforeLastIteration = false
 
-        parameterize(
+        testParameterize(
             onComplete = {
                 timesInvoked++
             }
@@ -40,7 +48,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
         var invokedBeforeLastIteration = false
         var failureCount = 0
 
-        parameterize(
+        testParameterize(
             onFailure = {
                 breakEarly = failureCount > 1
             },
@@ -69,7 +77,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
         class FailureWithinOnComplete : Throwable()
 
         assertFailsWith<FailureWithinOnComplete> {
-            parameterize(
+            testParameterize(
                 onComplete = {
                     throw FailureWithinOnComplete()
                 }
@@ -82,7 +90,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
     fun iteration_count_should_be_correct() {
         var expectedIterationCount = 0L
 
-        parameterize(
+        testParameterize(
             onComplete = {
                 assertEquals(expectedIterationCount, iterationCount)
             }
@@ -97,7 +105,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
     fun iteration_count_should_be_correct_with_break() {
         var expectedIterationCount = 0L
 
-        parameterize(
+        testParameterize(
             onFailure = {
                 breakEarly = true
             },
@@ -119,7 +127,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
     fun failure_count_should_be_correct() {
         var expectedFailureCount = 0L
 
-        parameterize(
+        testParameterize(
             onComplete = {
                 assertEquals(expectedFailureCount, failureCount)
             }
@@ -135,7 +143,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
 
     @Test
     fun completed_early_without_breaking_should_be_false() {
-        parameterize(
+        testParameterize(
             onComplete = {
                 assertFalse(completedEarly)
             }
@@ -146,7 +154,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
 
     @Test
     fun completed_early_with_break_on_last_iteration_should_be_false() {
-        parameterize(
+        testParameterize(
             onFailure = {
                 breakEarly = true
             },
@@ -165,7 +173,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
 
     @Test
     fun completed_early_with_break_before_last_iteration_should_be_true() {
-        parameterize(
+        testParameterize(
             onFailure = {
                 breakEarly = true
             },
@@ -187,7 +195,7 @@ class ParameterizeConfigurationSpec_onComplete : ParameterizeContext {
         val expectedRecordedFailures = mutableListOf<Pair<Throwable, List<ParameterizeFailure.Argument<*>>>>()
 
         var lastIteration = -1
-        parameterize(
+        testParameterize(
             onFailure = { failure ->
                 if (lastIteration % 3 == 0) {
                     recordFailure = true

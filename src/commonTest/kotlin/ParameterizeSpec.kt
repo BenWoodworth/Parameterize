@@ -287,14 +287,6 @@ class ParameterizeSpec {
 
     @Test
     fun should_be_able_to_return_from_an_outer_function_from_within_the_block() {
-        // Contextual overload
-        with(DefaultParameterizeContext) {
-            parameterize {
-                return@should_be_able_to_return_from_an_outer_function_from_within_the_block
-            }
-        }
-
-        // Non-contextual overload
         parameterize {
             return@should_be_able_to_return_from_an_outer_function_from_within_the_block
         }

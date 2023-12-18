@@ -1,12 +1,19 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
 import kotlin.test.*
 
 @Suppress("ClassName")
-class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
-    override val parameterizeConfiguration = ParameterizeConfiguration {
-        onComplete = {} // Don't throw because of the tested failures
-    }
+class ParameterizeConfigurationSpec_onFailure {
+    private inline fun testParameterize(
+        noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit,
+        block: ParameterizeScope.() -> Unit
+    ): Unit =
+        parameterize(
+            onFailure = onFailure,
+            onComplete = {}, // Don't throw because of the tested failures
+            block = block
+        )
 
     @Test
     fun should_be_invoked_once_per_failure() {
@@ -15,7 +22,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
         var currentIteration = -1
         val iterationsInvoked = mutableListOf<Int>()
 
-        parameterize(
+        testParameterize(
             onFailure = {
                 iterationsInvoked += currentIteration
             }
@@ -37,7 +44,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
 
         val invokedWithFailures = mutableListOf<Throwable>()
 
-        parameterize(
+        testParameterize(
             onFailure = { failure ->
                 invokedWithFailures += failure
             }
@@ -57,7 +64,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
 
         var lastIteration = -1
 
-        parameterize(
+        testParameterize(
             onFailure = {
                 breakEarly = (lastIteration == breakIteration)
             }
@@ -78,7 +85,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
         class FailureWithinOnFailure : Throwable()
 
         assertFailsWith<FailureWithinOnFailure> {
-            parameterize(
+            testParameterize(
                 onFailure = {
                     throw FailureWithinOnFailure()
                 }
@@ -92,7 +99,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
     fun iteration_count_should_be_correct() {
         var expectedIterationCount = 0L
 
-        parameterize(
+        testParameterize(
             onFailure = {
                 assertEquals(expectedIterationCount, iterationCount)
             }
@@ -108,7 +115,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
     fun failure_count_should_be_correct() {
         var expectedFailureCount = 0L
 
-        parameterize(
+        testParameterize(
             onFailure = {
                 assertEquals(expectedFailureCount, failureCount)
             }
@@ -126,7 +133,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
     fun failure_arguments_should_be_those_from_the_last_iteration() {
         val lastParameterArguments = mutableListOf<Pair<String, *>>()
 
-        parameterize(
+        testParameterize(
             onFailure = {
                 val actualParameterArguments = arguments
                     .map { (parameter, argument) -> parameter.name to argument }
@@ -154,7 +161,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
     }
 
     @Test
-    fun failure_arguments_should_only_include_used_parameters() = parameterize(
+    fun failure_arguments_should_only_include_used_parameters() = testParameterize(
         onFailure = {
             val actualUsedParameters = arguments.map { it.parameter.name }
             assertEquals(listOf("used1", "used2"), actualUsedParameters)
@@ -172,7 +179,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
     }
 
     @Test
-    fun failure_arguments_should_include_lazily_used_parameters_that_were_only_used_in_previous_iterations() = parameterize(
+    fun failure_arguments_should_include_lazily_used_parameters_that_were_unused_this_iteration() = testParameterize(
         onFailure = {
             val actualUsedParameters = arguments.map { it.parameter.name }
             assertContains(actualUsedParameters, "letter")
@@ -195,7 +202,7 @@ class ParameterizeConfigurationSpec_onFailure : ParameterizeContext {
     }
 
     @Test
-    fun failure_arguments_should_not_include_captured_parameters_from_previous_iterations() = parameterize(
+    fun failure_arguments_should_not_include_captured_parameters_from_previous_iterations() = testParameterize(
         onFailure = {
             val parameters = arguments.map { it.parameter.name }
 
