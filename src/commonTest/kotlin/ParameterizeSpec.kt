@@ -2,6 +2,7 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.tmp.preparedParameterized
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -280,6 +281,31 @@ class ParameterizeSpec {
             (0..10).map { "iteration $it" to it }
         ) { iteration ->
             assertEquals(iteration, capturedParameters[iteration]())
+        }
+    }
+
+    @Test
+    fun prototype() {
+        parameterize {
+            val letter by parameter('a'..'z')
+            val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
+            val lazyValue by parameter { listOf(5, 7) }
+
+            println("Current values: $letter $primeUnder20 $lazyValue")
+        }
+    }
+
+    @Test
+    fun prototype2() {
+        preparedParameterized {
+            val letter by parameter('a'..'z')
+            val lazyValue by parameter(listOf(5, 6, 7))
+
+            test {
+                println("Current values: $letter")
+            }
+
+            println("Current values: $letter $lazyValue")
         }
     }
 }
