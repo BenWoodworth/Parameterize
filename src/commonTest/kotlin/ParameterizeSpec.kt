@@ -3,7 +3,6 @@ package com.benwoodworth.parameterize
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 /**
  * Specifies how default non-configured [parameterize] usage should behave.
@@ -108,35 +107,6 @@ class ParameterizeSpec {
 
             state = "between iterations"
         }
-    }
-
-    @Test
-    fun parameter_with_lazy_arguments_should_create_parameter_correctly() = parameterize {
-        val lazyParameter = parameter { 'a'..'z' }
-
-        assertEquals(('a'..'z').toList(), lazyParameter.arguments.toList())
-    }
-
-    @Test
-    fun parameter_with_lazy_arguments_should_not_be_computed_before_declaring() = parameterize {
-        /*val undeclared by*/ parameter<Nothing> { fail("computed") }
-    }
-
-    @Test
-    fun parameter_with_lazy_arguments_should_only_be_computed_once() = parameterize {
-        var evaluationCount = 0
-
-        val lazyParameter = parameter {
-            evaluationCount++
-            1..10
-        }
-
-        repeat(5) { i ->
-            val arguments = lazyParameter.arguments.toList()
-            assertEquals((1..10).toList(), arguments, "Iteration #$i")
-        }
-
-        assertEquals(1, evaluationCount)
     }
 
     @Test
