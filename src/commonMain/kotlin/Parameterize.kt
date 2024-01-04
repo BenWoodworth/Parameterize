@@ -137,6 +137,7 @@ public class ParameterizeScope internal constructor(
      * ```
      */
     public fun <T> parameter(arguments: Sequence<T>): Parameter<T> =
+        @OptIn(ExperimentalParameterizeApi::class)
         Parameter(arguments)
 
     /** @suppress */
@@ -156,10 +157,16 @@ public class ParameterizeScope internal constructor(
     }
 
 
-    /** @suppress */
+    /**
+     * @constructor
+     * **Experimental:** Prefer using the scope-limited [parameter] function instead, if possible.
+     * The constructor will be made `@PublishedApi internal` once context receivers are introduced to the language.
+     *
+     * @suppress
+     */
     @JvmInline
-    public value class Parameter<out T> internal constructor(
-        internal val arguments: Sequence<T>
+    public value class Parameter<out T> @ExperimentalParameterizeApi constructor(
+        public val arguments: Sequence<T>
     )
 
     /** @suppress */
