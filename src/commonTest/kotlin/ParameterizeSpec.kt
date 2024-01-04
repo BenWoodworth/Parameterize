@@ -44,7 +44,7 @@ class ParameterizeSpec {
     fun parameter_arguments_iterator_should_be_computed_when_declared() = parameterize {
         var computed = false
 
-        val parameter by parameter(Iterable {
+        val parameter by parameter(Sequence {
             computed = true
             listOf(Unit).iterator()
         })
@@ -71,7 +71,7 @@ class ParameterizeSpec {
         }
 
         parameterize {
-            val parameter by parameter(Iterable(::AssertingIterator))
+            val parameter by parameter(Sequence(::AssertingIterator))
 
             finishedFirstIteration = true
         }
@@ -83,7 +83,7 @@ class ParameterizeSpec {
 
         parameterize {
             state = "creating arguments"
-            val iterationArguments = Iterable {
+            val iterationArguments = Sequence {
                 object : Iterator<Int> {
                     var nextArgument = 0
 
