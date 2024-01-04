@@ -37,7 +37,7 @@ internal class ParameterState(
     private val parameterizeState: ParameterizeState
 ) {
     private var property: KProperty<*>? = null
-    private var arguments: Iterable<*>? = null
+    private var arguments: Sequence<*>? = null
     private var argument: Any? = null // T
     private var argumentIterator: Iterator<*>? = null
 
@@ -82,7 +82,7 @@ internal class ParameterState(
      * @throws ParameterizeException if already declared for a different [property].
      * @throws ParameterizeContinue if [arguments] is empty.
      */
-    fun <T> declare(property: KProperty<T>, arguments: Iterable<T>) {
+    fun <T> declare(property: KProperty<T>, arguments: Sequence<T>) {
         // Nothing to do if already declared (besides validating the property)
         this.property?.let { declaredProperty ->
             parameterizeState.checkState(property.equalsProperty(declaredProperty)) {

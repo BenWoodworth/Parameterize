@@ -50,7 +50,7 @@ class ParameterStateSpec {
     fun string_representation_when_initialized_should_equal_that_of_the_current_argument() {
         val argument = "argument"
 
-        parameter.declare(::property, listOf(argument))
+        parameter.declare(::property, sequenceOf(argument))
 
         assertSame(argument, parameter.toString())
     }
@@ -63,14 +63,14 @@ class ParameterStateSpec {
     @Test
     fun declaring_with_no_arguments_should_throw_ParameterizeContinue() {
         assertFailsWith<ParameterizeContinue> {
-            parameter.declare(::property, emptyList())
+            parameter.declare(::property, emptySequence())
         }
     }
 
     @Test
     fun declaring_with_no_arguments_should_leave_parameter_undeclared() {
         runCatching {
-            parameter.declare(::property, emptyList())
+            parameter.declare(::property, emptySequence())
         }
 
         assertUndeclared(parameter)
@@ -80,7 +80,7 @@ class ParameterStateSpec {
     fun declare_should_immediately_get_the_first_argument() {
         var gotFirstArgument = false
 
-        val arguments = Iterable {
+        val arguments = Sequence {
             gotFirstArgument = true
             listOf(Unit).iterator()
         }
@@ -105,19 +105,19 @@ class ParameterStateSpec {
             }
         }
 
-        parameter.declare(::property, Iterable(::AssertingIterator))
+        parameter.declare(::property, Sequence(::AssertingIterator))
     }
 
     @Test
     fun declare_with_one_argument_should_set_is_last_argument_to_true() {
-        parameter.declare(::property, listOf("first"))
+        parameter.declare(::property, sequenceOf("first"))
 
         assertTrue(parameter.isLastArgument)
     }
 
     @Test
     fun declare_with_more_than_one_argument_should_set_is_last_argument_to_false() {
-        parameter.declare(::property, listOf("first", "second"))
+        parameter.declare(::property, sequenceOf("first", "second"))
 
         assertFalse(parameter.isLastArgument)
     }
@@ -133,7 +133,7 @@ class ParameterStateSpec {
 
     @Test
     fun getting_argument_with_the_wrong_property_should_throw_ParameterizeException() {
-        parameter.declare(::property, listOf(Unit))
+        parameter.declare(::property, sequenceOf(Unit))
 
         val exception = assertFailsWith<ParameterizeException> {
             parameter.getArgument(::differentProperty)
@@ -147,14 +147,14 @@ class ParameterStateSpec {
 
     @Test
     fun getting_argument_should_initially_return_the_first_argument() {
-        parameter.declare(::property, listOf("first", "second"))
+        parameter.declare(::property, sequenceOf("first", "second"))
 
         assertEquals("first", parameter.getArgument(::property))
     }
 
     @Test
     fun use_argument_should_set_has_been_used_to_true() {
-        parameter.declare(::property, listOf("first", "second"))
+        parameter.declare(::property, sequenceOf("first", "second"))
         parameter.useArgument()
 
         assertTrue(parameter.hasBeenUsed)
@@ -171,7 +171,7 @@ class ParameterStateSpec {
 
     @Test
     fun next_should_move_to_the_next_argument() {
-        parameter.declare(::property, listOf("first", "second", "third"))
+        parameter.declare(::property, sequenceOf("first", "second", "third"))
         parameter.getArgument(::property)
 
         parameter.nextArgument()
@@ -183,7 +183,7 @@ class ParameterStateSpec {
 
     @Test
     fun next_to_a_middle_argument_should_leave_is_last_argument_as_false() {
-        parameter.declare(::property, listOf("first", "second", "third", "fourth"))
+        parameter.declare(::property, sequenceOf("first", "second", "third", "fourth"))
         parameter.getArgument(::property)
 
         parameter.nextArgument()
@@ -195,7 +195,7 @@ class ParameterStateSpec {
 
     @Test
     fun next_to_the_last_argument_should_set_is_last_argument_to_true() {
-        parameter.declare(::property, listOf("first", "second", "third", "fourth"))
+        parameter.declare(::property, sequenceOf("first", "second", "third", "fourth"))
         parameter.getArgument(::property)
         parameter.nextArgument() // second
         parameter.nextArgument() // third
@@ -206,7 +206,7 @@ class ParameterStateSpec {
 
     @Test
     fun next_after_the_last_argument_should_loop_back_to_the_first() {
-        parameter.declare(::property, listOf("first", "second"))
+        parameter.declare(::property, sequenceOf("first", "second"))
         parameter.getArgument(::property)
         parameter.nextArgument() // second
         parameter.nextArgument() // first
@@ -216,7 +216,7 @@ class ParameterStateSpec {
 
     @Test
     fun next_after_the_last_argument_should_set_is_last_argument_to_false() {
-        parameter.declare(::property, listOf("first", "second"))
+        parameter.declare(::property, sequenceOf("first", "second"))
         parameter.getArgument(::property)
         parameter.nextArgument() // second
         parameter.nextArgument() // first
@@ -226,9 +226,9 @@ class ParameterStateSpec {
 
     @Test
     fun redeclare_should_not_change_current_argument() {
-        parameter.declare(::property, listOf("a", "b"))
+        parameter.declare(::property, sequenceOf("a", "b"))
 
-        val newArguments = Iterable<String> {
+        val newArguments = Sequence<String> {
             fail("Re-declaring should keep the old arguments")
         }
         parameter.declare(::property, newArguments)
@@ -238,9 +238,9 @@ class ParameterStateSpec {
 
     @Test
     fun redeclare_arguments_should_keep_using_the_original_arguments() {
-        parameter.declare(::property, listOf("a"))
+        parameter.declare(::property, sequenceOf("a"))
 
-        val newArguments = Iterable<String> {
+        val newArguments = Sequence<String> {
             fail("Re-declaring should keep the old arguments")
         }
         parameter.declare(::property, newArguments)
@@ -248,20 +248,20 @@ class ParameterStateSpec {
 
     @Test
     fun redeclare_with_different_parameter_should_throw_ParameterizeException() {
-        parameter.declare(::property, listOf(Unit))
+        parameter.declare(::property, sequenceOf(Unit))
 
         assertFailsWith<ParameterizeException> {
-            parameter.declare(::differentProperty, listOf(Unit))
+            parameter.declare(::differentProperty, sequenceOf(Unit))
         }
     }
 
     @Test
     fun redeclare_with_different_parameter_should_not_change_has_been_used() {
-        parameter.declare(::property, listOf("a"))
+        parameter.declare(::property, sequenceOf("a"))
         parameter.useArgument()
 
         runCatching {
-            parameter.declare(::differentProperty, listOf("a"))
+            parameter.declare(::differentProperty, sequenceOf("a"))
         }
 
         assertTrue(parameter.hasBeenUsed)
@@ -269,7 +269,7 @@ class ParameterStateSpec {
 
     @Test
     fun reset_should_set_has_been_used_to_false() {
-        parameter.declare(::property, listOf("a", "b"))
+        parameter.declare(::property, sequenceOf("a", "b"))
         parameter.getArgument(::property)
         parameter.reset()
 
@@ -296,7 +296,7 @@ class ParameterStateSpec {
     @Test
     fun get_failure_argument_when_declared_should_have_correct_property_and_argument() {
         val expectedArgument = "a"
-        parameter.declare(::property, listOf(expectedArgument))
+        parameter.declare(::property, sequenceOf(expectedArgument))
         parameter.getArgument(::property)
 
         val (property, argument) = parameter.getFailureArgument()
