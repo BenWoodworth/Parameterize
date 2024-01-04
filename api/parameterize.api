@@ -1,3 +1,6 @@
+public abstract interface annotation class com/benwoodworth/parameterize/ExperimentalParameterizeApi : java/lang/annotation/Annotation {
+}
+
 public final class com/benwoodworth/parameterize/ParameterizeConfiguration {
 	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeConfiguration$Companion;
 	public final fun getDecorator ()Lkotlin/jvm/functions/Function3;
@@ -94,9 +97,11 @@ public final class com/benwoodworth/parameterize/ParameterizeScope {
 
 public final class com/benwoodworth/parameterize/ParameterizeScope$Parameter {
 	public static final synthetic fun box-impl (Lkotlin/sequences/Sequence;)Lcom/benwoodworth/parameterize/ParameterizeScope$Parameter;
+	public static fun constructor-impl (Lkotlin/sequences/Sequence;)Lkotlin/sequences/Sequence;
 	public fun equals (Ljava/lang/Object;)Z
 	public static fun equals-impl (Lkotlin/sequences/Sequence;Ljava/lang/Object;)Z
 	public static final fun equals-impl0 (Lkotlin/sequences/Sequence;Lkotlin/sequences/Sequence;)Z
+	public final fun getArguments ()Lkotlin/sequences/Sequence;
 	public fun hashCode ()I
 	public static fun hashCode-impl (Lkotlin/sequences/Sequence;)I
 	public fun toString ()Ljava/lang/String;
