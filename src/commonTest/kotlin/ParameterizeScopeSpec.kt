@@ -1,6 +1,8 @@
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.Parameter
 import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
+import com.benwoodworth.parameterize.ParameterizeScopeSpec.LazyParameterFunction.LazyArguments
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.*
 
@@ -8,56 +10,111 @@ import kotlin.test.*
  * Specifies the [parameterize] DSL and its syntax.
  */
 class ParameterizeScopeSpec {
-    @Test
-    fun parameter_from_iterable_should_be_constructed_with_the_same_arguments_instance() = parameterize {
-        val iterable = emptyList<Nothing>()
-        val parameter = parameter(iterable)
+    /**
+     * A unique iterator that the tests can use to verify that a constructed [Parameter] has the correct
+     * [arguments][Parameter.arguments].
+     */
+    private data object ArgumentIterator : Iterator<Nothing> {
+        override fun hasNext(): Boolean = false
+        override fun next(): Nothing = throw NoSuchElementException()
+    }
 
-        assertSame(iterable, parameter.arguments)
+    @Test
+    fun parameter_from_sequence_should_be_constructed_with_the_same_arguments_instance() = parameterize {
+        val sequence = sequenceOf<Nothing>()
+        val parameter = parameter(sequence)
+
+        assertSame(sequence, parameter.arguments)
+    }
+
+    @Test
+    fun parameter_from_iterable_should_have_the_correct_arguments() = parameterize {
+        val parameter = parameter(Iterable { ArgumentIterator })
+
+        assertSame(ArgumentIterator, parameter.arguments.iterator())
     }
 
     @Test
     fun parameter_of_listed_arguments_should_have_the_correct_arguments() = parameterize {
-        data class UniqueClass(val argument: String)
+        data class UniqueArgument(val argument: String)
 
         val listedArguments = listOf(
-            UniqueClass("A"),
-            UniqueClass("B"),
-            UniqueClass("C")
+            UniqueArgument("A"),
+            UniqueArgument("B"),
+            UniqueArgument("C")
         )
 
         val parameter = parameterOf(*listedArguments.toTypedArray())
 
-        assertContentEquals(listedArguments.asIterable(), parameter.arguments)
+        assertContentEquals(listedArguments.asSequence(), parameter.arguments)
     }
+
+    /**
+     * The lazy `parameter {}` functions should have the same behavior, so this provides an abstraction that a test can
+     * use to specify for all the lazy overloads parametrically.
+     */
+    private interface LazyParameterFunction {
+        operator fun <T> invoke(scope: ParameterizeScope, lazyArguments: () -> LazyArguments<T>): Parameter<T>
+
+        class LazyArguments<T>(val createIterator: () -> Iterator<T>)
+    }
+
+    private val lazyParameterFunctions = listOf(
+        "from sequence" to object : LazyParameterFunction {
+            override fun <T> invoke(scope: ParameterizeScope, lazyArguments: () -> LazyArguments<T>): Parameter<T> =
+                with(scope) {
+                    parameter {
+                        val arguments = lazyArguments()
+                        Sequence { arguments.createIterator() }
+                    }
+                }
+        },
+        "from iterable" to object : LazyParameterFunction {
+            override fun <T> invoke(scope: ParameterizeScope, lazyArguments: () -> LazyArguments<T>): Parameter<T> =
+                with(scope) {
+                    parameter {
+                        val arguments = lazyArguments()
+                        Iterable { arguments.createIterator() }
+                    }
+                }
+        }
+    )
 
     @Test
     fun parameter_from_lazy_arguments_should_have_the_correct_arguments() = parameterize {
-        val lazyParameter = parameter { 'a'..'z' }
+        testAll(lazyParameterFunctions) { lazyParameterFunction ->
+            val lazyParameter = lazyParameterFunction(this@parameterize) {
+                LazyArguments { ArgumentIterator }
+            }
 
-        assertEquals(('a'..'z').toList(), lazyParameter.arguments.toList())
+            assertSame(ArgumentIterator, lazyParameter.arguments.iterator())
+        }
     }
 
     @Test
     fun parameter_from_lazy_arguments_should_not_be_computed_before_declaring() = parameterize {
-        /*val undeclared by*/ parameter<Nothing> { fail("computed") }
+        testAll(lazyParameterFunctions) { lazyParameterFunction ->
+            /*val undeclared by*/ lazyParameterFunction<Nothing>(this@parameterize) { fail("computed") }
+        }
     }
 
     @Test
-    fun parameter_from_lazy_arguments_should_only_be_computed_once() = parameterize {
-        var evaluationCount = 0
+    fun parameter_from_lazy_argument_iterable_should_only_be_computed_once() = parameterize {
+        testAll(lazyParameterFunctions) { lazyParameterFunction ->
+            var evaluationCount = 0
 
-        val lazyParameter = parameter {
-            evaluationCount++
-            1..10
+            val lazyParameter = lazyParameterFunction(this@parameterize) {
+                evaluationCount++
+                LazyArguments { (1..10).iterator() }
+            }
+
+            repeat(5) { i ->
+                val arguments = lazyParameter.arguments.toList()
+                assertEquals((1..10).toList(), arguments, "Iteration #$i")
+            }
+
+            assertEquals(1, evaluationCount)
         }
-
-        repeat(5) { i ->
-            val arguments = lazyParameter.arguments.toList()
-            assertEquals((1..10).toList(), arguments, "Iteration #$i")
-        }
-
-        assertEquals(1, evaluationCount)
     }
 
     @Test
@@ -77,15 +134,16 @@ class ParameterizeScopeSpec {
     }
 
     @Test
-    fun parameter_delegate_string_representation_when_declared_should_equal_that_of_the_current_argument() = parameterize {
-        lateinit var delegate: ParameterDelegate<String>
+    fun parameter_delegate_string_representation_when_declared_should_equal_that_of_the_current_argument() =
+        parameterize {
+            lateinit var delegate: ParameterDelegate<String>
 
-        val parameter by PropertyDelegateProvider { thisRef: Nothing?, property ->
-            parameterOf("argument")
-                .provideDelegate(thisRef, property)
-                .also { delegate = it } // intercept delegate
+            val parameter by PropertyDelegateProvider { thisRef: Nothing?, property ->
+                parameterOf("argument")
+                    .provideDelegate(thisRef, property)
+                    .also { delegate = it } // intercept delegate
+            }
+
+            assertSame(parameter, delegate.toString())
         }
-
-        assertSame(parameter, delegate.toString())
-    }
 }

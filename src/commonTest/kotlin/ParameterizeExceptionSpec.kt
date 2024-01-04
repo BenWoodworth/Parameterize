@@ -97,7 +97,7 @@ class ParameterizeExceptionSpec {
 
     @Test
     fun nested_parameter_declaration_within_arguments_iterator_function() {
-        fun ParameterizeScope.testArguments() = object : Iterable<Unit> {
+        fun ParameterizeScope.testArguments() = object : Sequence<Unit> {
             override fun iterator(): Iterator<Unit> {
                 val inner by parameterOf(Unit)
 
@@ -139,7 +139,7 @@ class ParameterizeExceptionSpec {
 
         val exception = assertFailsWith<ParameterizeException> {
             parameterize {
-                val outer by parameter(Iterable(::testArgumentsIterator))
+                val outer by parameter(Sequence(::testArgumentsIterator))
                 val end by parameterOf(Unit, Unit)
             }
         }

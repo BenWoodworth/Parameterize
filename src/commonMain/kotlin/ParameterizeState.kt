@@ -51,7 +51,7 @@ internal class ParameterizeState {
 
     fun <T> declareParameter(
         property: KProperty<T>,
-        arguments: Iterable<T>
+        arguments: Sequence<T>
     ): ParameterDelegate<T> = trackNestedDeclaration(property) {
         val parameterIndex = parameterCount
 
