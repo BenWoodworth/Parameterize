@@ -146,10 +146,17 @@ public class ParameterizeScope internal constructor(
     }
 
 
-    /** @suppress */
+    /**
+     * @constructor
+     * **Experimental:** Prefer using the scope-limited [parameter] function, if possible.
+     * The constructor will be made `@PublishedApi internal` once
+     * [context parameters](https://github.com/Kotlin/KEEP/issues/367) are introduced to the language.
+     *
+     * @suppress
+     */
     @JvmInline
-    public value class Parameter<out T> internal constructor(
-        internal val arguments: Sequence<T>
+    public value class Parameter<out T> @ExperimentalParameterizeApi constructor(
+        public val arguments: Sequence<T>
     )
 
     /** @suppress */
@@ -179,6 +186,7 @@ public class ParameterizeScope internal constructor(
  */
 @Suppress("UnusedReceiverParameter") // Should only be accessible within parameterize scopes
 public fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): ParameterizeScope.Parameter<T> =
+    @OptIn(ExperimentalParameterizeApi::class)
     ParameterizeScope.Parameter(arguments)
 
 /**
