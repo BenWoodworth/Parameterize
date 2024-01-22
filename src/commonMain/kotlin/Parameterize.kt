@@ -169,7 +169,7 @@ public class ParameterizeScope internal constructor(
          *
          * Useful while debugging, e.g. inline hints that show property values:
          * ```
-         * val letter by parameter { 'a'..'z' }  //letter$delegate: b
+         * val letter by parameter('a'..'z')  //letter$delegate: b
          * ```
          */
         override fun toString(): String =
