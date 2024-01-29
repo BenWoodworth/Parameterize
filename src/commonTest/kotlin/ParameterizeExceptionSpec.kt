@@ -157,7 +157,10 @@ class ParameterizeExceptionSpec {
                 val trackedNestingInterference by parameterOf(Unit)
 
                 val outer by parameter {
-                    val inner by parameterOf(Unit)
+                    with(this@parameterize) { // Work around @ParameterizeDsl
+                        val inner by parameterOf(Unit)
+                    }
+
                     listOf(Unit)
                 }
 

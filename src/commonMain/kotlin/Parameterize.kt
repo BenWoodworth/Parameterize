@@ -114,6 +114,7 @@ public inline fun parameterize(
 }
 
 /** @see parameterize */
+@ParameterizeDsl
 public class ParameterizeScope internal constructor(
     internal val parameterizeState: ParameterizeState,
 ) {
@@ -233,7 +234,7 @@ public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): ParameterizeS
 @OverloadResolutionByLambdaReturnType
 @JvmName("parameterLazySequence")
 public inline fun <T> ParameterizeScope.parameter(
-    crossinline lazyArguments: () -> Sequence<T>
+    crossinline lazyArguments: LazyParameterScope.() -> Sequence<T>
 ): ParameterizeScope.Parameter<T> =
     parameter(object : Sequence<T> {
         private var arguments: Sequence<T>? = null
@@ -242,7 +243,7 @@ public inline fun <T> ParameterizeScope.parameter(
             var arguments = this.arguments
 
             if (arguments == null) {
-                arguments = lazyArguments()
+                arguments = LazyParameterScope(this@parameter).lazyArguments()
                 this.arguments = arguments
             }
 
@@ -274,8 +275,21 @@ public inline fun <T> ParameterizeScope.parameter(
 @OverloadResolutionByLambdaReturnType
 @JvmName("parameterLazyIterable")
 public inline fun <T> ParameterizeScope.parameter(
-    crossinline lazyArguments: () -> Iterable<T>
+    crossinline lazyArguments: LazyParameterScope.() -> Iterable<T>
 ): ParameterizeScope.Parameter<T> =
     parameter {
         lazyArguments().asSequence()
     }
+
+/**
+ * Used to prevent `parameter` functions from being used within lazy `parameter {}` blocks, since doing so is not
+ * currently supported.
+ *
+ * @suppress
+ * @see ParameterizeDsl
+ */
+@JvmInline
+@ParameterizeDsl
+public value class LazyParameterScope @PublishedApi internal constructor(
+    private val parameterizeScope: ParameterizeScope
+)
