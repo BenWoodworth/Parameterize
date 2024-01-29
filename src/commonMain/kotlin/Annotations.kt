@@ -17,3 +17,13 @@ import kotlin.annotation.AnnotationTarget.*
 )
 @RequiresOptIn(level = RequiresOptIn.Level.WARNING)
 public annotation class ExperimentalParameterizeApi
+
+/**
+ * Used to prevent [parameterize] functions from being used in the wrong scope.
+ *
+ * @see DslMarker
+ */
+@DslMarker
+@Retention(AnnotationRetention.BINARY)
+@Target(CLASS, TYPE, TYPEALIAS)
+public annotation class ParameterizeDsl

@@ -1,6 +1,19 @@
 public abstract interface annotation class com/benwoodworth/parameterize/ExperimentalParameterizeApi : java/lang/annotation/Annotation {
 }
 
+public final class com/benwoodworth/parameterize/LazyParameterScope {
+	public static final synthetic fun box-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;)Lcom/benwoodworth/parameterize/LazyParameterScope;
+	public static fun constructor-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;)Lcom/benwoodworth/parameterize/ParameterizeScope;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lcom/benwoodworth/parameterize/ParameterizeScope;Lcom/benwoodworth/parameterize/ParameterizeScope;)Z
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lcom/benwoodworth/parameterize/ParameterizeScope;
+}
+
 public final class com/benwoodworth/parameterize/ParameterizeConfiguration {
 	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeConfiguration$Companion;
 	public final fun getDecorator ()Lkotlin/jvm/functions/Function3;
@@ -47,6 +60,9 @@ public final class com/benwoodworth/parameterize/ParameterizeConfiguration$OnFai
 	public final fun setRecordFailure (Z)V
 }
 
+public abstract interface annotation class com/benwoodworth/parameterize/ParameterizeDsl : java/lang/annotation/Annotation {
+}
+
 public final class com/benwoodworth/parameterize/ParameterizeFailedError : org/opentest4j/MultipleFailuresError {
 	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeFailedError$Companion;
 	public synthetic fun getFailures ()Ljava/util/List;
@@ -80,8 +96,8 @@ public final class com/benwoodworth/parameterize/ParameterizeIterator {
 public final class com/benwoodworth/parameterize/ParameterizeKt {
 	public static final fun parameter (Lcom/benwoodworth/parameterize/ParameterizeScope;Ljava/lang/Iterable;)Lkotlin/sequences/Sequence;
 	public static final fun parameter (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/sequences/Sequence;)Lkotlin/sequences/Sequence;
-	public static final fun parameterLazyIterable (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/jvm/functions/Function0;)Lkotlin/sequences/Sequence;
-	public static final fun parameterLazySequence (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/jvm/functions/Function0;)Lkotlin/sequences/Sequence;
+	public static final fun parameterLazyIterable (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
+	public static final fun parameterLazySequence (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
 	public static final fun parameterOf (Lcom/benwoodworth/parameterize/ParameterizeScope;[Ljava/lang/Object;)Lkotlin/sequences/Sequence;
 	public static final fun parameterize (Lcom/benwoodworth/parameterize/ParameterizeConfiguration;Lkotlin/jvm/functions/Function1;)V
 	public static final fun parameterize (Lcom/benwoodworth/parameterize/ParameterizeConfiguration;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
