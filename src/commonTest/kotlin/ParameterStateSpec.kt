@@ -53,7 +53,7 @@ class ParameterStateSpec {
 
         val expected = replacements
             .onEach { (old) ->
-                check(old in messageFromLazy) { "'$old' in '$messageFromLazy'"}
+                check(old in messageFromLazy) { "'$old' in '$messageFromLazy'" }
             }
             .fold(messageFromLazy) { result, (old, new) ->
                 result.replace(old, new)

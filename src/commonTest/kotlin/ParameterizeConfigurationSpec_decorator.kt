@@ -187,7 +187,7 @@ class ParameterizeConfigurationSpec_decorator {
         (1..3)
             .flatMap { listOf(it to "before", it to "after") }
             .map { "in iteration ${it.first}, ${it.second}" to it }
-    ){ (inIteration, beforeOrAfter) ->
+    ) { (inIteration, beforeOrAfter) ->
         val before = beforeOrAfter == "before"
         val after = beforeOrAfter == "after"
 
@@ -211,7 +211,7 @@ class ParameterizeConfigurationSpec_decorator {
     @Test
     fun is_last_iteration_should_be_correct() = testAll(
         (1..3).map { "in iteration $it" to it }
-    ){ inIteration ->
+    ) { inIteration ->
         var currentIteration = 1
 
         testParameterize(
