@@ -23,7 +23,7 @@ import java.net.URL
 plugins {
     kotlin("multiplatform") version "1.9.22"
     id("org.jetbrains.dokka") version "1.9.10"
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.2"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.14.0"
     id("parameterize.library-conventions")
 }
 
