@@ -55,14 +55,23 @@ class ParameterizeExceptionSpec {
             parameterize(
                 onFailure = { failure ->
                     onFailureInvoked = true
-                    assertSame(exceptionFromDifferentParameterize, failure, "onFailure handler should be invoked with the exception")
+
+                    assertSame(
+                        exceptionFromDifferentParameterize,
+                        failure,
+                        "onFailure handler should be invoked with the exception"
+                    )
                 },
                 onComplete = {
                     onCompleteInvoked = true
                 }
             ) {
                 parameterize {
-                    exceptionFromDifferentParameterize = ParameterizeException(parameterizeState, "from different parameterize")
+                    exceptionFromDifferentParameterize = ParameterizeException(
+                        parameterizeState,
+                        "from different parameterize"
+                    )
+
                     throw exceptionFromDifferentParameterize
                 }
             }
