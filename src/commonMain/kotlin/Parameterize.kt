@@ -109,6 +109,10 @@ public inline fun parameterize(
  *
  * @see parameterize
  */
+@Suppress(
+    // False positive: onComplete is called in place exactly once through the configuration by the end parameterize call
+    "LEAKED_IN_PLACE_LAMBDA", "WRONG_INVOCATION_KIND"
+)
 public inline fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
     noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = configuration.decorator,

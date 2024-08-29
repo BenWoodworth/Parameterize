@@ -116,8 +116,13 @@ private class DecoratorCoroutine(
     fun beforeIteration() {
         check(!completed) { "Decorator already completed" }
 
-        suspend { configuration.decorator(scope, iteration) }
+        val invokeDecorator: suspend DecoratorScope.() -> Unit = {
+            configuration.decorator(this, iteration)
+        }
+
+        invokeDecorator
             .createCoroutineUnintercepted(
+                receiver = scope,
                 completion = Continuation(EmptyCoroutineContext) {
                     completed = true
                     it.getOrThrow()
