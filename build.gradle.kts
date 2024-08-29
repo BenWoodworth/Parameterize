@@ -70,8 +70,13 @@ kotlin {
     watchosDeviceArm64()
     mingwX64()
 
-    wasmJs()
-    wasmWasi()
+    wasmJs {
+        browser()
+        nodejs()
+    }
+    wasmWasi {
+        nodejs()
+    }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
