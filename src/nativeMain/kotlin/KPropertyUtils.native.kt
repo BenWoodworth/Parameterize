@@ -18,11 +18,6 @@ package com.benwoodworth.parameterize
 
 import kotlin.reflect.KProperty
 
-/**
- * Indicates whether some [other] property is equal to [this] one.
- *
- * Necessary since not all platforms support checking that two property references are from the same property in the
- * source code. In those cases, this function compares their names so that there's some confidence that they're not
- * unequal.
- */
-internal expect inline fun KProperty<*>.equalsProperty(other: KProperty<*>): Boolean
+@Suppress("NOTHING_TO_INLINE")
+internal actual inline fun KProperty<*>.equalsProperty(other: KProperty<*>): Boolean =
+    this == other
