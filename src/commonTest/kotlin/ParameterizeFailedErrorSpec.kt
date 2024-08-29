@@ -69,7 +69,7 @@ class ParameterizeFailedErrorSpec {
         )
 
         val error = ParameterizeFailedError(
-            failures.map { ParameterizeFailure(it, arguments) },
+            failures.map { ParameterizeFailure(it, emptyList()) },
             failureCount = 3,
             iterationCount = 7,
             completedEarly = false
@@ -96,7 +96,7 @@ class ParameterizeFailedErrorSpec {
         val failures = listOf(NullMessage(), EmptyMessage(), BlankMessage())
 
         val error = ParameterizeFailedError(
-            failures.map { ParameterizeFailure(it, arguments) },
+            failures.map { ParameterizeFailure(it, emptyList()) },
             failureCount = 3,
             iterationCount = 7,
             completedEarly = false
@@ -122,7 +122,7 @@ class ParameterizeFailedErrorSpec {
         )
 
         val error = ParameterizeFailedError(
-            failures.map { ParameterizeFailure(it, arguments) },
+            failures.map { ParameterizeFailure(it, emptyList()) },
             failureCount = 3,
             iterationCount = 7,
             completedEarly = false
@@ -146,7 +146,7 @@ class ParameterizeFailedErrorSpec {
         )
 
         val error = ParameterizeFailedError(
-            failures.map { ParameterizeFailure(it, arguments) },
+            failures.map { ParameterizeFailure(it, emptyList()) },
             failureCount = 1,
             iterationCount = 7,
             completedEarly = false
@@ -164,7 +164,7 @@ class ParameterizeFailedErrorSpec {
     @Test
     fun message_failure_list_should_end_with_an_ellipsis_if_not_all_failures_were_recorded() {
         val error = ParameterizeFailedError(
-            List(2) { i -> ParameterizeFailure(Throwable("Failure $i"), arguments) },
+            List(2) { i -> ParameterizeFailure(Throwable("Failure $i"), emptyList()) },
             failureCount = 3,
             iterationCount = 7,
             completedEarly = false
@@ -175,6 +175,36 @@ class ParameterizeFailedErrorSpec {
             ${'\t'}Throwable: Failure 0
             ${'\t'}Throwable: Failure 1
             ${'\t'}...
+        """.trimIndent()
+
+        assertEquals(expectedMessage, error.message)
+    }
+
+    @Test
+    fun message_failure_arguments_list_after_failure_message() {
+        val failures = listOf(
+            IllegalStateException("Failure 0"),
+            AssertionError("Failure 1"),
+            IllegalArgumentException("Failure 2")
+        )
+
+        val error = ParameterizeFailedError(
+            failures.mapIndexed { index, it -> ParameterizeFailure(it, arguments.take(index)) },
+            failureCount = 3,
+            iterationCount = 7,
+            completedEarly = false
+        )
+
+        // Tabs for indentation, since that's how the stack traces print.
+        // Simple name, since the fully qualified name will be shown in the suppressed failures
+        val expectedMessage = """
+            Failed 3/7 cases
+            ${'\t'}${failures[0]::class.simpleName}: Failure 0
+            ${'\t'}${failures[1]::class.simpleName}: Failure 1
+            ${'\t'}${'\t'}${arguments[0]}
+            ${'\t'}${failures[2]::class.simpleName}: Failure 2
+            ${'\t'}${'\t'}${arguments[0]}
+            ${'\t'}${'\t'}${arguments[1]}
         """.trimIndent()
 
         assertEquals(expectedMessage, error.message)

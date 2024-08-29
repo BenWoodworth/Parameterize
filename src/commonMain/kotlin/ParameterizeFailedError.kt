@@ -115,6 +115,11 @@ internal inline val ParameterizeFailedError.commonMessage
                         append(" ...")
                     }
                 }
+
+                failure.arguments.forEach { argument ->
+                    append("\n\t\t")
+                    append(argument)
+                }
             }
 
             if (recordedFailures.size < failureCount) {
