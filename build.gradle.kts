@@ -17,6 +17,7 @@
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
 import java.net.URL
 
@@ -31,6 +32,7 @@ repositories {
     mavenCentral()
 }
 
+@OptIn(ExperimentalWasmDsl::class)
 kotlin {
     explicitApi()
 
@@ -68,6 +70,9 @@ kotlin {
     watchosDeviceArm64()
     mingwX64()
 
+    wasmJs()
+    wasmWasi()
+
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
@@ -94,7 +99,7 @@ kotlin {
 
 val ciHostTargets = run {
     val hostTargetPrefixes = mapOf(
-        "linux" to listOf("metadata", "jvm", "js", "linux", "android"),
+        "linux" to listOf("metadata", "jvm", "js", "linux", "android", "wasm"),
         "macos" to listOf("macos", "ios", "watchos", "tvos"),
         "windows" to listOf("mingw")
     )

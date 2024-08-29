@@ -25,6 +25,20 @@ import kotlin.test.Ignore
 @OptionalExpectation
 expect annotation class NativeIgnore()
 
+/**
+ * [Ignore] on wasm js targets.
+ */
+@OptIn(ExperimentalMultiplatform::class)
+@OptionalExpectation
+expect annotation class WasmJsIgnore()
+
+/**
+ * [Ignore] on wasm wasi targets.
+ */
+@OptIn(ExperimentalMultiplatform::class)
+@OptionalExpectation
+expect annotation class WasmWasiIgnore()
+
 expect val Throwable.stackTraceLines: List<String>
 
 @Suppress("UNUSED_PARAMETER")

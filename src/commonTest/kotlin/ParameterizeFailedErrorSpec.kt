@@ -252,7 +252,7 @@ class ParameterizeFailedErrorSpec {
     }
 
     @Test
-    @NativeIgnore
+    @[NativeIgnore WasmJsIgnore WasmWasiIgnore]
     fun stack_trace_without_recorded_failures_should_not_be_cleared() {
         val error = ParameterizeFailedError(
             listOf(),
@@ -265,7 +265,7 @@ class ParameterizeFailedErrorSpec {
     }
 
     @Test
-    @NativeIgnore
+    @[NativeIgnore WasmJsIgnore WasmWasiIgnore]
     fun stack_trace_with_recorded_failures_should_be_cleared() {
         val failure = Throwable("Failure message")
 
@@ -280,7 +280,7 @@ class ParameterizeFailedErrorSpec {
     }
 
     @Test
-    @NativeIgnore
+    @[NativeIgnore WasmJsIgnore WasmWasiIgnore]
     fun augmented_failure_stack_trace_should_be_cleared() {
         val failure = Throwable("Failure message")
 
