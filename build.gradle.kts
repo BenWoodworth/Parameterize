@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import kotlinx.validation.ExperimentalBCVApi
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
@@ -30,6 +31,13 @@ plugins {
 
 repositories {
     mavenCentral()
+}
+
+apiValidation {
+    @OptIn(ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
 }
 
 @OptIn(ExperimentalWasmDsl::class)
