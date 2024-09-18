@@ -140,6 +140,91 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
+    fun iteration_count_should_be_correct_with_skips() {
+        var expectedIterationCount = 0L
+
+        testParameterize(
+            onComplete = {
+                assertEquals(expectedIterationCount, iterationCount)
+            }
+        ) {
+            val iteration by parameter(0..100)
+
+            expectedIterationCount++
+
+            if (iteration % 3 == 0 && iteration % 7 == 0) {
+                val skipWithEmptyParameter by parameterOf<Unit>()
+            }
+        }
+    }
+
+    @Test
+    fun skip_count_should_be_correct() {
+        var expectedSkipCount = 0L
+
+        testParameterize(
+            onComplete = {
+                assertEquals(expectedSkipCount, skipCount)
+            }
+        ) {
+            val iteration by parameter(0..100)
+
+            if (iteration % 3 == 0 && iteration % 7 == 0) {
+                expectedSkipCount++
+                val skipWithEmptyParameter by parameterOf<Unit>()
+            }
+        }
+    }
+
+    @Test
+    fun skip_count_should_be_correct_with_break() {
+        var expectedSkipCount = 0L
+
+        testParameterize(
+            onFailure = {
+                breakEarly = true
+            },
+            onComplete = {
+                assertEquals(expectedSkipCount, skipCount)
+            }
+        ) {
+            val iteration by parameter(0..100)
+
+            if (iteration % 3 == 0 && iteration % 7 == 0) {
+                expectedSkipCount++
+                val skipWithEmptyParameter by parameterOf<Unit>()
+            }
+
+            if (iteration == 50) {
+                fail()
+            }
+        }
+    }
+
+    @Test
+    fun success_count_should_be_correct_with_skips_and_failures() {
+        var expectedSuccessCount = 0L
+
+        testParameterize(
+            onComplete = {
+                assertEquals(expectedSuccessCount, successCount)
+            }
+        ) {
+            val iteration by parameter(0..100)
+
+            if (iteration % 3 == 0) {
+                val skipWithEmptyParameter by parameterOf<Unit>()
+            }
+
+            if (iteration % 7 == 0) {
+                fail()
+            }
+
+            expectedSuccessCount++
+        }
+    }
+
+    @Test
     fun failure_count_should_be_correct() {
         var expectedFailureCount = 0L
 
@@ -240,12 +325,14 @@ class ParameterizeConfigurationSpec_onComplete {
         "base values" to OnCompleteScope(
             recordedFailures = emptyList(),
             failureCount = 1,
+            skipCount = 1,
             iterationCount = 1,
             completedEarly = false
         ),
         "changed values" to OnCompleteScope(
             recordedFailures = listOf(ParameterizeFailure(Throwable(), emptyList())),
             failureCount = 2,
+            skipCount = 2,
             iterationCount = 2,
             completedEarly = true
         )
@@ -255,8 +342,8 @@ class ParameterizeConfigurationSpec_onComplete {
         }
 
         assertEquals(scope.recordedFailures, error.recordedFailures, error::recordedFailures.name)
+        assertEquals(scope.successCount, error.successCount, error::successCount.name)
         assertEquals(scope.failureCount, error.failureCount, error::failureCount.name)
-        assertEquals(scope.iterationCount, error.iterationCount, error::iterationCount.name)
         assertEquals(scope.completedEarly, error.completedEarly, error::completedEarly.name)
     }
 }

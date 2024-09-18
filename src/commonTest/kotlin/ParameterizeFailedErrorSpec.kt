@@ -40,8 +40,8 @@ class ParameterizeFailedErrorSpec {
     fun message_should_have_failure_count_and_total() {
         val error = ParameterizeFailedError(
             emptyList(),
+            successCount = 4,
             failureCount = 3,
-            iterationCount = 7,
             completedEarly = false
         )
 
@@ -52,8 +52,8 @@ class ParameterizeFailedErrorSpec {
     fun message_total_when_completed_early_should_have_a_plus_after_the_total() {
         val error = ParameterizeFailedError(
             emptyList(),
+            successCount = 4,
             failureCount = 3,
-            iterationCount = 7,
             completedEarly = true
         )
 
@@ -70,8 +70,8 @@ class ParameterizeFailedErrorSpec {
 
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, emptyList()) },
+            successCount = 4,
             failureCount = 3,
-            iterationCount = 7,
             completedEarly = false
         )
 
@@ -97,8 +97,8 @@ class ParameterizeFailedErrorSpec {
 
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, emptyList()) },
+            successCount = 4,
             failureCount = 3,
-            iterationCount = 7,
             completedEarly = false
         )
 
@@ -123,8 +123,8 @@ class ParameterizeFailedErrorSpec {
 
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, emptyList()) },
+            successCount = 4,
             failureCount = 3,
-            iterationCount = 7,
             completedEarly = false
         )
 
@@ -147,8 +147,8 @@ class ParameterizeFailedErrorSpec {
 
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, emptyList()) },
+            successCount = 6,
             failureCount = 1,
-            iterationCount = 7,
             completedEarly = false
         )
 
@@ -165,8 +165,8 @@ class ParameterizeFailedErrorSpec {
     fun message_failure_list_should_end_with_an_ellipsis_if_not_all_failures_were_recorded() {
         val error = ParameterizeFailedError(
             List(2) { i -> ParameterizeFailure(Throwable("Failure $i"), emptyList()) },
+            successCount = 4,
             failureCount = 3,
-            iterationCount = 7,
             completedEarly = false
         )
 
@@ -190,8 +190,8 @@ class ParameterizeFailedErrorSpec {
 
         val error = ParameterizeFailedError(
             failures.mapIndexed { index, it -> ParameterizeFailure(it, arguments.take(index)) },
+            successCount = 4,
             failureCount = 3,
-            iterationCount = 7,
             completedEarly = false
         )
 
@@ -216,8 +216,8 @@ class ParameterizeFailedErrorSpec {
 
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, arguments) },
+            successCount = 4,
             failureCount = 3,
-            iterationCount = 7,
             completedEarly = false
         )
 
@@ -231,8 +231,8 @@ class ParameterizeFailedErrorSpec {
     fun recorded_failure_message_with_no_arguments_should_say_failed_with_no_arguments() {
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(Throwable(), emptyList())),
+            successCount = 0,
             failureCount = 1,
-            iterationCount = 1,
             completedEarly = false
         )
 
@@ -245,8 +245,8 @@ class ParameterizeFailedErrorSpec {
     fun recorded_failure_message_with_one_used_parameter_should_list_its_argument() {
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(Throwable(), arguments.take(1))),
+            successCount = 0,
             failureCount = 1,
-            iterationCount = 1,
             completedEarly = false
         )
 
@@ -265,8 +265,8 @@ class ParameterizeFailedErrorSpec {
     fun recorded_failure_message_with_two_used_parameters_should_list_their_arguments() {
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(Throwable(), arguments)),
+            successCount = 0,
             failureCount = 1,
-            iterationCount = 1,
             completedEarly = false
         )
 
@@ -286,8 +286,8 @@ class ParameterizeFailedErrorSpec {
     fun stack_trace_without_recorded_failures_should_not_be_cleared() {
         val error = ParameterizeFailedError(
             listOf(),
+            successCount = 0,
             failureCount = 1,
-            iterationCount = 1,
             completedEarly = false
         )
 
@@ -301,8 +301,8 @@ class ParameterizeFailedErrorSpec {
 
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(failure, arguments)),
+            successCount = 0,
             failureCount = 1,
-            iterationCount = 1,
             completedEarly = false
         )
 
@@ -316,8 +316,8 @@ class ParameterizeFailedErrorSpec {
 
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(failure, arguments)),
+            successCount = 0,
             failureCount = 1,
-            iterationCount = 1,
             completedEarly = false
         )
 

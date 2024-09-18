@@ -53,6 +53,10 @@ final class com.benwoodworth.parameterize/ParameterizeConfiguration { // com.ben
             final fun <get-iterationCount>(): kotlin/Long // com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope.iterationCount.<get-iterationCount>|<get-iterationCount>(){}[0]
         final val recordedFailures // com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope.recordedFailures|{}recordedFailures[0]
             final fun <get-recordedFailures>(): kotlin.collections/List<com.benwoodworth.parameterize/ParameterizeFailure> // com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope.recordedFailures.<get-recordedFailures>|<get-recordedFailures>(){}[0]
+        final val skipCount // com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope.skipCount|{}skipCount[0]
+            final fun <get-skipCount>(): kotlin/Long // com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope.skipCount.<get-skipCount>|<get-skipCount>(){}[0]
+        final val successCount // com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope.successCount|{}successCount[0]
+            final fun <get-successCount>(): kotlin/Long // com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope.successCount.<get-successCount>|<get-successCount>(){}[0]
 
         final fun (com.benwoodworth.parameterize/ParameterizeFailedError.Companion).invoke(): com.benwoodworth.parameterize/ParameterizeFailedError // com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope.invoke|invoke@com.benwoodworth.parameterize.ParameterizeFailedError.Companion(){}[0]
     }

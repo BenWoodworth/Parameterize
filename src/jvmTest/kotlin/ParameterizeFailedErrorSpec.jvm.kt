@@ -32,8 +32,8 @@ class ParameterizeFailedErrorSpecJvm {
 
         val error: MultipleFailuresError = ParameterizeFailedError(
             recordedFailures,
+            successCount = 0,
             failureCount = recordedFailures.size.toLong(),
-            iterationCount = recordedFailures.size.toLong(),
             completedEarly = false
         )
 
@@ -52,8 +52,8 @@ class ParameterizeFailedErrorSpecJvm {
 
         val error: MultipleFailuresError = ParameterizeFailedError(
             recordedFailures,
+            successCount = 0,
             failureCount = recordedFailures.size.toLong(),
-            iterationCount = recordedFailures.size.toLong(),
             completedEarly = false
         )
 

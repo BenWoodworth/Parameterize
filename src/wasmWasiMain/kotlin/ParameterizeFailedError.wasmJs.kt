@@ -18,8 +18,8 @@ package com.benwoodworth.parameterize
 
 public actual class ParameterizeFailedError internal actual constructor(
     internal actual val recordedFailures: List<ParameterizeFailure>,
+    internal actual val successCount: Long,
     internal actual val failureCount: Long,
-    internal actual val iterationCount: Long,
     internal actual val completedEarly: Boolean
 ) : AssertionError() {
     public actual companion object;

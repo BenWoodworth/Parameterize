@@ -21,8 +21,8 @@ import org.opentest4j.MultipleFailuresError
 @Suppress("ACTUAL_WITHOUT_EXPECT") // https://youtrack.jetbrains.com/issue/KT-20641/
 public actual class ParameterizeFailedError internal actual constructor(
     internal actual val recordedFailures: List<ParameterizeFailure>,
+    internal actual val successCount: Long,
     internal actual val failureCount: Long,
-    internal actual val iterationCount: Long,
     internal actual val completedEarly: Boolean
 ) : MultipleFailuresError(null, emptyList()) {
     public actual companion object;
