@@ -20,10 +20,10 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.*
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
+import com.benwoodworth.parameterize.ParameterizeScope.Parameter
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
-import kotlin.experimental.ExperimentalTypeInference
-import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
 import kotlin.reflect.KProperty
@@ -133,14 +133,11 @@ public inline fun parameterize(
     parameterize(newConfiguration, block)
 }
 
-/** @see parameterize */
-@ParameterizeDsl
-public class ParameterizeScope internal constructor(
+internal class SimpleParameterizeScope internal constructor(
     internal val parameterizeState: ParameterizeState,
-) {
+) : ParameterizeScope {
     internal var iterationCompleted: Boolean = false
 
-    /** @suppress */
     override fun toString(): String =
         parameterizeState.getFailureArguments().joinToString(
             prefix = "ParameterizeScope(",
@@ -150,8 +147,7 @@ public class ParameterizeScope internal constructor(
             "${parameter.name} = $argument"
         }
 
-    /** @suppress */
-    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): DeclaredParameter<T> {
+    override fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): DeclaredParameter<T> {
         parameterizeState.checkState(!iterationCompleted) {
             "Cannot declare parameter `${property.name}` after its iteration has completed"
         }
@@ -160,165 +156,8 @@ public class ParameterizeScope internal constructor(
         return parameterizeState.declareParameter(property as KProperty<T>, arguments)
     }
 
-    /** @suppress */
-    public operator fun <T> DeclaredParameter<T>.getValue(thisRef: Any?, property: KProperty<*>): T {
+    override operator fun <T> DeclaredParameter<T>.getValue(thisRef: Any?, property: KProperty<*>): T {
         if (!iterationCompleted) parameterState.useArgument()
         return argument
     }
-
-
-    /**
-     * @constructor
-     * **Experimental:** Prefer using the scope-limited [parameter] function, if possible.
-     * The constructor will be made `@PublishedApi internal` once
-     * [context parameters](https://github.com/Kotlin/KEEP/issues/367) are introduced to the language.
-     *
-     * @suppress
-     */
-    @JvmInline
-    public value class Parameter<out T> @ExperimentalParameterizeApi constructor(
-        public val arguments: Sequence<T>
-    )
-
-    /** @suppress */
-    public class DeclaredParameter<out T> internal constructor(
-        internal val parameterState: ParameterState,
-        internal val argument: T
-    ) {
-        /**
-         * Returns a string representation of the current argument.
-         *
-         * Useful while debugging, e.g. inline hints that show property values:
-         * ```
-         * val letter by parameter('a'..'z')  //letter$delegate: b
-         * ```
-         */
-        override fun toString(): String =
-            argument.toString()
-    }
-
-    /** @suppress */
-    @Suppress("unused")
-    @Deprecated(
-        "Renamed to DeclaredParameter",
-        ReplaceWith("DeclaredParameter<T>"),
-        DeprecationLevel.ERROR
-    )
-    public class ParameterDelegate<T> private constructor()
 }
-
-/**
- * Declare a parameter with the given [arguments].
- *
- * ```
- * val letter by parameter('a'..'z')
- * ```
- */
-@Suppress("UnusedReceiverParameter") // Should only be accessible within parameterize scopes
-public fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): ParameterizeScope.Parameter<T> =
-    @OptIn(ExperimentalParameterizeApi::class)
-    ParameterizeScope.Parameter(arguments)
-
-/**
- * Declare a parameter with the given [arguments].
- *
- * ```
- * val letter by parameter('a'..'z')
- * ```
- */
-public fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): ParameterizeScope.Parameter<T> =
-    parameter(arguments.asSequence())
-
-/**
- * Declare a parameter with the given [arguments].
- *
- * ```
- * val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
- * ```
- */
-public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): ParameterizeScope.Parameter<T> =
-    parameter(arguments.asSequence())
-
-/**
- * Declares a parameter with the given [lazyArguments].
- * The arguments are only computed the first time the parameter is used, and not at all if used.
- *
- * This `parameter` function is useful to avoid computing the arguments every iteration.
- * Instead, these arguments will only be computed the first time the parameter is used.
- *
- * ```
- * val evenNumberSquared by parameter {
- *     numbers
- *         .filter { it % 2 == 0 }
- *         .map { it * it }
- * }
- * ```
- *
- * ### Restrictions
- *
- * - The [lazyArguments] block should not have side effects. Since it's not run every iteration, side effects could make
- *   the execution different from future iterations, breaking [parameterize]'s determinism assumption.
- */
-@OptIn(ExperimentalTypeInference::class)
-@OverloadResolutionByLambdaReturnType
-@JvmName("parameterLazySequence")
-public inline fun <T> ParameterizeScope.parameter(
-    crossinline lazyArguments: LazyParameterScope.() -> Sequence<T>
-): ParameterizeScope.Parameter<T> =
-    parameter(object : Sequence<T> {
-        private var arguments: Sequence<T>? = null
-
-        override fun iterator(): Iterator<T> {
-            var arguments = this.arguments
-
-            if (arguments == null) {
-                arguments = LazyParameterScope(this@parameter).lazyArguments()
-                this.arguments = arguments
-            }
-
-            return arguments.iterator()
-        }
-    })
-
-/**
- * Declares a parameter with the given [lazyArguments].
- * The arguments are only computed the first time the parameter is used, and not at all if used.
- *
- * This `parameter` function is useful to avoid computing the arguments every iteration.
- * Instead, these arguments will only be computed the first time the parameter is used.
- *
- * ```
- * val evenNumberSquared by parameter {
- *     numbers
- *         .filter { it % 2 == 0 }
- *         .map { it * it }
- * }
- * ```
- *
- * ### Restrictions
- *
- * - The [lazyArguments] block should not have side effects. Since it's not run every iteration, side effects could make
- *   the execution different from future iterations, breaking [parameterize]'s determinism assumption.
- */
-@OptIn(ExperimentalTypeInference::class)
-@OverloadResolutionByLambdaReturnType
-@JvmName("parameterLazyIterable")
-public inline fun <T> ParameterizeScope.parameter(
-    crossinline lazyArguments: LazyParameterScope.() -> Iterable<T>
-): ParameterizeScope.Parameter<T> =
-    parameter {
-        lazyArguments().asSequence()
-    }
-
-/**
- * Used to prevent `parameter` functions from being used within lazy `parameter {}` blocks, since doing so is not
- * currently supported.
- *
- * @suppress
- * @see ParameterizeDsl
- */
-@JvmInline
-@ParameterizeDsl
-public value class LazyParameterScope @PublishedApi internal constructor(
-    private val parameterizeScope: ParameterizeScope
-)

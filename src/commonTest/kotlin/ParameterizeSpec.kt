@@ -297,4 +297,20 @@ class ParameterizeSpec {
             coordinates.toList()
         )
     }
+
+    @Test
+    fun string_representation_should_show_used_parameter_arguments_in_declaration_order() = parameterize {
+        val a by parameterOf(1)
+        val unused1 by parameterOf(Unit)
+        val b by parameterOf(2)
+        val unused2 by parameterOf(Unit)
+        val c by parameterOf(3)
+
+        // Used in a different order
+        useParameter(c)
+        useParameter(b)
+        useParameter(a)
+
+        assertEquals("${ParameterizeScope::class.simpleName}(a = $a, b = $b, c = $c)", this.toString())
+    }
 }

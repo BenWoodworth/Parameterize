@@ -31,7 +31,7 @@ internal class ParameterizeIterator(
     private val parameterizeState = ParameterizeState()
 
     private var breakEarly = false
-    private var currentIterationScope: ParameterizeScope? = null // Non-null if afterEach still needs to be called
+    private var currentIterationScope: SimpleParameterizeScope? = null // Non-null if afterEach still needs to be called
     private var decoratorCoroutine: DecoratorCoroutine? = null
 
     /**
@@ -47,7 +47,7 @@ internal class ParameterizeIterator(
         }
 
         parameterizeState.startNextIteration()
-        return ParameterizeScope(parameterizeState).also {
+        return SimpleParameterizeScope(parameterizeState).also {
             currentIterationScope = it
             beforeEach()
         }

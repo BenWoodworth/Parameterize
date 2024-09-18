@@ -45,6 +45,14 @@ expect val Throwable.stackTraceLines: List<String>
 fun <T> useParameter(parameter: T) {
 }
 
+internal val ParameterizeScope.parameterizeState: ParameterizeState
+    get() {
+        check(this is SimpleParameterizeScope) {
+            "Expected scope to be a ${SimpleParameterizeScope::class.simpleName}, but was ${this::class.simpleName}"
+        }
+        return parameterizeState
+    }
+
 private class TestAllSkip(
     message: String
 ) : Throwable(message)
