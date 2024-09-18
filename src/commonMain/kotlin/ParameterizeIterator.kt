@@ -55,7 +55,7 @@ internal class ParameterizeIterator(
 
     @PublishedApi
     internal fun handleFailure(failure: Throwable): Unit = when {
-        failure is ParameterizeContinue -> {}
+        failure is ParameterizeContinue -> parameterizeState.handleContinue()
 
         failure is ParameterizeException && failure.parameterizeState === parameterizeState -> {
             afterEach() // Since nextIteration() won't be called again to finalize the iteration

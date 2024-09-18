@@ -22,7 +22,7 @@ import org.opentest4j.MultipleFailuresError
 public actual class ParameterizeFailedError internal actual constructor(
     internal actual val recordedFailures: List<ParameterizeFailure>,
     internal actual val failureCount: Long,
-    internal actual val iterationCount: Long,
+    internal actual val passCount: Long,
     internal actual val completedEarly: Boolean
 ) : MultipleFailuresError(null, emptyList()) {
     public actual companion object;

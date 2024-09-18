@@ -48,6 +48,7 @@ internal class ParameterizeState {
     private var lastParameterWithNextArgument: ParameterState? = null
 
     private var iterationCount = 0L
+    private var continueCount = 0L
     private var failureCount = 0L
     private val recordedFailures = mutableListOf<ParameterizeFailure>()
 
@@ -111,6 +112,10 @@ internal class ParameterizeState {
         }
     }
 
+    fun handleContinue() {
+        continueCount++
+    }
+
     /**
      * Get a list of used arguments for reporting a failure.
      */
@@ -153,6 +158,7 @@ internal class ParameterizeState {
 
         val scope = OnCompleteScope(
             iterationCount,
+            continueCount,
             failureCount,
             completedEarly = hasNextArgumentCombination,
             recordedFailures,

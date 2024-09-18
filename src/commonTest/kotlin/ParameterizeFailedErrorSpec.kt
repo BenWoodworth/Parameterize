@@ -41,7 +41,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             emptyList(),
             failureCount = 3,
-            iterationCount = 7,
+            passCount = 4,
             completedEarly = false
         )
 
@@ -53,7 +53,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             emptyList(),
             failureCount = 3,
-            iterationCount = 7,
+            passCount = 4,
             completedEarly = true
         )
 
@@ -71,7 +71,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, emptyList()) },
             failureCount = 3,
-            iterationCount = 7,
+            passCount = 4,
             completedEarly = false
         )
 
@@ -98,7 +98,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, emptyList()) },
             failureCount = 3,
-            iterationCount = 7,
+            passCount = 4,
             completedEarly = false
         )
 
@@ -124,7 +124,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, emptyList()) },
             failureCount = 3,
-            iterationCount = 7,
+            passCount = 4,
             completedEarly = false
         )
 
@@ -148,7 +148,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, emptyList()) },
             failureCount = 1,
-            iterationCount = 7,
+            passCount = 6,
             completedEarly = false
         )
 
@@ -166,7 +166,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             List(2) { i -> ParameterizeFailure(Throwable("Failure $i"), emptyList()) },
             failureCount = 3,
-            iterationCount = 7,
+            passCount = 4,
             completedEarly = false
         )
 
@@ -191,7 +191,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             failures.mapIndexed { index, it -> ParameterizeFailure(it, arguments.take(index)) },
             failureCount = 3,
-            iterationCount = 7,
+            passCount = 4,
             completedEarly = false
         )
 
@@ -217,7 +217,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             failures.map { ParameterizeFailure(it, arguments) },
             failureCount = 3,
-            iterationCount = 7,
+            passCount = 4,
             completedEarly = false
         )
 
@@ -232,7 +232,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(Throwable(), emptyList())),
             failureCount = 1,
-            iterationCount = 1,
+            passCount = 0,
             completedEarly = false
         )
 
@@ -246,7 +246,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(Throwable(), arguments.take(1))),
             failureCount = 1,
-            iterationCount = 1,
+            passCount = 0,
             completedEarly = false
         )
 
@@ -266,7 +266,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(Throwable(), arguments)),
             failureCount = 1,
-            iterationCount = 1,
+            passCount = 0,
             completedEarly = false
         )
 
@@ -287,7 +287,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             listOf(),
             failureCount = 1,
-            iterationCount = 1,
+            passCount = 0,
             completedEarly = false
         )
 
@@ -302,7 +302,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(failure, arguments)),
             failureCount = 1,
-            iterationCount = 1,
+            passCount = 0,
             completedEarly = false
         )
 
@@ -317,7 +317,7 @@ class ParameterizeFailedErrorSpec {
         val error = ParameterizeFailedError(
             listOf(ParameterizeFailure(failure, arguments)),
             failureCount = 1,
-            iterationCount = 1,
+            passCount = 0,
             completedEarly = false
         )
 

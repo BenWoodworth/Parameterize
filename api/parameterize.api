@@ -46,7 +46,9 @@ public final class com/benwoodworth/parameterize/ParameterizeConfiguration$OnCom
 	public final fun getCompletedEarly ()Z
 	public final fun getFailureCount ()J
 	public final fun getIterationCount ()J
+	public final fun getPassCount ()J
 	public final fun getRecordedFailures ()Ljava/util/List;
+	public final fun getSkipCount ()J
 	public final fun invoke (Lcom/benwoodworth/parameterize/ParameterizeFailedError$Companion;)Lcom/benwoodworth/parameterize/ParameterizeFailedError;
 }
 

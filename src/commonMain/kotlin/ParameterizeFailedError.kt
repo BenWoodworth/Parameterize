@@ -34,7 +34,7 @@ import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 public expect class ParameterizeFailedError internal constructor(
     recordedFailures: List<ParameterizeFailure>,
     failureCount: Long,
-    iterationCount: Long,
+    passCount: Long,
     completedEarly: Boolean
 ) : AssertionError {
     // TODO: Use context receiver instead of companion + pseudo constructor
@@ -43,7 +43,7 @@ public expect class ParameterizeFailedError internal constructor(
 
     internal val recordedFailures: List<ParameterizeFailure>
     internal val failureCount: Long
-    internal val iterationCount: Long
+    internal val passCount: Long
     internal val completedEarly: Boolean
 
     /** @suppress */
@@ -88,7 +88,7 @@ internal inline val ParameterizeFailedError.commonMessage
         append("Failed ")
         append(failureCount)
         append('/')
-        append(iterationCount)
+        append(passCount + failureCount)
 
         if (completedEarly) {
             append('+')

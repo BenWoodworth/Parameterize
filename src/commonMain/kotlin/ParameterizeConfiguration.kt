@@ -214,9 +214,14 @@ public class ParameterizeConfiguration internal constructor(
     /** @see Builder.onComplete */
     public class OnCompleteScope internal constructor(
         /**
-         * The total number of iterations completed.
+         * The total number of iterations, including [skips][skipCount] and [failures][failureCount].
          */
         public val iterationCount: Long,
+
+        /**
+         * The number of skipped iterations, from parameters with empty arguments.
+         */
+        public val skipCount: Long,
 
         /**
          * The number of failing iterations.
@@ -235,8 +240,14 @@ public class ParameterizeConfiguration internal constructor(
         /** @see OnFailureScope.recordFailure */
         public val recordedFailures: List<ParameterizeFailure>
     ) {
+        /**
+         * The number of passing iterations, completed without [failing][failureCount] or [skipping][skipCount].
+         */
+        public val passCount: Long
+            get() = iterationCount - skipCount - failureCount
+
         /** @see ParameterizeFailedError */
         public operator fun ParameterizeFailedError.Companion.invoke(): ParameterizeFailedError =
-            ParameterizeFailedError(recordedFailures, failureCount, iterationCount, completedEarly)
+            ParameterizeFailedError(recordedFailures, failureCount, passCount, completedEarly)
     }
 }
