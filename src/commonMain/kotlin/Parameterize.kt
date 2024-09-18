@@ -151,7 +151,7 @@ public class ParameterizeScope internal constructor(
         }
 
     /** @suppress */
-    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
+    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): DeclaredParameter<T> {
         parameterizeState.checkState(!iterationCompleted) {
             "Cannot declare parameter `${property.name}` after its iteration has completed"
         }
@@ -161,7 +161,7 @@ public class ParameterizeScope internal constructor(
     }
 
     /** @suppress */
-    public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T {
+    public operator fun <T> DeclaredParameter<T>.getValue(thisRef: Any?, property: KProperty<*>): T {
         if (!iterationCompleted) parameterState.useArgument()
         return argument
     }
@@ -181,7 +181,7 @@ public class ParameterizeScope internal constructor(
     )
 
     /** @suppress */
-    public class ParameterDelegate<out T> internal constructor(
+    public class DeclaredParameter<out T> internal constructor(
         internal val parameterState: ParameterState,
         internal val argument: T
     ) {
@@ -196,6 +196,15 @@ public class ParameterizeScope internal constructor(
         override fun toString(): String =
             argument.toString()
     }
+
+    /** @suppress */
+    @Suppress("unused")
+    @Deprecated(
+        "Renamed to DeclaredParameter",
+        ReplaceWith("DeclaredParameter<T>"),
+        DeprecationLevel.ERROR
+    )
+    public class ParameterDelegate<T> private constructor()
 }
 
 /**

@@ -130,7 +130,7 @@ internal class ParameterState(
         }
 
         parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
-            "Cannot use parameter delegate with `${property.name}`, since it was declared with `${declaredProperty.name}`."
+            "Cannot use parameter with `${property.name}`, since it was declared with `${declaredProperty.name}`."
         }
 
         @Suppress("UNCHECKED_CAST") // Argument is declared with property's arguments, so must be T

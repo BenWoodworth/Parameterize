@@ -108,8 +108,12 @@ public final class com/benwoodworth/parameterize/ParameterizeKt {
 }
 
 public final class com/benwoodworth/parameterize/ParameterizeScope {
-	public final fun getValue (Lcom/benwoodworth/parameterize/ParameterizeScope$ParameterDelegate;Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
-	public final fun provideDelegate-13mUnGw (Lkotlin/sequences/Sequence;Ljava/lang/Object;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/ParameterizeScope$ParameterDelegate;
+	public final fun getValue (Lcom/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter;Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public final fun provideDelegate-13mUnGw (Lkotlin/sequences/Sequence;Ljava/lang/Object;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter {
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -128,6 +132,5 @@ public final class com/benwoodworth/parameterize/ParameterizeScope$Parameter {
 }
 
 public final class com/benwoodworth/parameterize/ParameterizeScope$ParameterDelegate {
-	public fun toString ()Ljava/lang/String;
 }
 

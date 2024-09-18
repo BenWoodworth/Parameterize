@@ -16,8 +16,8 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import com.benwoodworth.parameterize.ParameterizeScope.Parameter
-import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
 import com.benwoodworth.parameterize.ParameterizeScopeSpec.LazyParameterFunction.LazyArguments
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.*
@@ -150,16 +150,16 @@ class ParameterizeScopeSpec {
     }
 
     @Test
-    fun parameter_delegate_string_representation_when_declared_should_equal_that_of_the_current_argument() =
+    fun declared_parameter_string_representation_when_declared_should_equal_that_of_the_current_argument() =
         parameterize {
-            lateinit var delegate: ParameterDelegate<String>
+            lateinit var declaredParameter: DeclaredParameter<String>
 
             val parameter by PropertyDelegateProvider { thisRef: Nothing?, property ->
                 parameterOf("argument")
                     .provideDelegate(thisRef, property)
-                    .also { delegate = it } // intercept delegate
+                    .also { declaredParameter = it } // intercept delegate
             }
 
-            assertSame(parameter, delegate.toString())
+            assertSame(parameter, declaredParameter.toString())
         }
 }
