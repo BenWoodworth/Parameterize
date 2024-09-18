@@ -18,7 +18,7 @@ package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
-import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
@@ -69,7 +69,7 @@ internal class ParameterizeState {
     fun <T> declareParameter(
         property: KProperty<T>,
         arguments: Sequence<T>
-    ): ParameterDelegate<T> = trackNestedDeclaration(property) {
+    ): DeclaredParameter<T> = trackNestedDeclaration(property) {
         val parameterIndex = parameterCount
 
         val parameter = if (parameterIndex in parameters.indices) {
@@ -95,7 +95,7 @@ internal class ParameterizeState {
             lastParameterWithNextArgument = parameter
         }
 
-        return ParameterDelegate(parameter, parameter.getArgument(property))
+        return DeclaredParameter(parameter, parameter.getArgument(property))
     }
 
     private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {
