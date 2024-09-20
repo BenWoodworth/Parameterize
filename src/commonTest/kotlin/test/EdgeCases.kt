@@ -22,7 +22,7 @@ import com.benwoodworth.parameterize.ParameterizeState
 import com.benwoodworth.parameterize.parameterize
 
 internal object EdgeCases {
-    val iterationFailures = listOf<Pair<String, (ParameterizeState) -> Throwable>>(
+    val iterationFailures = listOf<Pair<String, suspend (ParameterizeState) -> Throwable>>(
         "ParameterizeContinue" to {
             ParameterizeContinue
         },

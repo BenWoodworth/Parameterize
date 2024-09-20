@@ -16,7 +16,14 @@
 
 package com.benwoodworth.parameterize
 
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
+import runCC
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Ignore
+import kotlin.time.Duration
 
 /**
  * [Ignore] on native targets.
@@ -56,11 +63,11 @@ object TestAllScope {
 
 fun <T> testAll(
     testCases: Iterable<Pair<String, T>>,
-    test: TestAllScope.(testCase: T) -> Unit
+    test: suspend TestAllScope.(testCase: T) -> Unit
 ) {
     val results = testCases
         .map { (description, testCase) ->
-            description to runCatching { TestAllScope.test(testCase) }
+            description to runCatching { runTestCC { TestAllScope.test(testCase) } }
         }
 
     val passed = results.count { (_, result) -> result.isSuccess }
@@ -100,11 +107,21 @@ fun <T> testAll(
 
 fun <T> testAll(
     vararg testCases: Pair<String, T>,
-    test: TestAllScope.(testCase: T) -> Unit
+    test: suspend TestAllScope.(testCase: T) -> Unit
 ): Unit =
     testAll(testCases.toList(), test)
 
-fun testAll(vararg testCases: Pair<String, TestAllScope.() -> Unit>): Unit =
+fun testAll(vararg testCases: Pair<String, suspend TestAllScope.() -> Unit>): Unit =
     testAll(testCases.toList()) { testCase ->
         testCase()
     }
+
+inline fun runTestCC(
+    context: CoroutineContext = EmptyCoroutineContext,
+    timeout: Duration? = null,
+    crossinline testBody: suspend TestScope.() -> Unit
+): TestResult = if (timeout == null) runTest(context) {
+    runCC { testBody() }
+} else runTest(context, timeout) {
+    runCC { testBody() }
+}
