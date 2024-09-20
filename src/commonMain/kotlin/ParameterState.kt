@@ -32,7 +32,7 @@ import kotlin.reflect.KProperty
  * also validates that the parameter is in fact being used with the expected
  * property.
  *
- * When first declared, the parameter [property] and the [arguments] it was
+ * When first declared, the parameter [property] it was
  * declared with will be stored, along with a new argument iterator and the
  * first argument from it. The arguments are lazily read in from the iterator as
  * they're needed, and will seamlessly continue with the start again after the
@@ -53,7 +53,6 @@ internal class ParameterState(
     private val parameterizeState: ParameterizeState
 ) {
     private var property: KProperty<*>? = null
-    private var arguments: Sequence<*>? = null
     private var argument: Any? = null // T
     private var argumentIterator: Iterator<*>? = null
 
@@ -62,7 +61,6 @@ internal class ParameterState(
 
     internal fun reset() {
         property = null
-        arguments = null
         argument = null
         argumentIterator = null
         hasBeenUsed = false
@@ -113,7 +111,6 @@ internal class ParameterState(
         }
 
         this.property = property
-        this.arguments = arguments
         this.argument = iterator.next()
         this.argumentIterator = iterator.takeIf { it.hasNext() }
     }
@@ -147,11 +144,7 @@ internal class ParameterState(
      * @throws IllegalStateException if the argument has not been declared yet.
      */
     fun nextArgument() {
-        val arguments = checkNotNull(arguments) {
-            "Cannot iterate arguments before parameter has been declared"
-        }
-
-        val iterator = argumentIterator ?: arguments.iterator()
+        val iterator = argumentIterator ?: error("Cannot iterate arguments before parameter has been declared")
 
         argument = iterator.next()
         argumentIterator = iterator.takeIf { it.hasNext() }
