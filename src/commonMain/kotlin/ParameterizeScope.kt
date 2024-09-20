@@ -16,6 +16,7 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import com.benwoodworth.parameterize.ParameterizeScope.Parameter
 import kotlin.experimental.ExperimentalTypeInference
 import kotlin.jvm.JvmField
@@ -56,7 +57,6 @@ import kotlin.reflect.KProperty
  *
  * @see Parameter
  */
-@ParameterizeDsl
 public interface ParameterizeScope {
     /**
      * Declares this [Parameter], allowing one of its arguments to be used as the [value][getValue] of the Kotlin
@@ -258,14 +258,27 @@ public inline fun <T> ParameterizeScope.parameter(
     }
 
 /**
- * Used to prevent `parameter` functions from being used within lazy `parameter {}` blocks, since doing so is not
- * currently supported.
- *
- * @suppress
- * @see ParameterizeDsl
+ * The scope for lazy `parameter {}` blocks.
  */
 @JvmInline
-@ParameterizeDsl
 public value class LazyParameterScope @PublishedApi internal constructor(
     private val parameterizeScope: ParameterizeScope
-)
+) {
+    /**
+     * Declares this [Parameter], allowing one of its arguments to be used as the [value][getValue] of the Kotlin
+     * [property].
+     *
+     * @throws ParameterizeException since declaring parameters in lazy `parameter {}` blocks is not currently supported.
+     * @see Parameter
+     * @see ParameterizeScope.provideDelegate
+     */
+    @Deprecated(
+        "Declaring parameters in lazy `parameter {}` blocks is not currently supported.",
+        level = DeprecationLevel.ERROR
+    )
+    public operator fun <T> Parameter<T>.provideDelegate(
+        thisRef: Nothing?,
+        property: KProperty<*>
+    ): DeclaredParameter<T> =
+        parameterizeScope.run { provideDelegate(thisRef, property) }
+}
