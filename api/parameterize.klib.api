@@ -147,6 +147,7 @@ final class com.benwoodworth.parameterize/ParameterizeIterator { // com.benwoodw
 final value class com.benwoodworth.parameterize/LazyParameterScope { // com.benwoodworth.parameterize/LazyParameterScope|null[0]
     constructor <init>(com.benwoodworth.parameterize/ParameterizeScope) // com.benwoodworth.parameterize/LazyParameterScope.<init>|<init>(com.benwoodworth.parameterize.ParameterizeScope){}[0]
 
+    final fun <#A1: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A1>).provideDelegate(kotlin/Nothing?, kotlin.reflect/KProperty<*>): com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<#A1> // com.benwoodworth.parameterize/LazyParameterScope.provideDelegate|provideDelegate@com.benwoodworth.parameterize.ParameterizeScope.Parameter<0:0>(kotlin.Nothing?;kotlin.reflect.KProperty<*>){0§<kotlin.Any?>}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.benwoodworth.parameterize/LazyParameterScope.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.benwoodworth.parameterize/LazyParameterScope.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.benwoodworth.parameterize/LazyParameterScope.toString|toString(){}[0]

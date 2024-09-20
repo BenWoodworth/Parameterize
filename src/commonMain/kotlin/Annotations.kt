@@ -37,9 +37,15 @@ public annotation class ExperimentalParameterizeApi
 /**
  * Used to prevent [parameterize] functions from being used in the wrong scope.
  *
+ * @suppress
  * @see DslMarker
+ * @see LazyParameterScope.provideDelegate
  */
 @DslMarker
 @Retention(AnnotationRetention.BINARY)
 @Target(CLASS, TYPE, TYPEALIAS)
+@Deprecated(
+    "Deprecated in favor of shadowing `Parameter.provideDelegate()`. See `LazyParameterScope.provideDelegate()`.",
+    level = DeprecationLevel.ERROR
+)
 public annotation class ParameterizeDsl
