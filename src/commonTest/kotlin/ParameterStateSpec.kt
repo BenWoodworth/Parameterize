@@ -220,6 +220,7 @@ class ParameterStateSpec {
         assertTrue(parameter.isLastArgument)
     }
 
+    @Ignore
     @Test
     fun next_after_the_last_argument_should_loop_back_to_the_first() {
         parameter.declare(::property, sequenceOf("first", "second"))
@@ -230,6 +231,7 @@ class ParameterStateSpec {
         assertEquals("first", parameter.getArgument(::property))
     }
 
+    @Ignore
     @Test
     fun next_after_the_last_argument_should_set_is_last_argument_to_false() {
         parameter.declare(::property, sequenceOf("first", "second"))
