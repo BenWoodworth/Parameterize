@@ -182,9 +182,32 @@ class ParameterizeExceptionSpec {
                 val trackedNestingInterference by parameterOf(Unit)
 
                 val outer by parameter {
-                    with(this@parameterize) { // Work around @ParameterizeDsl
+                    with(this@parameterize) {
                         val inner by parameterOf(Unit)
                     }
+
+                    listOf(Unit)
+                }
+
+                val end by parameterOf(Unit, Unit)
+            }
+        }
+
+        assertEquals(
+            "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
+            exception.message
+        )
+    }
+
+    @Test
+    fun nested_parameter_declaration_with_another_valid_intermediate_parameter_usage_with_lazy_parameter_scope() {
+        val exception = assertFailsWith<ParameterizeException> {
+            parameterize {
+                val trackedNestingInterference by parameterOf(Unit)
+
+                val outer by parameter {
+                    @Suppress("DEPRECATION_ERROR")
+                    val inner by parameterOf(Unit)
 
                     listOf(Unit)
                 }
