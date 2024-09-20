@@ -20,10 +20,7 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.*
-import effekt.Handler
-import effekt.HandlerPrompt
 import effekt.handle
-import effekt.use
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.experimental.ExperimentalTypeInference
@@ -142,7 +139,6 @@ public suspend inline fun parameterize(
 public class ParameterizeScope internal constructor(
     internal val parameterizeState: ParameterizeState,
 ) {
-    internal var iterationCompleted: Boolean = false
 
     /** @suppress */
     override fun toString(): String =
@@ -156,17 +152,13 @@ public class ParameterizeScope internal constructor(
 
     /** @suppress */
     public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
-        parameterizeState.checkState(!iterationCompleted) {
-            "Cannot declare parameter `${property.name}` after its iteration has completed"
-        }
-
         @Suppress("UNCHECKED_CAST")
         return parameterizeState.declareParameter(property as KProperty<T>, arguments)
     }
 
     /** @suppress */
     public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T {
-        if (!iterationCompleted) parameterState.useArgument()
+        parameterState.useArgument()
         return argument
     }
 

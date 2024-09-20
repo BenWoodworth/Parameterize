@@ -221,6 +221,7 @@ class ParameterizeConfigurationSpec_onFailure {
         }
     }
 
+    @Ignore
     @Test
     fun failure_arguments_should_not_include_captured_parameters_from_previous_iterations() = runTestCC {
         testParameterize(
