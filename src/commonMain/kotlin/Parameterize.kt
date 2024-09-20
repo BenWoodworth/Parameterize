@@ -20,6 +20,10 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.*
+import effekt.Handler
+import effekt.HandlerPrompt
+import effekt.handle
+import effekt.use
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.experimental.ExperimentalTypeInference
@@ -79,10 +83,10 @@ import kotlin.reflect.KProperty
  *
  * @throws ParameterizeException if the DSL is used incorrectly. (See restrictions)
  */
-public inline fun parameterize(
+public suspend inline fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
-    block: ParameterizeScope.() -> Unit
-) {
+    crossinline block: suspend ParameterizeScope.() -> Unit
+): Unit = handle {
     // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
     // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
     // iterator of a later release, and would be major breaking change that's difficult to detect.
@@ -113,12 +117,12 @@ public inline fun parameterize(
     // False positive: onComplete is called in place exactly once through the configuration by the end parameterize call
     "LEAKED_IN_PLACE_LAMBDA", "WRONG_INVOCATION_KIND"
 )
-public inline fun parameterize(
+public suspend inline fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
     noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = configuration.decorator,
     noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = configuration.onFailure,
     noinline onComplete: OnCompleteScope.() -> Unit = configuration.onComplete,
-    block: ParameterizeScope.() -> Unit
+    crossinline block: suspend ParameterizeScope.() -> Unit
 ) {
     contract {
         callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
@@ -206,7 +210,7 @@ public class ParameterizeScope internal constructor(
  * ```
  */
 @Suppress("UnusedReceiverParameter") // Should only be accessible within parameterize scopes
-public fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): ParameterizeScope.Parameter<T> =
+public suspend fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): ParameterizeScope.Parameter<T> =
     @OptIn(ExperimentalParameterizeApi::class)
     ParameterizeScope.Parameter(arguments)
 
@@ -217,7 +221,7 @@ public fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): Parameterize
  * val letter by parameter('a'..'z')
  * ```
  */
-public fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): ParameterizeScope.Parameter<T> =
+public suspend fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): ParameterizeScope.Parameter<T> =
     parameter(arguments.asSequence())
 
 /**
@@ -227,7 +231,7 @@ public fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): Parameterize
  * val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
  * ```
  */
-public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): ParameterizeScope.Parameter<T> =
+public suspend fun <T> ParameterizeScope.parameterOf(vararg arguments: T): ParameterizeScope.Parameter<T> =
     parameter(arguments.asSequence())
 
 /**
@@ -253,7 +257,7 @@ public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): ParameterizeS
 @OptIn(ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 @JvmName("parameterLazySequence")
-public inline fun <T> ParameterizeScope.parameter(
+public suspend inline fun <T> ParameterizeScope.parameter(
     crossinline lazyArguments: LazyParameterScope.() -> Sequence<T>
 ): ParameterizeScope.Parameter<T> =
     parameter(object : Sequence<T> {
@@ -294,7 +298,7 @@ public inline fun <T> ParameterizeScope.parameter(
 @OptIn(ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 @JvmName("parameterLazyIterable")
-public inline fun <T> ParameterizeScope.parameter(
+public suspend inline fun <T> ParameterizeScope.parameter(
     crossinline lazyArguments: LazyParameterScope.() -> Iterable<T>
 ): ParameterizeScope.Parameter<T> =
     parameter {

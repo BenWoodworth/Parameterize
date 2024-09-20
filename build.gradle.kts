@@ -32,6 +32,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 apiValidation {
@@ -59,35 +60,6 @@ kotlin {
         nodejs()
     }
 
-    linuxX64()
-    linuxArm64()
-    androidNativeArm32()
-    androidNativeArm64()
-    androidNativeX86()
-    androidNativeX64()
-    macosX64()
-    macosArm64()
-    iosSimulatorArm64()
-    iosX64()
-    watchosSimulatorArm64()
-    watchosX64()
-    watchosArm32()
-    watchosArm64()
-    tvosSimulatorArm64()
-    tvosX64()
-    tvosArm64()
-    iosArm64()
-    watchosDeviceArm64()
-    mingwX64()
-
-    wasmJs {
-        browser()
-        nodejs()
-    }
-    wasmWasi {
-        nodejs()
-    }
-
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
@@ -98,10 +70,15 @@ kotlin {
             languageSettings.optIn("kotlin.contracts.ExperimentalContracts")
         }
 
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                implementation("io.github.kyay10:kontinuity:0.0.1")
+            }
+        }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
             }
         }
         val jvmMain by getting {

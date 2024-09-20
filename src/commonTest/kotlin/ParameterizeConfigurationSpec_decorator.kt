@@ -25,14 +25,14 @@ import kotlin.test.*
 
 @Suppress("ClassName")
 class ParameterizeConfigurationSpec_decorator {
-    private inline fun testParameterize(
+    private suspend inline fun testParameterize(
         noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit,
         noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = {
             recordFailure = true
             breakEarly = true
         },
         noinline onComplete: OnCompleteScope.() -> Unit = ParameterizeConfiguration.default.onComplete,
-        block: ParameterizeScope.() -> Unit
+        crossinline block: suspend ParameterizeScope.() -> Unit
     ): Unit =
         parameterize(
             decorator = decorator,
@@ -42,7 +42,7 @@ class ParameterizeConfigurationSpec_decorator {
         )
 
     @Test
-    fun should_be_invoked_once_per_iteration() {
+    fun should_be_invoked_once_per_iteration() = runTestCC {
         var iterationCount = 0
         var timesInvoked = 0
 
@@ -148,7 +148,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun should_throw_if_iteration_function_is_not_invoked() {
+    fun should_throw_if_iteration_function_is_not_invoked() = runTestCC {
         val exception = assertFailsWith<ParameterizeException> {
             testParameterize(
                 decorator = {
@@ -165,7 +165,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun should_throw_if_iteration_function_is_invoked_more_than_once() {
+    fun should_throw_if_iteration_function_is_invoked_more_than_once() = runTestCC {
         val exception = assertFailsWith<ParameterizeException> {
             testParameterize(
                 decorator = { iteration ->
@@ -259,9 +259,9 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun declaring_parameter_after_iteration_function_should_fail() {
+    fun declaring_parameter_after_iteration_function_should_fail() = runTestCC {
         assertFailsWith<ParameterizeException> {
-            lateinit var declareParameter: () -> Unit
+            lateinit var declareParameter: suspend () -> Unit
 
             testParameterize(
                 decorator = { iteration ->

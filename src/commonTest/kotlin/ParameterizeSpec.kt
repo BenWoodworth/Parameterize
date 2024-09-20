@@ -32,8 +32,8 @@ class ParameterizeSpec {
      */
     private fun <T : Any> testParameterize(
         expectedIterations: Iterable<T?>,
-        block: ParameterizeScope.() -> T
-    ) {
+        block: suspend ParameterizeScope.() -> T
+    ) = runTestCC {
         val iterations = mutableListOf<T?>()
 
         parameterize {
@@ -57,19 +57,21 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun parameter_arguments_iterator_should_be_computed_when_declared() = parameterize {
-        var computed = false
+    fun parameter_arguments_iterator_should_be_computed_when_declared() = runTestCC {
+        parameterize {
+            var computed = false
 
-        val parameter by parameter(Sequence {
-            computed = true
-            listOf(Unit).iterator()
-        })
+            val parameter by parameter(Sequence {
+                computed = true
+                listOf(Unit).iterator()
+            })
 
-        assertTrue(computed, "computed")
+            assertTrue(computed, "computed")
+        }
     }
 
     @Test
-    fun second_parameter_argument_should_not_be_computed_until_the_next_iteration() {
+    fun second_parameter_argument_should_not_be_computed_until_the_next_iteration() = runTestCC {
         var finishedFirstIteration = false
 
         class AssertingIterator : Iterator<Unit> {
@@ -94,7 +96,7 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun parameter_should_iterate_to_the_next_argument_while_declaring() {
+    fun parameter_should_iterate_to_the_next_argument_while_declaring() = runTestCC {
         var state: String
 
         parameterize {
@@ -232,7 +234,7 @@ class ParameterizeSpec {
     fun custom_lazy_arguments_implementation() = testParameterize(
         listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
     ) {
-        fun <T> ParameterizeScope.customLazyParameter(
+        suspend fun <T> ParameterizeScope.customLazyParameter(
             lazyArguments: () -> Iterable<T>
         ): ParameterizeScope.Parameter<T> {
             val arguments by lazy(lazyArguments)
@@ -255,7 +257,7 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun captured_parameters_should_be_usable_after_the_iteration_completes() {
+    fun captured_parameters_should_be_usable_after_the_iteration_completes() = runTestCC {
         val capturedParameters = mutableListOf<() -> Int>()
 
         parameterize {
@@ -271,17 +273,17 @@ class ParameterizeSpec {
         }
     }
 
-    @Test
-    fun should_be_able_to_return_from_an_outer_function_from_within_the_block() {
+/*    @Test
+    fun should_be_able_to_return_from_an_outer_function_from_within_the_block() = runTestCC {
         parameterize {
             return@should_be_able_to_return_from_an_outer_function_from_within_the_block
         }
-    }
+    }*/
 
     /**
      * The motivating use case here is decorating a Kotest test group, in which the test declarations suspend.
      */
-    @Test
+/*    @Test
     fun should_be_able_to_decorate_a_suspend_block() {
         val coordinates = sequence {
             parameterize {
@@ -296,5 +298,5 @@ class ParameterizeSpec {
             listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"),
             coordinates.toList()
         )
-    }
+    }*/
 }

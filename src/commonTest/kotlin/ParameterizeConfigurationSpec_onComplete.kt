@@ -22,10 +22,10 @@ import kotlin.test.*
 
 @Suppress("ClassName")
 class ParameterizeConfigurationSpec_onComplete {
-    private inline fun testParameterize(
+    private suspend inline fun testParameterize(
         noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = {}, // Continue on failure
         noinline onComplete: OnCompleteScope.() -> Unit,
-        block: ParameterizeScope.() -> Unit
+        crossinline block: suspend ParameterizeScope.() -> Unit
     ): Unit =
         parameterize(
             onFailure = onFailure,
@@ -34,7 +34,7 @@ class ParameterizeConfigurationSpec_onComplete {
         )
 
     @Test
-    fun should_be_invoked_once_after_all_iterations() {
+    fun should_be_invoked_once_after_all_iterations() = runTestCC {
         var timesInvoked = 0
         var invokedBeforeLastIteration = false
 
@@ -59,7 +59,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun should_be_invoked_once_after_all_iterations_with_break() {
+    fun should_be_invoked_once_after_all_iterations_with_break() = runTestCC {
         var timesInvoked = 0
         var invokedBeforeLastIteration = false
         var failureCount = 0
@@ -89,7 +89,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun failures_within_on_complete_should_propagate_out_uncaught() {
+    fun failures_within_on_complete_should_propagate_out_uncaught() = runTestCC {
         class FailureWithinOnComplete : Throwable()
 
         assertFailsWith<FailureWithinOnComplete> {
@@ -103,7 +103,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun iteration_count_should_be_correct() {
+    fun iteration_count_should_be_correct() = runTestCC {
         var expectedIterationCount = 0L
 
         testParameterize(
@@ -118,7 +118,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun iteration_count_should_be_correct_with_break() {
+    fun iteration_count_should_be_correct_with_break() = runTestCC {
         var expectedIterationCount = 0L
 
         testParameterize(
@@ -140,7 +140,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun iteration_count_should_be_correct_with_skips() {
+    fun iteration_count_should_be_correct_with_skips() = runTestCC {
         var expectedIterationCount = 0L
 
         testParameterize(
@@ -159,7 +159,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun skip_count_should_be_correct() {
+    fun skip_count_should_be_correct() = runTestCC {
         var expectedSkipCount = 0L
 
         testParameterize(
@@ -177,7 +177,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun skip_count_should_be_correct_with_break() {
+    fun skip_count_should_be_correct_with_break() = runTestCC {
         var expectedSkipCount = 0L
 
         testParameterize(
@@ -202,7 +202,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun success_count_should_be_correct_with_skips_and_failures() {
+    fun success_count_should_be_correct_with_skips_and_failures() = runTestCC {
         var expectedSuccessCount = 0L
 
         testParameterize(
@@ -225,7 +225,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun failure_count_should_be_correct() {
+    fun failure_count_should_be_correct() = runTestCC {
         var expectedFailureCount = 0L
 
         testParameterize(
@@ -243,7 +243,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun completed_early_without_breaking_should_be_false() {
+    fun completed_early_without_breaking_should_be_false() = runTestCC {
         testParameterize(
             onComplete = {
                 assertFalse(completedEarly)
@@ -254,7 +254,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun completed_early_with_break_on_last_iteration_should_be_false() {
+    fun completed_early_with_break_on_last_iteration_should_be_false() = runTestCC {
         testParameterize(
             onFailure = {
                 breakEarly = true
@@ -273,7 +273,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun completed_early_with_break_before_last_iteration_should_be_true() {
+    fun completed_early_with_break_before_last_iteration_should_be_true() = runTestCC {
         testParameterize(
             onFailure = {
                 breakEarly = true
@@ -292,7 +292,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun recorded_failures_should_be_correct() {
+    fun recorded_failures_should_be_correct() = runTestCC {
         val expectedRecordedFailures = mutableListOf<Pair<Throwable, List<ParameterizeFailure.Argument<*>>>>()
 
         var lastIteration = -1
