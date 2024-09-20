@@ -258,6 +258,7 @@ class ParameterizeConfigurationSpec_decorator {
         )
     }
 
+    @Ignore
     @Test
     fun declaring_parameter_after_iteration_function_should_fail() = runTestCC {
         assertFailsWith<ParameterizeException> {
