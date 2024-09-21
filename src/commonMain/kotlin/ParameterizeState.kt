@@ -79,11 +79,10 @@ internal class ParameterizeState {
                 if (parameterToIterate == null) reset()
             }
         } else {
-            ParameterState(this)
-                .also { parameters += it }
+            ParameterState().also { parameters += it }
         }
 
-        parameter.declare(property, arguments)
+        parameter.declare(arguments)
         parameterCount++ // After declaring, since the parameter shouldn't count if declare throws
 
         if (parameter === parameterToIterate) {
@@ -95,7 +94,7 @@ internal class ParameterizeState {
             lastParameterWithNextArgument = parameter
         }
 
-        return ParameterDelegate(parameter, parameter.getArgument(property))
+        return ParameterDelegate(parameter, parameter.getArgument())
     }
 
     private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {

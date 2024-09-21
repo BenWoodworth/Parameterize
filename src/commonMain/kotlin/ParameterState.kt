@@ -49,17 +49,17 @@ import kotlin.reflect.KProperty
  * ignored since they're assumed to be the same, and the state remains unchanged
  * in favor of continuing through the current iterator where it left off.
  */
-internal class ParameterState(
-    private val parameterizeState: ParameterizeState
-) {
-    private var property: KProperty<*>? = null
+internal class ParameterState {
+    private var isDeclared: Boolean = false
     private var argument: Any? = null // T
+    var property: KProperty<*>? = null
     private var argumentIterator: Iterator<*>? = null
 
     var hasBeenUsed: Boolean = false
         private set
 
     internal fun reset() {
+        isDeclared = false
         property = null
         argument = null
         argumentIterator = null
@@ -71,7 +71,7 @@ internal class ParameterState(
      */
     val isLastArgument: Boolean
         get() {
-            checkNotNull(property) { "Parameter has not been declared" }
+            check(isDeclared) { "Parameter has not been declared" }
             return argumentIterator == null
         }
 
@@ -80,37 +80,32 @@ internal class ParameterState(
      * Returns a string representation of the current argument, or a "not declared" message.
      */
     override fun toString(): String =
-        if (property == null) {
+        if (!isDeclared) {
             "Parameter not declared yet."
         } else {
             argument.toString()
         }
 
     /**
-     * Set up the delegate for a parameter [property] with the given [arguments].
+     * Set up the delegate with the given [arguments].
      *
-     * If this delegate is already [declare]d, [property] and [arguments] should be equal to those that were originally passed in.
-     * The [property] will be checked to make sure it's the same, and the current argument will remain the same.
+     * If this delegate is already [declare]d, [arguments] should be equal to that that were originally passed in.
+     * The current argument will remain the same.
      * The new [arguments] will be ignored in favor of reusing the existing arguments, under the assumption that they're equal.
      *
      * @throws ParameterizeException if already declared for a different [property].
      * @throws ParameterizeContinue if [arguments] is empty.
      */
-    fun <T> declare(property: KProperty<T>, arguments: Sequence<T>) {
-        // Nothing to do if already declared (besides validating the property)
-        this.property?.let { declaredProperty ->
-            parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
-                "Expected to be declaring `${declaredProperty.name}`, but got `${property.name}`"
-            }
-            return
-        }
+    fun declare(arguments: Sequence<*>) {
+        // Nothing to do if already declared
+        if (isDeclared) return
 
         val iterator = arguments.iterator()
         if (!iterator.hasNext()) {
             throw ParameterizeContinue // Before changing any state
         }
 
-        this.property = property
+        isDeclared = true
         this.argument = iterator.next()
         this.argumentIterator = iterator.takeIf { it.hasNext() }
     }
@@ -121,13 +116,9 @@ internal class ParameterState(
      * @throws ParameterizeException if already declared for a different [property].
      * @throws IllegalStateException if the argument has not been declared yet.
      */
-    fun <T> getArgument(property: KProperty<T>): T {
-        val declaredProperty = checkNotNull(this.property) {
+    fun <T> getArgument(): T {
+        check(isDeclared) {
             "Cannot get argument before parameter has been declared"
-        }
-
-        parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
-            "Cannot use parameter delegate with `${property.name}`, since it was declared with `${declaredProperty.name}`."
         }
 
         @Suppress("UNCHECKED_CAST") // Argument is declared with property's arguments, so must be T
