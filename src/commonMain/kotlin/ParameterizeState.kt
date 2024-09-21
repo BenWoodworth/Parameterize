@@ -32,7 +32,6 @@ internal class ParameterizeState {
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
     private val parameters = ArrayList<ParameterState>()
-    private var declaringParameter: KProperty<*>? = null
     private var parameterCount = 0
 
     /**
@@ -67,9 +66,8 @@ internal class ParameterizeState {
     }
 
     fun <T> declareParameter(
-        property: KProperty<T>,
         arguments: Sequence<T>
-    ): ParameterDelegate<T> = trackNestedDeclaration(property) {
+    ): ParameterDelegate<T> {
         val parameterIndex = parameterCount
 
         val parameter = if (parameterIndex in parameters.indices) {
@@ -97,24 +95,9 @@ internal class ParameterizeState {
         return ParameterDelegate(parameter, parameter.getArgument())
     }
 
-    private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {
-        val outerParameter = declaringParameter
-        checkState(outerParameter == null) {
-            "Nesting parameters is not currently supported: `${property.name}` was declared within `${outerParameter!!.name}`'s arguments"
-        }
-
-        try {
-            declaringParameter = property
-            return block()
-        } finally {
-            declaringParameter = outerParameter
-        }
-    }
-
     fun handleContinue() {
         skipCount++
     }
-
     /**
      * Get a list of used arguments for reporting a failure.
      */
