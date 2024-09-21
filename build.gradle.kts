@@ -24,9 +24,9 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinTargetWithTests
 import java.net.URL
 
 plugins {
-    kotlin("multiplatform") version "2.0.20"
-    id("org.jetbrains.dokka") version "1.9.20"
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.16.3"
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.binary.compatibility.validator)
     id("parameterize.library-conventions")
 }
 
@@ -101,12 +101,12 @@ kotlin {
         val commonMain by getting
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
             }
         }
         val jvmMain by getting {
             dependencies {
-                implementation("org.opentest4j:opentest4j:1.3.0")
+                implementation(libs.opentest4j)
             }
         }
     }
