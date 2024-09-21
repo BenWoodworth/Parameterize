@@ -151,11 +151,9 @@ public class ParameterizeScope internal constructor(
         }
 
     /** @suppress */
-    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
-        @Suppress("UNCHECKED_CAST")
-        return parameterizeState.declareParameter(property as KProperty<T>, arguments).apply {
-            parameterState.property = property
-        }
+    public operator fun <T> ParameterDelegate<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
+        parameterState.property = property
+        return this
     }
 
     /** @suppress */
@@ -204,9 +202,9 @@ public class ParameterizeScope internal constructor(
  * ```
  */
 @Suppress("UnusedReceiverParameter") // Should only be accessible within parameterize scopes
-public suspend fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): ParameterizeScope.Parameter<T> =
+public suspend fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): ParameterizeScope.ParameterDelegate<T> =
     @OptIn(ExperimentalParameterizeApi::class)
-    ParameterizeScope.Parameter(arguments)
+    parameterizeState.declareParameter(arguments)
 
 /**
  * Declare a parameter with the given [arguments].
@@ -215,7 +213,7 @@ public suspend fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): Para
  * val letter by parameter('a'..'z')
  * ```
  */
-public suspend fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): ParameterizeScope.Parameter<T> =
+public suspend fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): ParameterizeScope.ParameterDelegate<T> =
     parameter(arguments.asSequence())
 
 /**
@@ -225,7 +223,7 @@ public suspend fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): Para
  * val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
  * ```
  */
-public suspend fun <T> ParameterizeScope.parameterOf(vararg arguments: T): ParameterizeScope.Parameter<T> =
+public suspend fun <T> ParameterizeScope.parameterOf(vararg arguments: T): ParameterizeScope.ParameterDelegate<T> =
     parameter(arguments.asSequence())
 
 /**
@@ -253,7 +251,7 @@ public suspend fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Param
 @JvmName("parameterLazySequence")
 public suspend inline fun <T> ParameterizeScope.parameter(
     crossinline lazyArguments: LazyParameterScope.() -> Sequence<T>
-): ParameterizeScope.Parameter<T> =
+): ParameterizeScope.ParameterDelegate<T> =
     parameter(object : Sequence<T> {
         private var arguments: Sequence<T>? = null
 
@@ -294,7 +292,7 @@ public suspend inline fun <T> ParameterizeScope.parameter(
 @JvmName("parameterLazyIterable")
 public suspend inline fun <T> ParameterizeScope.parameter(
     crossinline lazyArguments: LazyParameterScope.() -> Iterable<T>
-): ParameterizeScope.Parameter<T> =
+): ParameterizeScope.ParameterDelegate<T> =
     parameter {
         lazyArguments().asSequence()
     }
