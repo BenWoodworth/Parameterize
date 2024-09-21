@@ -153,7 +153,9 @@ public class ParameterizeScope internal constructor(
     /** @suppress */
     public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
         @Suppress("UNCHECKED_CAST")
-        return parameterizeState.declareParameter(property as KProperty<T>, arguments)
+        return parameterizeState.declareParameter(property as KProperty<T>, arguments).apply {
+            parameterState.property = property
+        }
     }
 
     /** @suppress */

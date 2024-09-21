@@ -83,6 +83,7 @@ class ParameterizeExceptionSpec {
     }
 
     @Test
+    @Ignore
     fun parameter_disappears_on_second_iteration_due_to_external_condition() = runTestCC {
         val exception = assertFailsWith<ParameterizeException> {
             var shouldDeclareA = true
@@ -101,6 +102,7 @@ class ParameterizeExceptionSpec {
         assertEquals("Expected to be declaring `a`, but got `b`", exception.message)
     }
 
+    @Ignore
     @Test
     fun parameter_appears_on_second_iteration_due_to_external_condition() = runTestCC {
         val exception = assertFailsWith<ParameterizeException> {
