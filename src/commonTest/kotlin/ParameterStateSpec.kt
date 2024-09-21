@@ -26,7 +26,7 @@ class ParameterStateSpec {
     private val property: String get() = error("${::property.name} is not meant to be used")
     private val differentProperty: String get() = error("${::differentProperty.name} is not meant to be used")
 
-    private lateinit var parameter: ParameterState
+    private lateinit var parameter: ParameterState<Any?>
 
     @BeforeTest
     fun beforeTest() {
@@ -34,7 +34,7 @@ class ParameterStateSpec {
     }
 
 
-    private fun assertUndeclared(parameter: ParameterState) {
+    private fun assertUndeclared(parameter: ParameterState<*>) {
         val failure = assertFailsWith<IllegalStateException> {
             parameter.getArgument()
         }
@@ -189,7 +189,7 @@ class ParameterStateSpec {
     @Test
     fun next_should_move_to_the_next_argument() {
         parameter.declare(sequenceOf("first", "second", "third"))
-        parameter.getArgument<Any?>()
+        parameter.getArgument()
 
         parameter.nextArgument()
         assertEquals("second", parameter.getArgument())
@@ -201,7 +201,7 @@ class ParameterStateSpec {
     @Test
     fun next_to_a_middle_argument_should_leave_is_last_argument_as_false() {
         parameter.declare(sequenceOf("first", "second", "third", "fourth"))
-        parameter.getArgument<Any?>()
+        parameter.getArgument()
 
         parameter.nextArgument()
         assertFalse(parameter.isLastArgument, "second")
@@ -213,7 +213,7 @@ class ParameterStateSpec {
     @Test
     fun next_to_the_last_argument_should_set_is_last_argument_to_true() {
         parameter.declare(sequenceOf("first", "second", "third", "fourth"))
-        parameter.getArgument<Any?>()
+        parameter.getArgument()
         parameter.nextArgument() // second
         parameter.nextArgument() // third
         parameter.nextArgument() // forth
@@ -225,7 +225,7 @@ class ParameterStateSpec {
     @Test
     fun next_after_the_last_argument_should_loop_back_to_the_first() {
         parameter.declare(sequenceOf("first", "second"))
-        parameter.getArgument<Any?>()
+        parameter.getArgument()
         parameter.nextArgument() // second
         parameter.nextArgument() // first
 
@@ -236,7 +236,7 @@ class ParameterStateSpec {
     @Test
     fun next_after_the_last_argument_should_set_is_last_argument_to_false() {
         parameter.declare(sequenceOf("first", "second"))
-        parameter.getArgument<Any?>()
+        parameter.getArgument()
         parameter.nextArgument() // second
         parameter.nextArgument() // first
 
@@ -290,7 +290,7 @@ class ParameterStateSpec {
     @Test
     fun reset_should_set_has_been_used_to_false() {
         parameter.declare(sequenceOf("a", "b"))
-        parameter.getArgument<Any?>()
+        parameter.getArgument()
         parameter.reset()
 
         assertFalse(parameter.hasBeenUsed)
@@ -318,7 +318,7 @@ class ParameterStateSpec {
         val expectedArgument = "a"
         parameter.declare(sequenceOf(expectedArgument))
         parameter.property = ::property
-        parameter.getArgument<Any?>()
+        parameter.getArgument()
 
         val (property, argument) = parameter.getFailureArgument()
         assertTrue(property.equalsProperty(::property))

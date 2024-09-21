@@ -152,7 +152,7 @@ public class ParameterizeScope internal constructor(
 
     /** @suppress */
     public operator fun <T> ParameterDelegate<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
-        parameterState.property = property
+        parameterState.property = property as KProperty<Nothing>
         return this
     }
 
@@ -178,7 +178,7 @@ public class ParameterizeScope internal constructor(
 
     /** @suppress */
     public class ParameterDelegate<out T> internal constructor(
-        internal val parameterState: ParameterState,
+        internal val parameterState: ParameterState<out T>,
         internal val argument: T
     ) {
         /**

@@ -22,7 +22,6 @@ import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
-import kotlin.reflect.KProperty
 
 internal class ParameterizeState {
     /**
@@ -31,7 +30,7 @@ internal class ParameterizeState {
      * Parameter instances are re-used between iterations, so will never be removed.
      * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
-    private val parameters = ArrayList<ParameterState>()
+    private val parameters = ArrayList<ParameterState<*>>()
     private var parameterCount = 0
 
     /**
@@ -39,12 +38,12 @@ internal class ParameterizeState {
      *
      * Set to `null` once the parameter is iterated.
      */
-    private var parameterToIterate: ParameterState? = null
+    private var parameterToIterate: ParameterState<*>? = null
 
     /**
      * The last parameter this iteration that has another argument after declaring, or `null` if there hasn't been one yet.
      */
-    private var lastParameterWithNextArgument: ParameterState? = null
+    private var lastParameterWithNextArgument: ParameterState<*>? = null
 
     private var iterationCount = 0L
     private var failureCount = 0L
@@ -74,9 +73,9 @@ internal class ParameterizeState {
                 // If null, then a previous parameter's argument has already been iterated,
                 // so all subsequent parameters should be discarded in case they depended on it
                 if (parameterToIterate == null) reset()
-            }
+            } as ParameterState<T>
         } else {
-            ParameterState().also { parameters += it }
+            ParameterState<T>().also { parameters += it }
         }
 
         parameter.declare(arguments)
