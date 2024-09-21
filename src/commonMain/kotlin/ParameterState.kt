@@ -49,11 +49,11 @@ import kotlin.reflect.KProperty
  * ignored since they're assumed to be the same, and the state remains unchanged
  * in favor of continuing through the current iterator where it left off.
  */
-internal class ParameterState {
+internal class ParameterState<T> {
     private var isDeclared: Boolean = false
-    private var argument: Any? = null // T
-    var property: KProperty<*>? = null
-    private var argumentIterator: Iterator<*>? = null
+    private var argument: T? = null // T
+    var property: KProperty<T>? = null
+    private var argumentIterator: Iterator<T>? = null
 
     var hasBeenUsed: Boolean = false
         private set
@@ -96,7 +96,7 @@ internal class ParameterState {
      * @throws ParameterizeException if already declared for a different [property].
      * @throws ParameterizeContinue if [arguments] is empty.
      */
-    fun declare(arguments: Sequence<*>) {
+    fun declare(arguments: Sequence<T>) {
         // Nothing to do if already declared
         if (isDeclared) return
 
@@ -116,7 +116,7 @@ internal class ParameterState {
      * @throws ParameterizeException if already declared for a different [property].
      * @throws IllegalStateException if the argument has not been declared yet.
      */
-    fun <T> getArgument(): T {
+    fun getArgument(): T {
         check(isDeclared) {
             "Cannot get argument before parameter has been declared"
         }
