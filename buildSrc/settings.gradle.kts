@@ -14,20 +14,11 @@
  * limitations under the License.
  */
 
-plugins {
-    `kotlin-dsl`
-}
-
-repositories {
-    gradlePluginPortal()
-}
-
-dependencies {
-    // https://github.com/gradle/gradle/issues/17963#issuecomment-1600751553
-    fun plugin(provider: Provider<PluginDependency>): Provider<String> =
-        provider.map { "${it.pluginId}:${it.pluginId}.gradle.plugin:${it.version}" }
-
-    implementation(plugin(libs.plugins.kotlin.multiplatform))
-    implementation(plugin(libs.plugins.dokka))
-    implementation(plugin(libs.plugins.binary.compatibility.validator))
+// https://github.com/gradle/gradle/issues/15383#issuecomment-779893192
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
+    }
 }
