@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
+import kotlinx.validation.ExperimentalBCVApi
+
 plugins {
-    `kotlin-dsl`
+    id("org.jetbrains.kotlinx.binary-compatibility-validator")
 }
 
-repositories {
-    gradlePluginPortal()
-}
-
-dependencies {
-    // https://github.com/gradle/gradle/issues/17963#issuecomment-1600751553
-    fun plugin(provider: Provider<PluginDependency>): Provider<String> =
-        provider.map { "${it.pluginId}:${it.pluginId}.gradle.plugin:${it.version}" }
-
-    implementation(plugin(libs.plugins.kotlin.multiplatform))
-    implementation(plugin(libs.plugins.dokka))
-    implementation(plugin(libs.plugins.binary.compatibility.validator))
+apiValidation {
+    @OptIn(ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
 }
