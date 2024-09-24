@@ -17,6 +17,7 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.DecoratorScope
+import effekt.HandlerPrompt
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.intrinsics.createCoroutineUnintercepted
@@ -26,9 +27,10 @@ internal data object ParameterizeContinue : Throwable()
 
 @PublishedApi
 internal class ParameterizeIterator(
-    private val configuration: ParameterizeConfiguration
+    private val configuration: ParameterizeConfiguration,
+    p: HandlerPrompt<Unit>
 ) {
-    private val parameterizeState = ParameterizeState()
+    private val parameterizeState = ParameterizeState(p)
 
     private var breakEarly = false
     private var currentIterationScope: ParameterizeScope? = null // Non-null if afterEach still needs to be called

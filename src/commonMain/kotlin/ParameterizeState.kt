@@ -19,11 +19,13 @@ package com.benwoodworth.parameterize
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
 import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
+import effekt.Handler
+import effekt.HandlerPrompt
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
 
-internal class ParameterizeState {
+internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
     /**
      * The parameters created for [parameterize].
      *
@@ -69,11 +71,14 @@ internal class ParameterizeState {
         val parameterIndex = parameterCount
 
         val parameter = if (parameterIndex in parameters.indices) {
-            parameters[parameterIndex].apply {
-                // If null, then a previous parameter's argument has already been iterated,
-                // so all subsequent parameters should be discarded in case they depended on it
-                if (parameterToIterate == null) reset()
-            } as ParameterState<T>
+            // If null, then a previous parameter's argument has already been iterated,
+            // so all subsequent parameters should be discarded in case they depended on it
+            if (parameterToIterate != null) {
+                check(parameters[parameterIndex].isDeclared)
+                parameters[parameterIndex] as ParameterState<T>
+            } else {
+                ParameterState<T>().also { parameters[parameterIndex] = it }
+            }
         } else {
             ParameterState<T>().also { parameters += it }
         }
