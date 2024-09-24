@@ -171,11 +171,12 @@ class ParameterStateSpec {
     fun get_failure_argument_when_declared_should_have_correct_property_and_argument() {
         val expectedArgument = "a"
         val parameter = ParameterState(sequenceOf(expectedArgument))
-        parameter.property = ::property
+        val propReference = ::property
+        parameter.property = propReference
         parameter.argument
 
         val (property, argument) = parameter.getFailureArgument()
-        assertTrue(property.equalsProperty(::property))
+        assertEquals(propReference, property)
         assertSame(expectedArgument, argument)
     }
 }
