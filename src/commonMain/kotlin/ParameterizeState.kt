@@ -74,17 +74,15 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
             // If null, then a previous parameter's argument has already been iterated,
             // so all subsequent parameters should be discarded in case they depended on it
             if (parameterToIterate != null) {
-                check(parameters[parameterIndex].isDeclared)
                 parameters[parameterIndex] as ParameterState<T>
             } else {
-                ParameterState<T>().also { parameters[parameterIndex] = it }
+                ParameterState<T>(arguments).also { parameters[parameterIndex] = it }
             }
         } else {
-            ParameterState<T>().also { parameters += it }
+            ParameterState<T>(arguments).also { parameters += it }
         }
 
-        parameter.declare(arguments)
-        parameterCount++ // After declaring, since the parameter shouldn't count if declare throws
+        parameterCount++ // After declaring, since the parameter shouldn't count if ParameterState's constructor throws
 
         if (parameter === parameterToIterate) {
             parameter.nextArgument()
@@ -95,7 +93,7 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
             lastParameterWithNextArgument = parameter
         }
 
-        return ParameterDelegate(parameter, parameter.getArgument())
+        return ParameterDelegate(parameter, parameter.argument)
     }
 
     /**
