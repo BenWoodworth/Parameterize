@@ -88,7 +88,7 @@ public suspend inline fun parameterize(
     // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
     // iterator of a later release, and would be major breaking change that's difficult to detect.
 
-    val iterator = ParameterizeIterator(configuration)
+    val iterator = ParameterizeIterator(configuration, this)
 
     while (true) {
         val scope = iterator.nextIteration() ?: break

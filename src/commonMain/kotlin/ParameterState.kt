@@ -50,21 +50,13 @@ import kotlin.reflect.KProperty
  * in favor of continuing through the current iterator where it left off.
  */
 internal class ParameterState<T> {
-    private var isDeclared: Boolean = false
+    internal var isDeclared: Boolean = false
     private var argument: T? = null // T
     var property: KProperty<T>? = null
     private var argumentIterator: Iterator<T>? = null
 
     var hasBeenUsed: Boolean = false
         private set
-
-    internal fun reset() {
-        isDeclared = false
-        property = null
-        argument = null
-        argumentIterator = null
-        hasBeenUsed = false
-    }
 
     /**
      * @throws IllegalStateException if used before the argument has been declared.

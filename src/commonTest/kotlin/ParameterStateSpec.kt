@@ -288,15 +288,6 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun reset_should_set_has_been_used_to_false() {
-        parameter.declare(sequenceOf("a", "b"))
-        parameter.getArgument()
-        parameter.reset()
-
-        assertFalse(parameter.hasBeenUsed)
-    }
-
-    @Test
     fun is_last_argument_before_declared_should_throw() {
         val failure = assertFailsWith<IllegalStateException> {
             parameter.isLastArgument
