@@ -5,7 +5,7 @@
 // - Show manifest properties: true
 // - Show declarations: true
 
-// Library unique name: <com.benwoodworth.parameterize:parameterize>
+// Library unique name: <com.benwoodworth.parameterize:parameterize-core>
 open annotation class com.benwoodworth.parameterize/ExperimentalParameterizeApi : kotlin/Annotation { // com.benwoodworth.parameterize/ExperimentalParameterizeApi|null[0]
     constructor <init>() // com.benwoodworth.parameterize/ExperimentalParameterizeApi.<init>|<init>(){}[0]
 }
