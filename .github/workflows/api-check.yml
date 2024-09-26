@@ -37,4 +37,4 @@ jobs:
 
       - name: Documentation
         if: success() || failure()
-        run: ./gradlew dokkaHtml
+        run: ./gradlew dokkaHtmlMultiModule
