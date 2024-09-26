@@ -1,3 +1,5 @@
+import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
+
 /*
  * Copyright 2024 Ben Woodworth
  *
@@ -14,31 +16,15 @@
  * limitations under the License.
  */
 
-import org.jetbrains.dokka.gradle.DokkaTask
-
 plugins {
-    id("kotlin-multiplatform-conventions")
     id("dokka-conventions")
-    id("binary-compatibility-validator-conventions")
-    id("publishing-conventions")
-    id("ci-conventions")
 }
 
 repositories {
     mavenCentral()
 }
 
-kotlin {
-    sourceSets {
-        val jvmMain by getting {
-            dependencies {
-                implementation(libs.opentest4j)
-            }
-        }
-    }
-}
-
-tasks.withType<DokkaTask>().configureEach {
+tasks.withType<DokkaMultiModuleTask>().configureEach {
     doLast {
         layout.buildDirectory.asFileTree.asSequence()
             .filter { it.isFile && it.extension == "html" }

@@ -14,6 +14,24 @@
  * limitations under the License.
  */
 
-rootProject.name = "parameterize"
+plugins {
+    id("kotlin-multiplatform-conventions")
+    id("dokka-conventions")
+    id("binary-compatibility-validator-conventions")
+    id("publishing-conventions")
+    id("ci-conventions")
+}
 
-include(":parameterize-core")
+repositories {
+    mavenCentral()
+}
+
+kotlin {
+    sourceSets {
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.opentest4j)
+            }
+        }
+    }
+}
