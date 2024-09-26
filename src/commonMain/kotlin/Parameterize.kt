@@ -157,7 +157,6 @@ internal class SimpleParameterizeScope internal constructor(
     }
 
     override operator fun <T> DeclaredParameter<T>.getValue(thisRef: Nothing?, property: KProperty<*>): T {
-        if (!iterationCompleted) parameterState.useArgument()
         return argument
     }
 }

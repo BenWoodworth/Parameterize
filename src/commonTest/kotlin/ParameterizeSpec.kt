@@ -118,9 +118,6 @@ class ParameterizeSpec {
             state = "declaring parameter"
             val iteration by iterationParameter
 
-            state = "using parameter"
-            useParameter(iteration)
-
             state = "between iterations"
         }
     }
@@ -221,10 +218,6 @@ class ParameterizeSpec {
         val first by parameterOf("a", "b")
         val second by parameterOf(1, 2)
 
-        // Used in a different order
-        useParameter(second)
-        useParameter(first)
-
         "$first$second"
     }
 
@@ -299,17 +292,10 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun string_representation_should_show_used_parameter_arguments_in_declaration_order() = parameterize {
+    fun string_representation_should_show_parameter_arguments_in_declaration_order() = parameterize {
         val a by parameterOf(1)
-        val unused1 by parameterOf(Unit)
         val b by parameterOf(2)
-        val unused2 by parameterOf(Unit)
         val c by parameterOf(3)
-
-        // Used in a different order
-        useParameter(c)
-        useParameter(b)
-        useParameter(a)
 
         assertEquals("${ParameterizeScope::class.simpleName}(a = $a, b = $b, c = $c)", this.toString())
     }

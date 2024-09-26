@@ -141,7 +141,7 @@ class ParameterizeScopeSpec : ParameterizeScope {
         lateinit var declaredParameter: DeclaredParameter<Any>
 
         val parameter by PropertyDelegateProvider { thisRef: Nothing?, property ->
-            DeclaredParameter(ParameterState(ParameterizeState()), "argument")
+            DeclaredParameter("argument")
                 .also { declaredParameter = it }
         }
 

@@ -204,7 +204,6 @@ class ParameterizeConfigurationSpec_decorator {
             }
         ) {
             val iteration by parameter(1..3)
-            useParameter(iteration)
         }
     }
 
@@ -225,7 +224,6 @@ class ParameterizeConfigurationSpec_decorator {
             }
         ) {
             val iteration by parameter(1..3)
-            useParameter(iteration)
         }
     }
 
@@ -247,7 +245,6 @@ class ParameterizeConfigurationSpec_decorator {
                 }
             ) {
                 val iteration by parameter(1..3)
-                useParameter(iteration)
             }
         }
 

@@ -41,10 +41,6 @@ expect annotation class WasmWasiIgnore()
 
 expect val Throwable.stackTraceLines: List<String>
 
-@Suppress("UNUSED_PARAMETER")
-fun <T> useParameter(parameter: T) {
-}
-
 internal val ParameterizeScope.parameterizeState: ParameterizeState
     get() {
         check(this is SimpleParameterizeScope) {

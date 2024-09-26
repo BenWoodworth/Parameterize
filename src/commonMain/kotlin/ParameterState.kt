@@ -57,15 +57,11 @@ internal class ParameterState(
     private var argument: Any? = null // T
     private var argumentIterator: Iterator<*>? = null
 
-    var hasBeenUsed: Boolean = false
-        private set
-
     internal fun reset() {
         property = null
         arguments = null
         argument = null
         argumentIterator = null
-        hasBeenUsed = false
     }
 
     /**
@@ -119,7 +115,7 @@ internal class ParameterState(
     }
 
     /**
-     * Get the current argument, and set [hasBeenUsed] to true.
+     * Get the current argument.
      *
      * @throws ParameterizeException if already declared for a different [property].
      * @throws IllegalStateException if the argument has not been declared yet.
@@ -135,10 +131,6 @@ internal class ParameterState(
 
         @Suppress("UNCHECKED_CAST") // Argument is declared with property's arguments, so must be T
         return argument as T
-    }
-
-    fun useArgument() {
-        hasBeenUsed = true
     }
 
     /**
