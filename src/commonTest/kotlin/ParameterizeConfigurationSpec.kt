@@ -344,17 +344,18 @@ class ParameterizeConfigurationSpec {
     @Test
     fun on_complete_should_be_marked_as_being_called_in_place_exactly_once() {
         // Must be assigned exactly once
-        val lateAssignedValue: Any
+        val lateAssignedValue: Unit
 
         parameterize(
             onComplete = {
                 // Compile-time error if Kotlin thinks this could be run more than once
-                lateAssignedValue = 0
+                lateAssignedValue = Unit
             }
         ) {}
 
         // Compile-time error if Kotlin thinks the variable might not be assigned
-        useParameter(lateAssignedValue)
+        @Suppress("UNUSED_EXPRESSION")
+        lateAssignedValue
     }
 
     @Test

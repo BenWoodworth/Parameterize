@@ -125,7 +125,6 @@ public interface ParameterizeScope {
      * @see Parameter
      */
     public class DeclaredParameter<out T> internal constructor(
-        internal val parameterState: ParameterState,
         internal val argument: T
     ) {
         /**

@@ -177,24 +177,6 @@ class ParameterizeConfigurationSpec_onFailure {
     }
 
     @Test
-    fun failure_arguments_should_only_include_used_parameters() = testParameterize(
-        onFailure = {
-            val actualUsedParameters = arguments.map { it.parameter.name }
-            assertEquals(listOf("used1", "used2"), actualUsedParameters)
-        }
-    ) {
-        val used1 by parameterOf(Unit)
-        val unused1 by parameterOf(Unit)
-        val used2 by parameterOf(Unit)
-        val unused2 by parameterOf(Unit)
-
-        useParameter(used1)
-        useParameter(used2)
-
-        fail()
-    }
-
-    @Test
     fun failure_arguments_should_include_lazily_used_parameters_that_were_unused_this_iteration() = testParameterize(
         onFailure = {
             val actualUsedParameters = arguments.map { it.parameter.name }
@@ -215,30 +197,5 @@ class ParameterizeConfigurationSpec_onFailure {
             check(!letterUsedThisIteration) { "Letter was actually used this iteration, so test is invalid" }
             fail()
         }
-    }
-
-    @Test
-    fun failure_arguments_should_not_include_captured_parameters_from_previous_iterations() = testParameterize(
-        onFailure = {
-            val parameters = arguments.map { it.parameter.name }
-
-            assertFalse(
-                "neverUsedDuringTheCurrentIteration" in parameters,
-                "neverUsedDuringTheCurrentIteration in $parameters"
-            )
-        }
-    ) {
-        val neverUsedDuringTheCurrentIteration by parameterOf(Unit)
-
-        @Suppress("UNUSED_EXPRESSION")
-        val usePreviousIterationParameter by parameterOf(
-            { }, // Don't use it the first iteration
-            { neverUsedDuringTheCurrentIteration }
-        )
-
-        // On the 2nd iteration, use the parameter captured from the 1st iteration
-        usePreviousIterationParameter()
-
-        fail()
     }
 }
