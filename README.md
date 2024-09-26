@@ -95,8 +95,8 @@ fun a_string_should_contain_its_own_substring() = parameterizeTest {
 }
 ```
 
-If any of the test cases don't pass, the failures will be wrapped into an `Error` detailing the <ins>*used*</ins>
-parameters with their arguments <ins>*and parameter names*</ins> for each, plus support for JVM tooling with
+If any of the test cases don't pass, the failures will be wrapped into an `Error` detailing the parameters with their
+arguments <ins>*and parameter names*</ins> for each, plus support for JVM tooling with
 [expected/actual value comparison](http://ota4j-team.github.io/opentest4j/docs/current/api/org/opentest4j/AssertionFailedError.html)
 and [multi-failures](http://ota4j-team.github.io/opentest4j/docs/current/api/org/opentest4j/MultipleFailuresError.html):
 

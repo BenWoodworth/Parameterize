@@ -95,7 +95,7 @@ internal class ParameterizeState {
             lastParameterWithNextArgument = parameter
         }
 
-        return DeclaredParameter(parameter, parameter.getArgument(property))
+        return DeclaredParameter(parameter.getArgument(property))
     }
 
     private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {
@@ -117,11 +117,10 @@ internal class ParameterizeState {
     }
 
     /**
-     * Get a list of used arguments for reporting a failure.
+     * Get a list of arguments for reporting a failure.
      */
     fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
         parameters.take(parameterCount)
-            .filter { it.hasBeenUsed }
             .map { it.getFailureArgument() }
 
     @JvmInline

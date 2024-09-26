@@ -72,11 +72,6 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun has_been_used_should_initially_be_false() {
-        assertFalse(parameter.hasBeenUsed)
-    }
-
-    @Test
     fun declaring_with_no_arguments_should_throw_ParameterizeContinue() {
         assertFailsWith<ParameterizeContinue> {
             parameter.declare(::property, emptySequence())
@@ -166,14 +161,6 @@ class ParameterStateSpec {
         parameter.declare(::property, sequenceOf("first", "second"))
 
         assertEquals("first", parameter.getArgument(::property))
-    }
-
-    @Test
-    fun use_argument_should_set_has_been_used_to_true() {
-        parameter.declare(::property, sequenceOf("first", "second"))
-        parameter.useArgument()
-
-        assertTrue(parameter.hasBeenUsed)
     }
 
     @Test
@@ -269,27 +256,6 @@ class ParameterStateSpec {
         assertFailsWith<ParameterizeException> {
             parameter.declare(::differentProperty, sequenceOf(Unit))
         }
-    }
-
-    @Test
-    fun redeclare_with_different_parameter_should_not_change_has_been_used() {
-        parameter.declare(::property, sequenceOf("a"))
-        parameter.useArgument()
-
-        runCatching {
-            parameter.declare(::differentProperty, sequenceOf("a"))
-        }
-
-        assertTrue(parameter.hasBeenUsed)
-    }
-
-    @Test
-    fun reset_should_set_has_been_used_to_false() {
-        parameter.declare(::property, sequenceOf("a", "b"))
-        parameter.getArgument(::property)
-        parameter.reset()
-
-        assertFalse(parameter.hasBeenUsed)
     }
 
     @Test
