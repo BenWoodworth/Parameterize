@@ -28,6 +28,11 @@ repositories {
 
 kotlin {
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+                api(project(":parameterize-api"))
+            }
+        }
         val jvmMain by getting {
             dependencies {
                 implementation(libs.opentest4j)

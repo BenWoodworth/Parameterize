@@ -267,6 +267,7 @@ the need for an extra level of nesting nesting inside the group of tests.
 
 | Artifact            | Description                                                                                       |
 |---------------------|---------------------------------------------------------------------------------------------------|
+| `parameterize-api`  | Library primitives, including the `ParameterizeScope` interface and `Parameter` functions.        |
 | `parameterize-core` | The core functionality, with `parameterize {}` as the entry point for running parameterized code. |
 
 
@@ -286,6 +287,7 @@ repositories {
 
 dependencies {
     implementation("com.benwoodworth.parameterize:parameterize-core:$parameterize_version") // or testImplementation(...)
+    //api("com.benwoodworth.parameterize:parameterize-api:$parameterize_version") // for libraries that expose parameter DSLs
 }
 ```
 

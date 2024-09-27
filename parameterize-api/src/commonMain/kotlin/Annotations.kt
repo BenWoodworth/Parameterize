@@ -19,19 +19,17 @@ package com.benwoodworth.parameterize
 import kotlin.annotation.AnnotationTarget.*
 
 /**
- * Used to prevent [parameterize] functions from being used in the wrong scope.
- *
- * Deprecated in favor of blocking declaration with a delegate overload. See [LazyParameterScope.provideDelegate].
- *
- * @suppress
- * @see DslMarker
- * @see LazyParameterScope.provideDelegate
+ * Marks declarations that are still **experimental** in Parameterize, which means that the design of the corresponding
+ * declarations has open issues which may (or may not) lead to their changes in the future. Roughly speaking, there is a
+ * chance that those declarations will be deprecated in the near future or the semantics of their behavior may change in
+ * some way that may break some code.
  */
-@DslMarker
+@MustBeDocumented
 @Retention(AnnotationRetention.BINARY)
-@Target(CLASS, TYPE, TYPEALIAS)
-@Deprecated(
-    "Deprecated in favor of blocking declaration with a delegate overload. See LazyParameterScope.provideDelegate.",
-    level = DeprecationLevel.ERROR
+@Target(
+    CLASS, ANNOTATION_CLASS, TYPEALIAS,
+    PROPERTY, FIELD, LOCAL_VARIABLE, VALUE_PARAMETER,
+    CONSTRUCTOR, FUNCTION, PROPERTY_GETTER, PROPERTY_SETTER
 )
-public annotation class ParameterizeDsl
+@RequiresOptIn(level = RequiresOptIn.Level.WARNING)
+public annotation class ExperimentalParameterizeApi

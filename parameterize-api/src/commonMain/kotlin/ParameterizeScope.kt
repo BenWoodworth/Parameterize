@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("KDocUnresolvedReference")
+
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
@@ -103,7 +105,7 @@ public interface ParameterizeScope {
      *
      * @see Parameter
      */
-    public class DeclaredParameter<out T> internal constructor(
+    public class DeclaredParameter<out T> @ExperimentalParameterizeApi constructor(
         /**
          * The [argument] that this parameter was [declared][provideDelegate] with.
          *
