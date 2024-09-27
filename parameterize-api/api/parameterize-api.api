@@ -1,0 +1,53 @@
+public abstract interface annotation class com/benwoodworth/parameterize/ExperimentalParameterizeApi : java/lang/annotation/Annotation {
+}
+
+public final class com/benwoodworth/parameterize/LazyParameterScope {
+	public static final synthetic fun box-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;)Lcom/benwoodworth/parameterize/LazyParameterScope;
+	public static fun constructor-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;)Lcom/benwoodworth/parameterize/ParameterizeScope;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lcom/benwoodworth/parameterize/ParameterizeScope;Lcom/benwoodworth/parameterize/ParameterizeScope;)Z
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;)I
+	public static final fun provideDelegate-13mUnGw (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/sequences/Sequence;Ljava/lang/Void;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter;
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lcom/benwoodworth/parameterize/ParameterizeScope;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lcom/benwoodworth/parameterize/ParameterizeScope;
+}
+
+public abstract interface class com/benwoodworth/parameterize/ParameterizeScope {
+	public abstract fun provideDelegate-13mUnGw (Lkotlin/sequences/Sequence;Ljava/lang/Void;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter {
+	public final field argument Ljava/lang/Object;
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun getValue (Ljava/lang/Void;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeScope$Parameter {
+	public static final synthetic fun box-impl (Lkotlin/sequences/Sequence;)Lcom/benwoodworth/parameterize/ParameterizeScope$Parameter;
+	public static fun constructor-impl (Lkotlin/sequences/Sequence;)Lkotlin/sequences/Sequence;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Lkotlin/sequences/Sequence;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Lkotlin/sequences/Sequence;Lkotlin/sequences/Sequence;)Z
+	public final fun getArguments ()Lkotlin/sequences/Sequence;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Lkotlin/sequences/Sequence;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Lkotlin/sequences/Sequence;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Lkotlin/sequences/Sequence;
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeScope$ParameterDelegate {
+}
+
+public final class com/benwoodworth/parameterize/ParameterizeScopeKt {
+	public static final fun parameter (Lcom/benwoodworth/parameterize/ParameterizeScope;Ljava/lang/Iterable;)Lkotlin/sequences/Sequence;
+	public static final fun parameter (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/sequences/Sequence;)Lkotlin/sequences/Sequence;
+	public static final fun parameterLazyIterable (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
+	public static final fun parameterLazySequence (Lcom/benwoodworth/parameterize/ParameterizeScope;Lkotlin/jvm/functions/Function1;)Lkotlin/sequences/Sequence;
+	public static final fun parameterOf (Lcom/benwoodworth/parameterize/ParameterizeScope;[Ljava/lang/Object;)Lkotlin/sequences/Sequence;
+}
+

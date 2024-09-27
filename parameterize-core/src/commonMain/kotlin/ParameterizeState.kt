@@ -95,6 +95,7 @@ internal class ParameterizeState {
             lastParameterWithNextArgument = parameter
         }
 
+        @OptIn(ExperimentalParameterizeApi::class)
         return DeclaredParameter(parameter.getArgument(property))
     }
 
