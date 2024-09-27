@@ -6,37 +6,8 @@
 // - Show declarations: true
 
 // Library unique name: <com.benwoodworth.parameterize:parameterize-core>
-open annotation class com.benwoodworth.parameterize/ExperimentalParameterizeApi : kotlin/Annotation { // com.benwoodworth.parameterize/ExperimentalParameterizeApi|null[0]
-    constructor <init>() // com.benwoodworth.parameterize/ExperimentalParameterizeApi.<init>|<init>(){}[0]
-}
-
 open annotation class com.benwoodworth.parameterize/ParameterizeDsl : kotlin/Annotation { // com.benwoodworth.parameterize/ParameterizeDsl|null[0]
     constructor <init>() // com.benwoodworth.parameterize/ParameterizeDsl.<init>|<init>(){}[0]
-}
-
-abstract interface com.benwoodworth.parameterize/ParameterizeScope { // com.benwoodworth.parameterize/ParameterizeScope|null[0]
-    abstract fun <#A1: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A1>).provideDelegate(kotlin/Nothing?, kotlin.reflect/KProperty<*>): com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<#A1> // com.benwoodworth.parameterize/ParameterizeScope.provideDelegate|provideDelegate@com.benwoodworth.parameterize.ParameterizeScope.Parameter<0:0>(kotlin.Nothing?;kotlin.reflect.KProperty<*>){0§<kotlin.Any?>}[0]
-
-    final class <#A1: kotlin/Any?> ParameterDelegate // com.benwoodworth.parameterize/ParameterizeScope.ParameterDelegate|null[0]
-
-    final class <#A1: out kotlin/Any?> DeclaredParameter { // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter|null[0]
-        final val argument // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter.argument|{}argument[0]
-            final fun <get-argument>(): #A1 // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter.argument.<get-argument>|<get-argument>(){}[0]
-
-        final fun toString(): kotlin/String // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter.toString|toString(){}[0]
-        final inline fun getValue(kotlin/Nothing?, kotlin.reflect/KProperty<*>): #A1 // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter.getValue|getValue(kotlin.Nothing?;kotlin.reflect.KProperty<*>){}[0]
-    }
-
-    final value class <#A1: out kotlin/Any?> Parameter { // com.benwoodworth.parameterize/ParameterizeScope.Parameter|null[0]
-        constructor <init>(kotlin.sequences/Sequence<#A1>) // com.benwoodworth.parameterize/ParameterizeScope.Parameter.<init>|<init>(kotlin.sequences.Sequence<1:0>){}[0]
-
-        final val arguments // com.benwoodworth.parameterize/ParameterizeScope.Parameter.arguments|{}arguments[0]
-            final fun <get-arguments>(): kotlin.sequences/Sequence<#A1> // com.benwoodworth.parameterize/ParameterizeScope.Parameter.arguments.<get-arguments>|<get-arguments>(){}[0]
-
-        final fun equals(kotlin/Any?): kotlin/Boolean // com.benwoodworth.parameterize/ParameterizeScope.Parameter.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // com.benwoodworth.parameterize/ParameterizeScope.Parameter.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // com.benwoodworth.parameterize/ParameterizeScope.Parameter.toString|toString(){}[0]
-    }
 }
 
 final class com.benwoodworth.parameterize/ParameterizeConfiguration { // com.benwoodworth.parameterize/ParameterizeConfiguration|null[0]
@@ -144,19 +115,5 @@ final class com.benwoodworth.parameterize/ParameterizeIterator { // com.benwoodw
     final fun nextIteration(): com.benwoodworth.parameterize/ParameterizeScope? // com.benwoodworth.parameterize/ParameterizeIterator.nextIteration|nextIteration(){}[0]
 }
 
-final value class com.benwoodworth.parameterize/LazyParameterScope { // com.benwoodworth.parameterize/LazyParameterScope|null[0]
-    constructor <init>(com.benwoodworth.parameterize/ParameterizeScope) // com.benwoodworth.parameterize/LazyParameterScope.<init>|<init>(com.benwoodworth.parameterize.ParameterizeScope){}[0]
-
-    final fun <#A1: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A1>).provideDelegate(kotlin/Nothing?, kotlin.reflect/KProperty<*>): com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<#A1> // com.benwoodworth.parameterize/LazyParameterScope.provideDelegate|provideDelegate@com.benwoodworth.parameterize.ParameterizeScope.Parameter<0:0>(kotlin.Nothing?;kotlin.reflect.KProperty<*>){0§<kotlin.Any?>}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.benwoodworth.parameterize/LazyParameterScope.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.benwoodworth.parameterize/LazyParameterScope.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.benwoodworth.parameterize/LazyParameterScope.toString|toString(){}[0]
-}
-
-final fun <#A: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope).com.benwoodworth.parameterize/parameter(kotlin.collections/Iterable<#A>): com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A> // com.benwoodworth.parameterize/parameter|parameter@com.benwoodworth.parameterize.ParameterizeScope(kotlin.collections.Iterable<0:0>){0§<kotlin.Any?>}[0]
-final fun <#A: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope).com.benwoodworth.parameterize/parameter(kotlin.sequences/Sequence<#A>): com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A> // com.benwoodworth.parameterize/parameter|parameter@com.benwoodworth.parameterize.ParameterizeScope(kotlin.sequences.Sequence<0:0>){0§<kotlin.Any?>}[0]
-final fun <#A: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope).com.benwoodworth.parameterize/parameterOf(kotlin/Array<out #A>...): com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A> // com.benwoodworth.parameterize/parameterOf|parameterOf@com.benwoodworth.parameterize.ParameterizeScope(kotlin.Array<out|0:0>...){0§<kotlin.Any?>}[0]
-final inline fun <#A: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope).com.benwoodworth.parameterize/parameter(crossinline kotlin/Function1<com.benwoodworth.parameterize/LazyParameterScope, kotlin.collections/Iterable<#A>>): com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A> // com.benwoodworth.parameterize/parameter|parameter@com.benwoodworth.parameterize.ParameterizeScope(kotlin.Function1<com.benwoodworth.parameterize.LazyParameterScope,kotlin.collections.Iterable<0:0>>){0§<kotlin.Any?>}[0]
-final inline fun <#A: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope).com.benwoodworth.parameterize/parameter(crossinline kotlin/Function1<com.benwoodworth.parameterize/LazyParameterScope, kotlin.sequences/Sequence<#A>>): com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A> // com.benwoodworth.parameterize/parameter|parameter@com.benwoodworth.parameterize.ParameterizeScope(kotlin.Function1<com.benwoodworth.parameterize.LazyParameterScope,kotlin.sequences.Sequence<0:0>>){0§<kotlin.Any?>}[0]
 final inline fun com.benwoodworth.parameterize/parameterize(com.benwoodworth.parameterize/ParameterizeConfiguration = ..., kotlin/Function1<com.benwoodworth.parameterize/ParameterizeScope, kotlin/Unit>) // com.benwoodworth.parameterize/parameterize|parameterize(com.benwoodworth.parameterize.ParameterizeConfiguration;kotlin.Function1<com.benwoodworth.parameterize.ParameterizeScope,kotlin.Unit>){}[0]
 final inline fun com.benwoodworth.parameterize/parameterize(com.benwoodworth.parameterize/ParameterizeConfiguration = ..., noinline kotlin.coroutines/SuspendFunction2<com.benwoodworth.parameterize/ParameterizeConfiguration.DecoratorScope, kotlin.coroutines/SuspendFunction1<com.benwoodworth.parameterize/ParameterizeConfiguration.DecoratorScope, kotlin/Unit>, kotlin/Unit> = ..., noinline kotlin/Function2<com.benwoodworth.parameterize/ParameterizeConfiguration.OnFailureScope, kotlin/Throwable, kotlin/Unit> = ..., noinline kotlin/Function1<com.benwoodworth.parameterize/ParameterizeConfiguration.OnCompleteScope, kotlin/Unit> = ..., kotlin/Function1<com.benwoodworth.parameterize/ParameterizeScope, kotlin/Unit>) // com.benwoodworth.parameterize/parameterize|parameterize(com.benwoodworth.parameterize.ParameterizeConfiguration;kotlin.coroutines.SuspendFunction2<com.benwoodworth.parameterize.ParameterizeConfiguration.DecoratorScope,kotlin.coroutines.SuspendFunction1<com.benwoodworth.parameterize.ParameterizeConfiguration.DecoratorScope,kotlin.Unit>,kotlin.Unit>;kotlin.Function2<com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope,kotlin.Throwable,kotlin.Unit>;kotlin.Function1<com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope,kotlin.Unit>;kotlin.Function1<com.benwoodworth.parameterize.ParameterizeScope,kotlin.Unit>){}[0]

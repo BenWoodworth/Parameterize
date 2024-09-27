@@ -25,7 +25,7 @@ import kotlin.reflect.KProperty
 import kotlin.test.*
 
 /**
- * Specifies the [parameterize] DSL and its syntax.
+ * Specifies the Parameterize DSL and its syntax.
  *
  * Implements [ParameterizeScope] only so [Parameter] functions are available in tests.
  */
@@ -135,6 +135,7 @@ class ParameterizeScopeSpec : ParameterizeScope {
     }
 
     @Test
+    @OptIn(ExperimentalParameterizeApi::class)
     fun declared_parameter_string_representation_when_declared_should_equal_that_of_the_current_argument() {
         lateinit var declaredParameter: DeclaredParameter<Any>
 
