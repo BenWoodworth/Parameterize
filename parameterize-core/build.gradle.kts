@@ -30,6 +30,17 @@ repositories {
 
 kotlin {
     sourceSets {
+        configureEach {
+            languageSettings {
+                optIn("com.benwoodworth.parameterize.internal.ParameterizeApiFriendModuleApi")
+            }
+        }
+
+        val commonMain by getting {
+            dependencies {
+                api(project(":parameterize-api"))
+            }
+        }
         val jvmMain by getting {
             dependencies {
                 implementation(libs.opentest4j)
