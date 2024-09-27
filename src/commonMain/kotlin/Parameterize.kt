@@ -19,7 +19,11 @@
 
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.ParameterizeConfiguration.*
+import com.benwoodworth.parameterize.ParameterizeConfiguration.DecoratorScope
+import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
+import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
+import effekt.HandlerPrompt
+import effekt.discardWithFast
 import effekt.handle
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -80,25 +84,24 @@ import kotlin.reflect.KProperty
  *
  * @throws ParameterizeException if the DSL is used incorrectly. (See restrictions)
  */
-public suspend inline fun parameterize(
+public suspend fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
-    crossinline block: suspend ParameterizeScope.() -> Unit
-): Unit = handle {
+    block: suspend ParameterizeScope.() -> Unit
+): Unit = with(ParameterizeScope(ParameterizeState(HandlerPrompt()))) {
     // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
     // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
     // iterator of a later release, and would be major breaking change that's difficult to detect.
-
-    val iterator = ParameterizeIterator(configuration, this)
-
-    while (true) {
-        val scope = iterator.nextIteration() ?: break
-
-        try {
-            scope.block()
-        } catch (failure: Throwable) {
-            iterator.handleFailure(failure)
+    handle breakEarly@{
+        parameterizeState.handle {
+            try {
+                block()
+            } catch (failure: Throwable) {
+                val result = parameterizeState.handleFailure(configuration.onFailure, failure)
+                if (result.breakEarly) this@breakEarly.discardWithFast(Result.success(Unit))
+            }
         }
     }
+    parameterizeState.handleComplete(configuration.onComplete)
 }
 
 /**
@@ -114,12 +117,12 @@ public suspend inline fun parameterize(
     // False positive: onComplete is called in place exactly once through the configuration by the end parameterize call
     "LEAKED_IN_PLACE_LAMBDA", "WRONG_INVOCATION_KIND"
 )
-public suspend inline fun parameterize(
+public suspend fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
-    noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = configuration.decorator,
-    noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = configuration.onFailure,
-    noinline onComplete: OnCompleteScope.() -> Unit = configuration.onComplete,
-    crossinline block: suspend ParameterizeScope.() -> Unit
+    decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = configuration.decorator,
+    onFailure: OnFailureScope.(failure: Throwable) -> Unit = configuration.onFailure,
+    onComplete: OnCompleteScope.() -> Unit = configuration.onComplete,
+    block: suspend ParameterizeScope.() -> Unit
 ) {
     contract {
         callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
@@ -151,7 +154,10 @@ public class ParameterizeScope internal constructor(
         }
 
     /** @suppress */
-    public operator fun <T> ParameterDelegate<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): ParameterDelegate<T> {
+    public operator fun <T> ParameterDelegate<T>.provideDelegate(
+        thisRef: Any?,
+        property: KProperty<*>
+    ): ParameterDelegate<T> {
         parameterState.property = property as KProperty<Nothing>
         return this
     }

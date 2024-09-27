@@ -43,7 +43,7 @@ class ParameterizeFailedErrorSpecJvm {
     }
 
     @Test
-    fun has_failures_should_be_correct() = testAll(
+    fun has_failures_should_be_correct() = testAllCC(
         "empty" to emptyList(),
         "non-empty" to listOf(Throwable("Failure"))
     ) { failures ->
@@ -66,7 +66,7 @@ class ParameterizeFailedErrorSpecJvm {
      * it should be suppressed.
      */
     @Test
-    fun methods_inherited_from_MultipleFailuresError_should_be_hidden_from_the_API() {
+    fun methods_inherited_from_MultipleFailuresError_should_be_hidden_from_the_API() = runTestCC {
         fun KClass<*>.inheritableMethods(): List<String> =
             java.methods
                 .filter { Modifier.isPublic(it.modifiers) }

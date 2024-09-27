@@ -30,13 +30,6 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun declaring_with_no_arguments_should_throw_ParameterizeContinue() {
-        assertFailsWith<ParameterizeContinue> {
-            ParameterState(emptySequence<String>())
-        }
-    }
-
-    @Test
     fun declare_should_immediately_get_the_first_argument() {
         var gotFirstArgument = false
 
@@ -80,21 +73,6 @@ class ParameterStateSpec {
         val parameter = ParameterState(sequenceOf("first", "second"))
 
         assertFalse(parameter.isLastArgument)
-    }
-
-    @Test
-    @Ignore
-    fun getting_argument_with_the_wrong_property_should_throw_ParameterizeException() {
-        val parameter = ParameterState(sequenceOf(Unit))
-
-        val exception = assertFailsWith<ParameterizeException> {
-            parameter.argument
-        }
-
-        assertEquals(
-            "Cannot use parameter delegate with `differentProperty`, since it was declared with `property`.",
-            exception.message
-        )
     }
 
     @Test
@@ -143,28 +121,6 @@ class ParameterStateSpec {
         parameter.nextArgument() // forth
 
         assertTrue(parameter.isLastArgument)
-    }
-
-    @Ignore
-    @Test
-    fun next_after_the_last_argument_should_loop_back_to_the_first() {
-        val parameter = ParameterState(sequenceOf("first", "second"))
-        parameter.argument
-        parameter.nextArgument() // second
-        parameter.nextArgument() // first
-
-        assertEquals("first", parameter.argument)
-    }
-
-    @Ignore
-    @Test
-    fun next_after_the_last_argument_should_set_is_last_argument_to_false() {
-        val parameter = ParameterState(sequenceOf("first", "second"))
-        parameter.argument
-        parameter.nextArgument() // second
-        parameter.nextArgument() // first
-
-        assertFalse(parameter.isLastArgument)
     }
 
     @Test

@@ -17,7 +17,6 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
-import com.benwoodworth.parameterize.ParameterizeConfigurationSpec.ParameterizeWithOptionDefault
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 import kotlin.test.*
@@ -94,7 +93,7 @@ class ParameterizeConfigurationSpec {
 
 
     @Test
-    fun builder_should_apply_options_correctly() = testAll(configurationOptions) { option ->
+    fun builder_should_apply_options_correctly() = testAllCC(configurationOptions) { option ->
         val configuration = ParameterizeConfiguration {
             option.setDistinctValue(this)
 
@@ -105,7 +104,7 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun builder_should_copy_from_another_configuration_correctly() = testAll(configurationOptions) { option ->
+    fun builder_should_copy_from_another_configuration_correctly() = testAllCC(configurationOptions) { option ->
         val copyFrom = ParameterizeConfiguration {
             option.setDistinctValue(this)
         }
@@ -116,7 +115,7 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun string_representation_should_be_class_name_with_options_listed() = testAll(configurationOptions) { testOption ->
+    fun string_representation_should_be_class_name_with_options_listed() = testAllCC(configurationOptions) { testOption ->
         val configuration = ParameterizeConfiguration {
             testOption.setDistinctValue(this)
         }
@@ -178,7 +177,7 @@ class ParameterizeConfigurationSpec {
         suspend fun configuredParameterize(configure: Builder.() -> Unit, block: ParameterizeScope.() -> Unit)
     }
 
-    private fun testConfiguredParameterize(test: suspend ConfiguredParameterize.() -> Unit) = testAll(
+    private fun testConfiguredParameterize(test: suspend ConfiguredParameterize.() -> Unit) = testAllCC(
         "configuration-only overload" to {
             test { configure, block ->
                 val configuration = ParameterizeConfiguration { configure() }
@@ -238,7 +237,7 @@ class ParameterizeConfigurationSpec {
             block: suspend ParameterizeScope.() -> Unit
         ) -> Unit,
         test: suspend ParameterizeWithOptionDefault.() -> Unit
-    ) = testAll(
+    ) = testAllCC(
         "with default from builder" to {
             val configuration = ParameterizeConfiguration { configure() }
 

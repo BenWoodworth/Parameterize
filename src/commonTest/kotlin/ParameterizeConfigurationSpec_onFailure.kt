@@ -23,7 +23,7 @@ import kotlin.test.*
 class ParameterizeConfigurationSpec_onFailure {
     private suspend inline fun testParameterize(
         noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit,
-        crossinline block: suspend ParameterizeScope.() -> Unit
+        noinline block: suspend ParameterizeScope.() -> Unit
     ): Unit =
         parameterize(
             onFailure = onFailure,
@@ -145,34 +145,33 @@ class ParameterizeConfigurationSpec_onFailure {
         }
     }
 
+    data class FailureParameterArgumentsException(val parameterArguments: List<Pair<String, *>>): Exception()
+
     @Test
     fun failure_arguments_should_be_those_from_the_last_iteration() = runTestCC {
-        val lastParameterArguments = mutableListOf<Pair<String, *>>()
-
         testParameterize(
             onFailure = {
+                assertIs<FailureParameterArgumentsException>(it)
                 val actualParameterArguments = arguments
                     .map { (parameter, argument) -> parameter.name to argument }
 
-                assertEquals(lastParameterArguments, actualParameterArguments)
+                assertEquals(it.parameterArguments, actualParameterArguments)
             }
         ) {
-            lastParameterArguments.clear()
-
             val iteration by parameter(0..10)
-            lastParameterArguments += "iteration" to iteration
+            val iterationPair = "iteration" to iteration
 
-            if (iteration % 2 == 0) {
+            val evenIterationPair = if (iteration % 2 == 0) {
                 val evenIteration by parameterOf(iteration)
-                lastParameterArguments += "evenIteration" to evenIteration
-            }
+                "evenIteration" to evenIteration
+            } else null
 
-            if (iteration % 3 == 0) {
+            val threevenIterationPair = if (iteration % 3 == 0) {
                 val threevenIteration by parameterOf(iteration)
-                lastParameterArguments += "threevenIteration" to threevenIteration
-            }
+                "threevenIteration" to threevenIteration
+            } else null
 
-            fail()
+            throw FailureParameterArgumentsException(listOfNotNull(iterationPair, evenIterationPair, threevenIterationPair))
         }
     }
 
@@ -221,17 +220,18 @@ class ParameterizeConfigurationSpec_onFailure {
         }
     }
 
-    @Ignore
     @Test
-    fun failure_arguments_should_not_include_captured_parameters_from_previous_iterations() = runTestCC {
+    fun failure_arguments_should_include_captured_parameters_from_previous_iterations() = runTestCC {
+        var isFirstIteration = true
         testParameterize(
             onFailure = {
                 val parameters = arguments.map { it.parameter.name }
 
-                assertFalse(
-                    "neverUsedDuringTheCurrentIteration" in parameters,
-                    "neverUsedDuringTheCurrentIteration in $parameters"
+                assertTrue(
+                    "neverUsedDuringTheCurrentIteration" !in parameters == isFirstIteration,
+                    "neverUsedDuringTheCurrentIteration !in $parameters != $isFirstIteration"
                 )
+                isFirstIteration = false
             }
         ) {
             val neverUsedDuringTheCurrentIteration by parameterOf(Unit)
@@ -244,6 +244,34 @@ class ParameterizeConfigurationSpec_onFailure {
 
             // On the 2nd iteration, use the parameter captured from the 1st iteration
             usePreviousIterationParameter()
+
+            fail()
+        }
+    }
+
+    @Test
+    fun failure_arguments_should_not_include_parameters_only_used_in_previous_iterations() = runTestCC {
+        var isFirstIteration = true
+        testParameterize(
+            onFailure = {
+                val parameters = arguments.map { it.parameter.name }
+
+                assertTrue(
+                    "neverUsedDuringTheCurrentIteration" in parameters == isFirstIteration,
+                    "neverUsedDuringTheCurrentIteration in $parameters != $isFirstIteration"
+                )
+                isFirstIteration = false
+            }
+        ) {
+            val neverUsedDuringTheCurrentIteration by parameterOf(Unit)
+
+            @Suppress("UNUSED_EXPRESSION")
+            val useParameter by parameterOf(
+                { neverUsedDuringTheCurrentIteration },
+                { }, // Don't use it the second iteration
+            )
+
+            useParameter()
 
             fail()
         }

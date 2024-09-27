@@ -21,6 +21,7 @@ import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
 import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
 import effekt.Handler
 import effekt.HandlerPrompt
+import effekt.use
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
@@ -28,73 +29,34 @@ import kotlin.jvm.JvmInline
 internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
     /**
      * The parameters created for [parameterize].
-     *
-     * Parameter instances are re-used between iterations, so will never be removed.
-     * The true number of parameters in the current iteration is maintained in [parameterCount].
      */
     private val parameters = ArrayList<ParameterState<*>>()
-    private var parameterCount = 0
-
-    /**
-     * The parameter that will be iterated to the next argument during this iteration.
-     *
-     * Set to `null` once the parameter is iterated.
-     */
-    private var parameterToIterate: ParameterState<*>? = null
-
-    /**
-     * The last parameter this iteration that has another argument after declaring, or `null` if there hasn't been one yet.
-     */
-    private var lastParameterWithNextArgument: ParameterState<*>? = null
 
     private var iterationCount = 0L
     private var skipCount = 0L
     private var failureCount = 0L
     private val recordedFailures = mutableListOf<ParameterizeFailure>()
 
-    val hasNextArgumentCombination: Boolean
-        get() = lastParameterWithNextArgument != null || iterationCount == 0L
-
     val isFirstIteration: Boolean
         get() = iterationCount == 1L
 
-    fun startNextIteration() {
-        iterationCount++
-        parameterCount = 0
-
-        parameterToIterate = lastParameterWithNextArgument
-        lastParameterWithNextArgument = null
-    }
-
-    fun <T> declareParameter(
+    suspend fun <T> declareParameter(
         arguments: Sequence<T>
-    ): ParameterDelegate<T> {
-        val parameterIndex = parameterCount
-
-        val parameter = if (parameterIndex in parameters.indices) {
-            // If null, then a previous parameter's argument has already been iterated,
-            // so all subsequent parameters should be discarded in case they depended on it
-            if (parameterToIterate != null) {
-                parameters[parameterIndex] as ParameterState<T>
-            } else {
-                ParameterState<T>(arguments).also { parameters[parameterIndex] = it }
-            }
-        } else {
-            ParameterState<T>(arguments).also { parameters += it }
+    ): ParameterDelegate<T> = use { resume ->
+        // TODO skip calling decorator on first iteration, but call it on the rest
+        //  and also call it for the top-most iteration.
+        val iterator = arguments.iterator()
+        if (!iterator.hasNext()) return@use
+        while (true) {
+            iterationCount++
+            val argument = iterator.next()
+            val isLast = !iterator.hasNext()
+            val parameter = ParameterState(sequenceOf(argument), isLast)
+            parameters.add(parameter)
+            resume(ParameterDelegate(parameter, argument))
+            check(parameters.removeLast() == parameter) { "Unexpected last parameter" }
+            if (isLast) break
         }
-
-        parameterCount++ // After declaring, since the parameter shouldn't count if ParameterState's constructor throws
-
-        if (parameter === parameterToIterate) {
-            parameter.nextArgument()
-            parameterToIterate = null
-        }
-
-        if (!parameter.isLastArgument) {
-            lastParameterWithNextArgument = parameter
-        }
-
-        return ParameterDelegate(parameter, parameter.argument)
     }
 
     fun handleContinue() {
@@ -104,7 +66,7 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
      * Get a list of used arguments for reporting a failure.
      */
     fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
-        parameters.take(parameterCount)
+        parameters
             .filter { it.hasBeenUsed }
             .map { it.getFailureArgument() }
 
@@ -112,10 +74,7 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
     value class HandleFailureResult(val breakEarly: Boolean)
 
     fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable): HandleFailureResult {
-        checkState(parameterToIterate == null, failure) {
-            "Previous iteration executed to this point successfully, but now failed with the same arguments"
-        }
-
+        if(failure is ParameterizeException && failure.parameterizeState === this) throw failure
         failureCount++
 
         val scope = OnFailureScope(
@@ -144,7 +103,7 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
             iterationCount,
             skipCount,
             failureCount,
-            completedEarly = hasNextArgumentCombination,
+            completedEarly = parameters.any { !it.isLast },
             recordedFailures,
         )
 
