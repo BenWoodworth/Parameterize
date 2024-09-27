@@ -31,16 +31,14 @@ import kotlin.reflect.KProperty
  * last argument is read in to release its reference
  *
  */
-internal class ParameterState<T>(argumentIterator: Iterator<T>) {
+internal class ParameterState<T>(argumentIterator: Iterator<T>, val isLast: Boolean = false) {
     /**
      * Set up the delegate with the given [arguments].
-     *
-     * @throws ParameterizeContinue if [arguments] is empty.
      */
-    constructor(arguments: Sequence<T>) : this(arguments.iterator())
+    constructor(arguments: Sequence<T>, isLast: Boolean = false) : this(arguments.iterator(), isLast)
 
     init {
-        if (!argumentIterator.hasNext()) throw ParameterizeContinue // Before changing any state
+        if (!argumentIterator.hasNext()) TODO() // Before changing any state
     }
 
     var argument: T = argumentIterator.next()

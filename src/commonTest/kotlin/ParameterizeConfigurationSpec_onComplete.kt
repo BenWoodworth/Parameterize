@@ -25,7 +25,7 @@ class ParameterizeConfigurationSpec_onComplete {
     private suspend inline fun testParameterize(
         noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = {}, // Continue on failure
         noinline onComplete: OnCompleteScope.() -> Unit,
-        crossinline block: suspend ParameterizeScope.() -> Unit
+        noinline block: suspend ParameterizeScope.() -> Unit
     ): Unit =
         parameterize(
             onFailure = onFailure,
@@ -236,7 +236,7 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
-    fun error_constructor_should_build_error_with_correct_values() = testAll(
+    fun error_constructor_should_build_error_with_correct_values() = testAllCC(
         "base values" to OnCompleteScope(
             recordedFailures = emptyList(),
             failureCount = 1,

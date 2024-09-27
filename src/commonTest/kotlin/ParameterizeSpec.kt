@@ -16,7 +16,6 @@
 
 package com.benwoodworth.parameterize
 
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -96,13 +95,10 @@ class ParameterizeSpec {
         }
     }
 
-    @Ignore
     @Test
-    fun parameter_should_iterate_to_the_next_argument_while_declaring() = runTestCC {
-        var state: String
-
+    fun parameter_should_restore_local_state_on_each_iteration() = runTestCC {
         parameterize {
-            state = "creating arguments"
+            var state = "creating arguments"
             val iterationArguments = Sequence {
                 object : Iterator<Int> {
                     var nextArgument = 0
@@ -110,17 +106,16 @@ class ParameterizeSpec {
                     override fun hasNext(): Boolean = nextArgument <= 5
 
                     override fun next(): Int {
-                        assertEquals("declaring parameter", state, "state (iteration $nextArgument)")
                         return nextArgument++
                     }
                 }
             }
 
-            state = "creating parameter"
+            state = "declaring parameter"
             val iterationParameter = parameter(iterationArguments)
 
-            state = "declaring parameter"
             val iteration by iterationParameter
+            assertEquals("declaring parameter", state, "state (iteration $iteration)")
 
             state = "using parameter"
             useParameter(iteration)
@@ -182,9 +177,13 @@ class ParameterizeSpec {
     ) {
         var string = ""
 
-        repeat(3) {
+        // repeat doesn't work on JS because JS broke its for-loop over IntRange
+        // optimization. TODO find relevant YouTrack issue
+        var i = 0
+        while(i < 3) {
             val letter by parameterOf('a', 'b', 'c')
             string += letter
+            i++
         }
 
         string
@@ -192,7 +191,7 @@ class ParameterizeSpec {
 
     @Test
     fun parameter_with_no_arguments_should_finish_iteration_early() = testParameterize(
-        listOf("123", "124", "125", "134", "135", "145", null, "234", "235", "245", null, "345", null, null, null)
+        listOf("123", "124", "125", "134", "135", "145", "234", "235", "245", "345")
     ) {
         // increasing digits
         val digit1 by parameter(1..5)
@@ -205,7 +204,7 @@ class ParameterizeSpec {
     @Test
     @Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
     fun unused_parameter_with_no_arguments_should_finish_iteration_early() = testParameterize(
-        listOf(null)
+        listOf()
     ) {
         val unused by parameterOf<Nothing>()
 

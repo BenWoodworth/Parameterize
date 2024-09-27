@@ -61,13 +61,13 @@ object TestAllScope {
         throw TestAllSkip(message)
 }
 
-fun <T> testAll(
+suspend fun <T> testAll(
     testCases: Iterable<Pair<String, T>>,
     test: suspend TestAllScope.(testCase: T) -> Unit
 ) {
     val results = testCases
         .map { (description, testCase) ->
-            description to runCatching { runTestCC { TestAllScope.test(testCase) } }
+            description to runCatching { TestAllScope.test(testCase) }
         }
 
     val passed = results.count { (_, result) -> result.isSuccess }
@@ -105,16 +105,29 @@ fun <T> testAll(
     }
 }
 
-fun <T> testAll(
+fun <T> testAllCC(
+    testCases: Iterable<Pair<String, T>>,
+    test: suspend TestAllScope.(testCase: T) -> Unit
+) = runTestCC { testAll(testCases, test) }
+
+suspend fun <T> testAll(
     vararg testCases: Pair<String, T>,
     test: suspend TestAllScope.(testCase: T) -> Unit
 ): Unit =
     testAll(testCases.toList(), test)
 
-fun testAll(vararg testCases: Pair<String, suspend TestAllScope.() -> Unit>): Unit =
+suspend fun testAll(vararg testCases: Pair<String, suspend TestAllScope.() -> Unit>): Unit =
     testAll(testCases.toList()) { testCase ->
         testCase()
     }
+
+fun <T> testAllCC(
+    vararg testCases: Pair<String, T>,
+    test: suspend TestAllScope.(testCase: T) -> Unit
+): TestResult = runTestCC { testAll(testCases = testCases, test) }
+
+fun testAllCC(vararg testCases: Pair<String, suspend TestAllScope.() -> Unit>): TestResult =
+    runTestCC { testAll(testCases = testCases) }
 
 inline fun runTestCC(
     context: CoroutineContext = EmptyCoroutineContext,

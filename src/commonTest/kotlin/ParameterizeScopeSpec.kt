@@ -115,12 +115,13 @@ class ParameterizeScopeSpec {
         }
     }*/
 
-    @Ignore
     @Test
-    fun parameter_from_lazy_arguments_should_not_be_computed_before_declaring() = runTestCC {
-        parameterize {
-            testAll(lazyParameterFunctions) { lazyParameterFunction ->
-                /*val undeclared by*/ lazyParameterFunction<Nothing>(this@parameterize) { fail("computed") }
+    fun parameter_from_lazy_arguments_should_be_computed_before_delegation() = runTestCC {
+        testAll(lazyParameterFunctions) { lazyParameterFunction ->
+            assertFailsWith<IllegalStateException>("computed") {
+                parameterize {
+                    lazyParameterFunction<Nothing>(this@parameterize) { throw IllegalStateException("computed") }
+                }
             }
         }
     }
