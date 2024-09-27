@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+@file:Suppress("KDocUnresolvedReference")
+
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import com.benwoodworth.parameterize.ParameterizeScope.Parameter
+import com.benwoodworth.parameterize.internal.ParameterizeApiFriendModuleApi
 import kotlin.experimental.ExperimentalTypeInference
 import kotlin.jvm.JvmField
 import kotlin.jvm.JvmInline
@@ -103,7 +106,10 @@ public interface ParameterizeScope {
      *
      * @see Parameter
      */
-    public class DeclaredParameter<out T> internal constructor(
+    public class DeclaredParameter<out T>
+    /** @suppress */
+    @ParameterizeApiFriendModuleApi
+    constructor(
         /**
          * The [argument] that this parameter was [declared][provideDelegate] with.
          *

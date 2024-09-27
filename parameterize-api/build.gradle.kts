@@ -14,8 +14,28 @@
  * limitations under the License.
  */
 
-rootProject.name = "parameterize"
+plugins {
+    id("kotlin-multiplatform-conventions")
+    id("dokka-conventions")
+    id("binary-compatibility-validator-conventions")
+    id("publishing-conventions")
+    id("ci-conventions")
+}
 
-include(":parameterize-api")
-include(":parameterize-core")
-include(":test-utils")
+repositories {
+    mavenCentral()
+}
+
+kotlin {
+    sourceSets {
+        configureEach {
+            languageSettings {
+                optIn("com.benwoodworth.parameterize.internal.ParameterizeApiFriendModuleApi")
+            }
+        }
+    }
+}
+
+apiValidation {
+    nonPublicMarkers += "com.benwoodworth.parameterize.ParameterizeApiFriendModuleApi"
+}

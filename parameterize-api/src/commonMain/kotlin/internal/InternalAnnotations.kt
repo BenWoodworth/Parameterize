@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-rootProject.name = "parameterize"
+package com.benwoodworth.parameterize.internal
 
-include(":parameterize-api")
-include(":parameterize-core")
-include(":test-utils")
+@RequiresOptIn(level = RequiresOptIn.Level.ERROR) // KT-50960
+@Target(AnnotationTarget.CONSTRUCTOR, AnnotationTarget.PROPERTY)
+internal annotation class ParameterizeApiFriendModuleApi

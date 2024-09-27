@@ -25,7 +25,7 @@ import kotlin.reflect.KProperty
 import kotlin.test.*
 
 /**
- * Specifies the [parameterize] DSL and its syntax.
+ * Specifies the Parameterize DSL and its syntax.
  *
  * Implements [ParameterizeScope] only so [Parameter] functions are available in tests.
  */
