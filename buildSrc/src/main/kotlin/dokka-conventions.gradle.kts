@@ -26,6 +26,8 @@ tasks.withType<DokkaTask>().configureEach {
         reportUndocumented = true
         failOnWarning = true
 
+        // TODO Suppress friend api annotations?
+
         val releaseVersionRef = version.toString()
             .takeIf { version -> version.matches(Regex("""\d+\.\d+\.\d+""")) }
             ?.let { version -> "v$version" }
