@@ -26,7 +26,7 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
 
-internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
+internal class ParameterizeState(p: HandlerPrompt<Unit>, val configuration: ParameterizeConfiguration) : Handler<Unit> by p {
     /**
      * The parameters created for [parameterize].
      */
@@ -36,25 +36,41 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
     private var skipCount = 0L
     private var failureCount = 0L
     private val recordedFailures = mutableListOf<ParameterizeFailure>()
+    private var decoratorCoroutine: DecoratorCoroutine? = null
 
     val isFirstIteration: Boolean
-        get() = iterationCount == 1L
+        get() = iterationCount == 0L
+
+    val hasNextArgumentCombination get() = parameters.any { !it.isLast }
 
     suspend fun <T> declareParameter(
         arguments: Sequence<T>
     ): ParameterDelegate<T> = use { resume ->
-        // TODO skip calling decorator on first iteration, but call it on the rest
-        //  and also call it for the top-most iteration.
         val iterator = arguments.iterator()
-        if (!iterator.hasNext()) return@use
+        if (!iterator.hasNext()) {
+            afterEach()
+            return@use
+        }
+        var isFirstIteration = true
         while (true) {
             iterationCount++
             val argument = iterator.next()
             val isLast = !iterator.hasNext()
-            val parameter = ParameterState(sequenceOf(argument), isLast)
+            val parameter = ParameterState(argument, isLast)
+            if(isFirstIteration) {
+                isFirstIteration = false
+            } else {
+                beforeEach()
+            }
+            val hasBeenUsed = BooleanArray(parameters.size) {
+                parameters[it].hasBeenUsed
+            }
             parameters.add(parameter)
-            resume(ParameterDelegate(parameter, argument))
+            resume(ParameterDelegate(parameter))
             check(parameters.removeLast() == parameter) { "Unexpected last parameter" }
+            parameters.forEachIndexed { i, parameter ->
+                parameter.hasBeenUsed = hasBeenUsed[i]
+            }
             if (isLast) break
         }
     }
@@ -103,12 +119,25 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>) : Handler<Unit> by p {
             iterationCount,
             skipCount,
             failureCount,
-            completedEarly = parameters.any { !it.isLast },
+            completedEarly = hasNextArgumentCombination,
             recordedFailures,
         )
 
         with(scope) {
             onComplete()
         }
+    }
+
+    internal fun beforeEach() {
+        decoratorCoroutine = DecoratorCoroutine(this, configuration)
+            .also { it.beforeIteration() }
+    }
+
+    internal fun afterEach() {
+        val decoratorCoroutine = checkNotNull(decoratorCoroutine) { "${::decoratorCoroutine.name} was null" }
+
+        decoratorCoroutine.afterIteration()
+
+        this.decoratorCoroutine = null
     }
 }

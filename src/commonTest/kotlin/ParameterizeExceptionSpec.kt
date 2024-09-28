@@ -198,10 +198,11 @@ class ParameterizeExceptionSpec {
             exception.message
         )
     }
+*/
 
     @Test
     fun declaring_parameter_after_iteration_completed() = runTestCC {
-        var declareParameter = {}
+        var declareParameter = suspend {}
 
         parameterize {
             declareParameter = {
@@ -209,13 +210,10 @@ class ParameterizeExceptionSpec {
             }
         }
 
-        val failure = assertFailsWith<ParameterizeException> {
+        val failure = assertFailsWith<IllegalStateException> {
             declareParameter()
         }
-
-        assertEquals("Cannot declare parameter `parameter` after its iteration has completed", failure.message)
     }
-*/
 
     @Test
     fun failing_earlier_than_the_previous_iteration() = runTestCC {

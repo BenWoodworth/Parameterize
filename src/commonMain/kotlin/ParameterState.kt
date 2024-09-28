@@ -20,41 +20,16 @@ import kotlin.reflect.KProperty
 
 /**
  * The parameter state is responsible for managing a parameter in the
- * [parameterize] DSL, maintaining an argument, and lazily loading the next ones
- * in as needed.
+ * [parameterize] DSL and maintaining an argument.
  *
  * When first declared, the parameter [property] it was
- * declared with will be stored, along with a new argument iterator and the
- * first argument from it. The arguments are lazily read in from the iterator as
- * they're needed, using [isLastArgument] as an indicator. The stored iterator
- * will always have a next argument available, and will be set to null when its
- * last argument is read in to release its reference
+ * declared with will be stored, along with the argument.
  *
  */
-internal class ParameterState<T>(argumentIterator: Iterator<T>, val isLast: Boolean = false) {
-    /**
-     * Set up the delegate with the given [arguments].
-     */
-    constructor(arguments: Sequence<T>, isLast: Boolean = false) : this(arguments.iterator(), isLast)
-
-    init {
-        if (!argumentIterator.hasNext()) TODO() // Before changing any state
-    }
-
-    var argument: T = argumentIterator.next()
-        private set
+internal class ParameterState<T>(val argument: T, val isLast: Boolean = false) {
     var property: KProperty<T>? = null
-    private var argumentIterator: Iterator<T>? = argumentIterator.takeIf { it.hasNext() }
 
     var hasBeenUsed: Boolean = false
-        private set
-
-    /**
-     * @throws IllegalStateException if used before the argument has been declared.
-     */
-    val isLastArgument: Boolean
-        get() = argumentIterator == null
-
 
     /**
      * Returns a string representation of the current argument, or a "not declared" message.
@@ -63,18 +38,6 @@ internal class ParameterState<T>(argumentIterator: Iterator<T>, val isLast: Bool
 
     fun useArgument() {
         hasBeenUsed = true
-    }
-
-    /**
-     * Iterates the parameter argument.
-     *
-     * @throws IllegalStateException if the argument has not been declared yet.
-     */
-    fun nextArgument() {
-        val iterator = argumentIterator ?: error("Cannot iterate arguments before parameter has been declared")
-
-        argument = iterator.next()
-        argumentIterator = iterator.takeIf { it.hasNext() }
     }
 
     /**

@@ -274,7 +274,7 @@ class ParameterizeSpec {
         }
     }
 
-/*    @Test
+/*    @Test TODO
     fun should_be_able_to_return_from_an_outer_function_from_within_the_block() = runTestCC {
         parameterize {
             return@should_be_able_to_return_from_an_outer_function_from_within_the_block
@@ -284,7 +284,7 @@ class ParameterizeSpec {
     /**
      * The motivating use case here is decorating a Kotest test group, in which the test declarations suspend.
      */
-/*    @Test
+/*    @Test TODO
     fun should_be_able_to_decorate_a_suspend_block() {
         val coordinates = sequence {
             parameterize {
