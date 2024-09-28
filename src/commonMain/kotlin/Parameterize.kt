@@ -127,10 +127,10 @@ public suspend fun parameterize(
         // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
         // iterator of a later release, and would be major breaking change that's difficult to detect.
         breakEarly {
-            withDecorator(decorator, onFailure = { failure ->
-                val result = handleFailure(onFailure, failure)
+            withDecorator(decorator, block) {
+                val result = handleFailure(onFailure, it.exceptionOrNull() ?: return@withDecorator)
                 if (result.breakEarly) breakEarly()
-            }, block)
+            }
         }
         handleComplete(onComplete)
     }

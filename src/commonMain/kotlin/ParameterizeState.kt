@@ -34,7 +34,7 @@ internal class ParameterizeState {
     private val recordedFailures = mutableListOf<ParameterizeFailure>()
 
     val isFirstIteration: Boolean
-        get() = iterationCount == 0L
+        get() = iterationCount == 1L
 
     val hasNextArgumentCombination get() = parameters.any { !it.isLast }
 
