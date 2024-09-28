@@ -18,15 +18,11 @@ package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
-import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
-import effekt.Handler
-import effekt.HandlerPrompt
-import effekt.use
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
 
-internal class ParameterizeState(p: HandlerPrompt<Unit>, val configuration: ParameterizeConfiguration) : Handler<Unit> by p {
+internal class ParameterizeState {
     /**
      * The parameters created for [parameterize].
      */
@@ -36,48 +32,12 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>, val configuration: Para
     private var skipCount = 0L
     private var failureCount = 0L
     private val recordedFailures = mutableListOf<ParameterizeFailure>()
-    private var decoratorCoroutine: DecoratorCoroutine? = null
 
     val isFirstIteration: Boolean
         get() = iterationCount == 0L
 
     val hasNextArgumentCombination get() = parameters.any { !it.isLast }
 
-    suspend fun <T> declareParameter(
-        arguments: Sequence<T>
-    ): ParameterDelegate<T> = use { resume ->
-        val iterator = arguments.iterator()
-        if (!iterator.hasNext()) {
-            afterEach()
-            return@use
-        }
-        var isFirstIteration = true
-        while (true) {
-            iterationCount++
-            val argument = iterator.next()
-            val isLast = !iterator.hasNext()
-            val parameter = ParameterState(argument, isLast)
-            if(isFirstIteration) {
-                isFirstIteration = false
-            } else {
-                beforeEach()
-            }
-            val hasBeenUsed = BooleanArray(parameters.size) {
-                parameters[it].hasBeenUsed
-            }
-            parameters.add(parameter)
-            resume(ParameterDelegate(parameter))
-            check(parameters.removeLast() == parameter) { "Unexpected last parameter" }
-            parameters.forEachIndexed { i, parameter ->
-                parameter.hasBeenUsed = hasBeenUsed[i]
-            }
-            if (isLast) break
-        }
-    }
-
-    fun handleContinue() {
-        skipCount++
-    }
     /**
      * Get a list of used arguments for reporting a failure.
      */
@@ -89,8 +49,32 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>, val configuration: Para
     @JvmInline
     value class HandleFailureResult(val breakEarly: Boolean)
 
+    fun newIteration() {
+        iterationCount++
+    }
+
+    fun handleContinue() {
+        skipCount++
+    }
+
+    inline fun <T> withParameter(parameter: ParameterState<T>, block: () -> Unit) {
+        parameters.add(parameter)
+        block()
+        check(parameters.removeLast() == parameter) { "Unexpected last parameter" }
+    }
+
+    inline fun preservingHasBeenUsed(block: () -> Unit) {
+        val hasBeenUsed = BooleanArray(parameters.size) {
+            parameters[it].hasBeenUsed
+        }
+        block()
+        parameters.forEachIndexed { index, parameter ->
+            parameter.hasBeenUsed = hasBeenUsed[index]
+        }
+    }
+
     fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable): HandleFailureResult {
-        if(failure is ParameterizeException && failure.parameterizeState === this) throw failure
+        if (failure is ParameterizeException && failure.parameterizeState === this) throw failure
         failureCount++
 
         val scope = OnFailureScope(
@@ -126,18 +110,5 @@ internal class ParameterizeState(p: HandlerPrompt<Unit>, val configuration: Para
         with(scope) {
             onComplete()
         }
-    }
-
-    internal fun beforeEach() {
-        decoratorCoroutine = DecoratorCoroutine(this, configuration)
-            .also { it.beforeIteration() }
-    }
-
-    internal fun afterEach() {
-        val decoratorCoroutine = checkNotNull(decoratorCoroutine) { "${::decoratorCoroutine.name} was null" }
-
-        decoratorCoroutine.afterIteration()
-
-        this.decoratorCoroutine = null
     }
 }

@@ -36,13 +36,11 @@ class ParameterizeSpec {
     ) = runTestCC {
         val iterations = mutableListOf<T?>()
 
-        parameterize {
-            try {
-                iterations += block()
-            } catch (caught: Throwable) {
-                iterations += null
-                throw caught
-            }
+        parameterize(decorator = {
+            iterations += null
+            it()
+        }) {
+            block().also { iterations[iterations.lastIndex] = it }
         }
 
         assertEquals(expectedIterations.toList(), iterations, "Incorrect iterations")
@@ -191,7 +189,7 @@ class ParameterizeSpec {
 
     @Test
     fun parameter_with_no_arguments_should_finish_iteration_early() = testParameterize(
-        listOf("123", "124", "125", "134", "135", "145", "234", "235", "245", "345")
+        listOf("123", "124", "125", "134", "135", "145", null, "234", "235", "245", null, "345", null, null, null)
     ) {
         // increasing digits
         val digit1 by parameter(1..5)
@@ -202,13 +200,11 @@ class ParameterizeSpec {
     }
 
     @Test
-    @Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
     fun unused_parameter_with_no_arguments_should_finish_iteration_early() = testParameterize(
-        listOf()
+        listOf(null)
     ) {
         val unused by parameterOf<Nothing>()
-
-        "finished"
+        unused
     }
 
     @Test
