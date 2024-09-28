@@ -29,15 +29,6 @@ import kotlin.test.assertSame
  */
 class ParameterizeScopeSpec {
     /**
-     * A unique iterator that the tests can use to verify that a constructed [Parameter] has the correct
-     * [arguments][Parameter.arguments].
-     */
-    private data object ArgumentIterator : Iterator<Nothing> {
-        override fun hasNext(): Boolean = false
-        override fun next(): Nothing = throw NoSuchElementException()
-    }
-
-    /**
      * The lazy `parameter {}` functions should have the same behavior, so this provides an abstraction that a test can
      * use to specify for all the lazy overloads parametrically.
      */
