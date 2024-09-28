@@ -16,7 +16,6 @@
 
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.RestrictsSuspension
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED

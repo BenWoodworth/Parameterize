@@ -86,18 +86,12 @@ import kotlin.reflect.KProperty
 public suspend fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
     block: suspend ParameterizeScope.() -> Unit
-): Unit = with(ParameterizeState()) {
-    // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
-    // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
-    // iterator of a later release, and would be major breaking change that's difficult to detect.
-    breakEarly {
-        withDecorator(configuration.decorator, onFailure = { failure ->
-            val result = handleFailure(configuration.onFailure, failure)
-            if (result.breakEarly) breakEarly()
-        }, block)
-    }
-    handleComplete(configuration.onComplete)
-}
+): Unit = parameterize(
+    decorator = configuration.decorator,
+    onFailure = configuration.onFailure,
+    onComplete = configuration.onComplete,
+    block = block
+)
 
 private fun interface Breakable {
     suspend fun breakEarly(): Nothing
@@ -118,10 +112,6 @@ private suspend inline fun breakEarly(crossinline block: suspend Breakable.() ->
  *
  * @see parameterize
  */
-@Suppress(
-    // False positive: onComplete is called in place exactly once through the configuration by the end parameterize call
-    "LEAKED_IN_PLACE_LAMBDA", "WRONG_INVOCATION_KIND"
-)
 public suspend fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
     decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = configuration.decorator,
@@ -132,14 +122,18 @@ public suspend fun parameterize(
     contract {
         callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
     }
-
-    val newConfiguration = ParameterizeConfiguration(configuration) {
-        this.decorator = decorator
-        this.onFailure = onFailure
-        this.onComplete = onComplete
+    with(ParameterizeState()) {
+        // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
+        // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
+        // iterator of a later release, and would be major breaking change that's difficult to detect.
+        breakEarly {
+            withDecorator(decorator, onFailure = { failure ->
+                val result = handleFailure(onFailure, failure)
+                if (result.breakEarly) breakEarly()
+            }, block)
+        }
+        handleComplete(onComplete)
     }
-
-    parameterize(newConfiguration, block)
 }
 
 /** @see parameterize */
@@ -164,6 +158,7 @@ public class ParameterizeScope @PublishedApi internal constructor(
         thisRef: Any?,
         property: KProperty<*>
     ): ParameterDelegate<T> {
+        @Suppress("UNCHECKED_CAST")
         parameterState.property = property as KProperty<Nothing>
         return this
     }
