@@ -19,6 +19,7 @@ internal class ParameterizeDecorator(
     private var decoratorCoroutine: DecoratorCoroutine? = null
 
     internal fun beforeEach() {
+        parameterizeState.newIteration()
         check(decoratorCoroutine == null) { "${::decoratorCoroutine.name} was improperly finished" }
         decoratorCoroutine = DecoratorCoroutine(parameterizeState, decorator)
             .also { it.beforeIteration() }
@@ -36,7 +37,6 @@ internal class ParameterizeDecorator(
             afterEach()
             return@use
         }) { isFirst, isLast, argument ->
-            parameterizeState.newIteration()
             if (!isFirst) beforeEach()
 
             val parameter = ParameterState(argument, isLast)
@@ -70,16 +70,16 @@ private inline fun <T> Sequence<T>.forEachWithIterations(
     } while (!isLastIteration)
 }
 
-internal suspend fun ParameterizeState.withDecorator(
+internal suspend fun <T> ParameterizeState.withDecorator(
     decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit,
-    onFailure: suspend (Throwable) -> Unit,
-    block: suspend ParameterizeScope.() -> Unit,
+    block: suspend ParameterizeScope.() -> T,
+    action: suspend (Result<T>) -> Unit
 ): Unit = handle {
     val decorator = ParameterizeDecorator(this@withDecorator, decorator, this)
     decorator.beforeEach()
     val result = runCatching { block(ParameterizeScope(decorator)) }
     decorator.afterEach()
-    result.onFailure { onFailure(it) }
+    action(result)
 }
 
 /**

@@ -118,6 +118,22 @@ class ParameterizeConfigurationSpec_onComplete {
     }
 
     @Test
+    fun iteration_count_should_be_correct_with_two_params() = runTestCC {
+        var expectedIterationCount = 0L
+
+        testParameterize(
+            onComplete = {
+                assertEquals(expectedIterationCount, iterationCount)
+            }
+        ) {
+            val iteration by parameter(0..100)
+            val iteration2 by parameter(0..10)
+
+            expectedIterationCount++
+        }
+    }
+
+    @Test
     fun iteration_count_should_be_correct_with_empty() = runTestCC {
         var expectedIterationCount = 0L
 
