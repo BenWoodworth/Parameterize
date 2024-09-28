@@ -22,7 +22,6 @@ package com.benwoodworth.parameterize
 import com.benwoodworth.parameterize.ParameterizeConfiguration.DecoratorScope
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
-import effekt.HandlerPrompt
 import effekt.discardWithFast
 import effekt.handle
 import kotlin.contracts.InvocationKind
@@ -87,30 +86,24 @@ import kotlin.reflect.KProperty
 public suspend fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
     block: suspend ParameterizeScope.() -> Unit
-): Unit = with(ParameterizeScope(ParameterizeState(HandlerPrompt(), configuration))) {
+): Unit = with(ParameterizeState()) {
     // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
     // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
     // iterator of a later release, and would be major breaking change that's difficult to detect.
     breakEarly {
-        parameterizeState.handle {
-            parameterizeState.beforeEach()
-            val result = runCatching { block() }
-            parameterizeState.afterEach()
-
-            result.onFailure { failure ->
-                val result = parameterizeState.handleFailure(configuration.onFailure, failure)
-                if (result.breakEarly) breakEarly()
-            }
-        }
+        withDecorator(configuration.decorator, onFailure = { failure ->
+            val result = handleFailure(configuration.onFailure, failure)
+            if (result.breakEarly) breakEarly()
+        }, block)
     }
-    parameterizeState.handleComplete(configuration.onComplete)
+    handleComplete(configuration.onComplete)
 }
 
-internal fun interface Breakable {
+private fun interface Breakable {
     suspend fun breakEarly(): Nothing
 }
 
-internal suspend inline fun breakEarly(crossinline block: suspend Breakable.() -> Unit) = handle {
+private suspend inline fun breakEarly(crossinline block: suspend Breakable.() -> Unit) = handle {
     block {
         discardWithFast(Result.success(Unit))
     }
@@ -151,9 +144,10 @@ public suspend fun parameterize(
 
 /** @see parameterize */
 @ParameterizeDsl
-public class ParameterizeScope internal constructor(
-    internal val parameterizeState: ParameterizeState,
+public class ParameterizeScope @PublishedApi internal constructor(
+    internal val parameterizeIterator: ParameterizeDecorator,
 ) {
+    internal val parameterizeState get() = parameterizeIterator.parameterizeState
 
     /** @suppress */
     override fun toString(): String =
@@ -208,7 +202,7 @@ public class ParameterizeScope internal constructor(
 @Suppress("UnusedReceiverParameter") // Should only be accessible within parameterize scopes
 public suspend fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): ParameterizeScope.ParameterDelegate<T> =
     @OptIn(ExperimentalParameterizeApi::class)
-    parameterizeState.declareParameter(arguments)
+    parameterizeIterator.declareParameter(arguments)
 
 /**
  * Declare a parameter with the given [arguments].
