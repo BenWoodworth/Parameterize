@@ -16,6 +16,13 @@
 
 package com.benwoodworth.parameterize
 
+import effekt.discardWithFast
+import effekt.handle
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
+import runCC
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -270,24 +277,34 @@ class ParameterizeSpec {
         }
     }
 
-/*    @Test TODO
-    fun should_be_able_to_return_from_an_outer_function_from_within_the_block() = runTestCC {
-        parameterize {
-            return@should_be_able_to_return_from_an_outer_function_from_within_the_block
+    @Test
+    fun should_be_able_to_discard_to_an_outer_function_from_within_the_block() = runTestCC {
+        handle {
+            parameterize {
+                discardWithFast(Result.success(Unit))
+            }
         }
-    }*/
+    }
 
     /**
      * The motivating use case here is decorating a Kotest test group, in which the test declarations suspend.
      */
-/*    @Test TODO
-    fun should_be_able_to_decorate_a_suspend_block() {
-        val coordinates = sequence {
-            parameterize {
-                val letter by parameter('a'..'c')
-                val number by parameter(1..3)
+    @Test
+    fun should_be_able_to_decorate_a_suspend_block() = runTest {
+        // This works as well with a normal flow, but this could
+        // change in future versions of kontinuity (because
+        // currently, we wrap the `coroutineContext` to add
+        // extra data, but that data could simply be added to the context.
+        // if we do that though, `flow` complains that the context,
+        // and hence the coroutine, changed)
+        val coordinates = channelFlow {
+            runCC {
+                parameterize {
+                    val letter by parameter('a'..'c')
+                    val number by parameter(1..3)
 
-                yield("$letter$number")
+                    send("$letter$number")
+                }
             }
         }
 
@@ -295,5 +312,5 @@ class ParameterizeSpec {
             listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"),
             coordinates.toList()
         )
-    }*/
+    }
 }
