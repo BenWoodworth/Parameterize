@@ -87,21 +87,33 @@ import kotlin.reflect.KProperty
 public suspend fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
     block: suspend ParameterizeScope.() -> Unit
-): Unit = with(ParameterizeScope(ParameterizeState(HandlerPrompt()))) {
+): Unit = with(ParameterizeScope(ParameterizeState(HandlerPrompt(), configuration))) {
     // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
     // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
     // iterator of a later release, and would be major breaking change that's difficult to detect.
-    handle breakEarly@{
+    breakEarly {
         parameterizeState.handle {
-            try {
-                block()
-            } catch (failure: Throwable) {
+            parameterizeState.beforeEach()
+            val result = runCatching { block() }
+            parameterizeState.afterEach()
+
+            result.onFailure { failure ->
                 val result = parameterizeState.handleFailure(configuration.onFailure, failure)
-                if (result.breakEarly) this@breakEarly.discardWithFast(Result.success(Unit))
+                if (result.breakEarly) breakEarly()
             }
         }
     }
     parameterizeState.handleComplete(configuration.onComplete)
+}
+
+internal fun interface Breakable {
+    suspend fun breakEarly(): Nothing
+}
+
+internal suspend inline fun breakEarly(crossinline block: suspend Breakable.() -> Unit) = handle {
+    block {
+        discardWithFast(Result.success(Unit))
+    }
 }
 
 /**
@@ -165,27 +177,13 @@ public class ParameterizeScope internal constructor(
     /** @suppress */
     public operator fun <T> ParameterDelegate<T>.getValue(thisRef: Any?, property: KProperty<*>): T {
         parameterState.useArgument()
-        return argument
+        return parameterState.argument
     }
 
-
-    /**
-     * @constructor
-     * **Experimental:** Prefer using the scope-limited [parameter] function, if possible.
-     * The constructor will be made `@PublishedApi internal` once
-     * [context parameters](https://github.com/Kotlin/KEEP/issues/367) are introduced to the language.
-     *
-     * @suppress
-     */
-    @JvmInline
-    public value class Parameter<out T> @ExperimentalParameterizeApi constructor(
-        public val arguments: Sequence<T>
-    )
-
     /** @suppress */
-    public class ParameterDelegate<out T> internal constructor(
+    @JvmInline
+    public value class ParameterDelegate<out T> internal constructor(
         internal val parameterState: ParameterState<out T>,
-        internal val argument: T
     ) {
         /**
          * Returns a string representation of the current argument.
@@ -196,7 +194,7 @@ public class ParameterizeScope internal constructor(
          * ```
          */
         override fun toString(): String =
-            argument.toString()
+            parameterState.argument.toString()
     }
 }
 

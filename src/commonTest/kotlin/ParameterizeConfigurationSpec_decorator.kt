@@ -257,22 +257,4 @@ class ParameterizeConfigurationSpec_decorator {
             "message"
         )
     }
-
-    @Test
-    fun declaring_parameter_after_iteration_function_should_fail() = runTestCC {
-        assertFailsWith<ParameterizeException> {
-            lateinit var declareParameter: suspend () -> Unit
-
-            testParameterize(
-                decorator = { iteration ->
-                    iteration()
-                    declareParameter()
-                }
-            ) {
-                declareParameter = {
-                    val parameter by parameterOf(Unit)
-                }
-            }
-        }
-    }
 }
