@@ -210,6 +210,7 @@ class ParameterizeExceptionSpec {
             }
         }
 
+        // TODO intercept missing prompt exception and change it to a ParameterizeException
         val failure = assertFailsWith<IllegalStateException> {
             declareParameter()
         }
