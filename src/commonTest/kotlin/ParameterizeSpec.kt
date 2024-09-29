@@ -19,7 +19,6 @@ package com.benwoodworth.parameterize
 import effekt.discardWithFast
 import effekt.handle
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import runCC
@@ -43,9 +42,9 @@ class ParameterizeSpec {
     ) = runTestCC {
         val iterations = mutableListOf<T?>()
 
-        parameterize(decorator = {
+        parameterize(decorator = { iteration ->
             iterations += null
-            it()
+            iteration()
         }) {
             block().also { iterations[iterations.lastIndex] = it }
         }
