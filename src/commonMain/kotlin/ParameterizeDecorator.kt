@@ -34,6 +34,7 @@ internal class ParameterizeDecorator(
         arguments: Sequence<T>
     ): ParameterDelegate<T> = use { resume ->
         arguments.forEachWithIterations(onEmpty = {
+            parameterizeState.handleContinue()
             afterEach()
             return@use
         }) { isFirst, isLast, argument ->
