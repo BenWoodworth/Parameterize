@@ -21,9 +21,9 @@ import kotlin.test.*
 
 @Suppress("ClassName")
 class ParameterizeConfigurationSpec_onFailure {
-    private inline fun testParameterize(
+    private suspend inline fun testParameterize(
         noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit,
-        block: ParameterizeScope.() -> Unit
+        noinline block: suspend ParameterizeScope.() -> Unit
     ): Unit =
         parameterize(
             onFailure = onFailure,
@@ -32,7 +32,7 @@ class ParameterizeConfigurationSpec_onFailure {
         )
 
     @Test
-    fun should_be_invoked_once_per_failure() {
+    fun should_be_invoked_once_per_failure() = runTestCC {
         val failureIterations = listOf(1, 3, 4, 7, 9, 10)
 
         var currentIteration = -1
@@ -55,7 +55,7 @@ class ParameterizeConfigurationSpec_onFailure {
     }
 
     @Test
-    fun should_be_invoked_with_the_failure() {
+    fun should_be_invoked_with_the_failure() = runTestCC {
         val failures = List(10) { Throwable(it.toString()) }
 
         val invokedWithFailures = mutableListOf<Throwable>()
@@ -74,7 +74,7 @@ class ParameterizeConfigurationSpec_onFailure {
     }
 
     @Test
-    fun should_not_continue_if_should_break_is_true() {
+    fun should_not_continue_if_should_break_is_true() = runTestCC {
         val failureIterations = listOf(1, 3, 4, 7)
         val breakIteration = failureIterations.last()
 
@@ -97,7 +97,7 @@ class ParameterizeConfigurationSpec_onFailure {
     }
 
     @Test
-    fun failures_within_on_failure_should_propagate_out_uncaught() {
+    fun failures_within_on_failure_should_propagate_out_uncaught() = runTestCC {
         class FailureWithinOnFailure : Throwable()
 
         assertFailsWith<FailureWithinOnFailure> {
@@ -112,7 +112,7 @@ class ParameterizeConfigurationSpec_onFailure {
     }
 
     @Test
-    fun iteration_count_should_be_correct() {
+    fun iteration_count_should_be_correct() = runTestCC {
         var expectedIterationCount = 0L
 
         testParameterize(
@@ -128,7 +128,7 @@ class ParameterizeConfigurationSpec_onFailure {
     }
 
     @Test
-    fun failure_count_should_be_correct() {
+    fun failure_count_should_be_correct() = runTestCC {
         var expectedFailureCount = 0L
 
         testParameterize(
@@ -145,100 +145,135 @@ class ParameterizeConfigurationSpec_onFailure {
         }
     }
 
-    @Test
-    fun failure_arguments_should_be_those_from_the_last_iteration() {
-        val lastParameterArguments = mutableListOf<Pair<String, *>>()
+    data class FailureParameterArgumentsException(val parameterArguments: List<Pair<String, *>>): Exception()
 
+    @Test
+    fun failure_arguments_should_be_those_from_the_last_iteration() = runTestCC {
         testParameterize(
             onFailure = {
+                assertIs<FailureParameterArgumentsException>(it)
                 val actualParameterArguments = arguments
                     .map { (parameter, argument) -> parameter.name to argument }
 
-                assertEquals(lastParameterArguments, actualParameterArguments)
+                assertEquals(it.parameterArguments, actualParameterArguments)
             }
         ) {
-            lastParameterArguments.clear()
-
             val iteration by parameter(0..10)
-            lastParameterArguments += "iteration" to iteration
+            val iterationPair = "iteration" to iteration
 
-            if (iteration % 2 == 0) {
+            val evenIterationPair = if (iteration % 2 == 0) {
                 val evenIteration by parameterOf(iteration)
-                lastParameterArguments += "evenIteration" to evenIteration
-            }
+                "evenIteration" to evenIteration
+            } else null
 
-            if (iteration % 3 == 0) {
+            val threevenIterationPair = if (iteration % 3 == 0) {
                 val threevenIteration by parameterOf(iteration)
-                lastParameterArguments += "threevenIteration" to threevenIteration
+                "threevenIteration" to threevenIteration
+            } else null
+
+            throw FailureParameterArgumentsException(listOfNotNull(iterationPair, evenIterationPair, threevenIterationPair))
+        }
+    }
+
+    @Test
+    fun failure_arguments_should_only_include_used_parameters() = runTestCC {
+        testParameterize(
+            onFailure = {
+                val actualUsedParameters = arguments.map { it.parameter.name }
+                assertEquals(listOf("used1", "used2"), actualUsedParameters)
+            }
+        ) {
+            val used1 by parameterOf(Unit)
+            val unused1 by parameterOf(Unit)
+            val used2 by parameterOf(Unit)
+            val unused2 by parameterOf(Unit)
+
+            useParameter(used1)
+            useParameter(used2)
+
+            fail()
+        }
+    }
+
+    @Test
+    fun failure_arguments_should_include_lazily_used_parameters_that_were_unused_this_iteration() = runTestCC {
+        testParameterize(
+            onFailure = {
+                val actualUsedParameters = arguments.map { it.parameter.name }
+                assertContains(actualUsedParameters, "letter")
+            }
+        ) {
+            val letter by parameterOf('a', 'b')
+
+            var letterUsedThisIteration = false
+
+            val letterNumber by parameter {
+                letterUsedThisIteration = true
+                (1..2).map { "$letter$it" }
             }
 
-            fail()
+            // Letter contributes to the failure, even though it wasn't used this iteration
+            if (letterNumber == "b2") {
+                check(!letterUsedThisIteration) { "Letter was actually used this iteration, so test is invalid" }
+                fail()
+            }
         }
     }
 
     @Test
-    fun failure_arguments_should_only_include_used_parameters() = testParameterize(
-        onFailure = {
-            val actualUsedParameters = arguments.map { it.parameter.name }
-            assertEquals(listOf("used1", "used2"), actualUsedParameters)
-        }
-    ) {
-        val used1 by parameterOf(Unit)
-        val unused1 by parameterOf(Unit)
-        val used2 by parameterOf(Unit)
-        val unused2 by parameterOf(Unit)
+    fun failure_arguments_should_include_captured_parameters_from_previous_iterations() = runTestCC {
+        var isFirstIteration = true
+        testParameterize(
+            onFailure = {
+                val parameters = arguments.map { it.parameter.name }
 
-        useParameter(used1)
-        useParameter(used2)
+                assertTrue(
+                    "neverUsedDuringTheCurrentIteration" !in parameters == isFirstIteration,
+                    "neverUsedDuringTheCurrentIteration !in $parameters != $isFirstIteration"
+                )
+                isFirstIteration = false
+            }
+        ) {
+            val neverUsedDuringTheCurrentIteration by parameterOf(Unit)
 
-        fail()
-    }
-
-    @Test
-    fun failure_arguments_should_include_lazily_used_parameters_that_were_unused_this_iteration() = testParameterize(
-        onFailure = {
-            val actualUsedParameters = arguments.map { it.parameter.name }
-            assertContains(actualUsedParameters, "letter")
-        }
-    ) {
-        val letter by parameterOf('a', 'b')
-
-        var letterUsedThisIteration = false
-
-        val letterNumber by parameter {
-            letterUsedThisIteration = true
-            (1..2).map { "$letter$it" }
-        }
-
-        // Letter contributes to the failure, even though it wasn't used this iteration
-        if (letterNumber == "b2") {
-            check(!letterUsedThisIteration) { "Letter was actually used this iteration, so test is invalid" }
-            fail()
-        }
-    }
-
-    @Test
-    fun failure_arguments_should_not_include_captured_parameters_from_previous_iterations() = testParameterize(
-        onFailure = {
-            val parameters = arguments.map { it.parameter.name }
-
-            assertFalse(
-                "neverUsedDuringTheCurrentIteration" in parameters,
-                "neverUsedDuringTheCurrentIteration in $parameters"
+            @Suppress("UNUSED_EXPRESSION")
+            val usePreviousIterationParameter by parameterOf(
+                { }, // Don't use it the first iteration
+                { neverUsedDuringTheCurrentIteration }
             )
+
+            // On the 2nd iteration, use the parameter captured from the 1st iteration
+            usePreviousIterationParameter()
+
+            fail()
         }
-    ) {
-        val neverUsedDuringTheCurrentIteration by parameterOf(Unit)
+    }
 
-        @Suppress("UNUSED_EXPRESSION")
-        val usePreviousIterationParameter by parameterOf(
-            { }, // Don't use it the first iteration
-            { neverUsedDuringTheCurrentIteration }
-        )
+    @Test
+    fun failure_arguments_should_not_include_parameters_only_used_in_previous_iterations() = runTestCC {
+        var isFirstIteration = true
+        testParameterize(
+            onFailure = {
+                val parameters = arguments.map { it.parameter.name }
 
-        // On the 2nd iteration, use the parameter captured from the 1st iteration
-        usePreviousIterationParameter()
+                assertTrue(
+                    "neverUsedDuringTheCurrentIteration" in parameters == isFirstIteration,
+                    "neverUsedDuringTheCurrentIteration in $parameters != $isFirstIteration"
+                )
+                isFirstIteration = false
+            }
+        ) {
+            val neverUsedDuringTheCurrentIteration by parameterOf(Unit)
 
-        fail()
+            @Suppress("UNUSED_EXPRESSION")
+            val useParameter by parameterOf(
+                { neverUsedDuringTheCurrentIteration },
+                { }, // Don't use it the second iteration
+            )
+
+            useParameter()
+
+            fail()
+        }
     }
 }

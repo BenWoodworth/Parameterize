@@ -17,7 +17,6 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
-import com.benwoodworth.parameterize.ParameterizeConfigurationSpec.ParameterizeWithOptionDefault
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 import kotlin.test.*
@@ -60,7 +59,7 @@ class ParameterizeConfigurationSpec {
         val property: KProperty1<ParameterizeConfiguration, T>,
         val builderProperty: KMutableProperty1<Builder, T>,
         val distinctValue: T,
-        val parameterizeWithConfigurationAndOptionPassed: (
+        val parameterizeWithConfigurationAndOptionPassed: suspend (
             configuration: ParameterizeConfiguration, block: ParameterizeScope.() -> Unit
         ) -> Unit
     ) {
@@ -94,7 +93,7 @@ class ParameterizeConfigurationSpec {
 
 
     @Test
-    fun builder_should_apply_options_correctly() = testAll(configurationOptions) { option ->
+    fun builder_should_apply_options_correctly() = testAllCC(configurationOptions) { option ->
         val configuration = ParameterizeConfiguration {
             option.setDistinctValue(this)
 
@@ -105,7 +104,7 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun builder_should_copy_from_another_configuration_correctly() = testAll(configurationOptions) { option ->
+    fun builder_should_copy_from_another_configuration_correctly() = testAllCC(configurationOptions) { option ->
         val copyFrom = ParameterizeConfiguration {
             option.setDistinctValue(this)
         }
@@ -116,7 +115,7 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun string_representation_should_be_class_name_with_options_listed() = testAll(configurationOptions) { testOption ->
+    fun string_representation_should_be_class_name_with_options_listed() = testAllCC(configurationOptions) { testOption ->
         val configuration = ParameterizeConfiguration {
             testOption.setDistinctValue(this)
         }
@@ -144,7 +143,7 @@ class ParameterizeConfigurationSpec {
      * straightforward.
      */
     @Test
-    fun options_should_be_executed_in_the_correct_order() {
+    fun options_should_be_executed_in_the_correct_order() = runTestCC {
         val order = mutableListOf<String>()
 
         // Non-builder constructor so all options must be specified
@@ -175,10 +174,10 @@ class ParameterizeConfigurationSpec {
     }
 
     private fun interface ConfiguredParameterize {
-        fun configuredParameterize(configure: Builder.() -> Unit, block: ParameterizeScope.() -> Unit)
+        suspend fun configuredParameterize(configure: Builder.() -> Unit, block: ParameterizeScope.() -> Unit)
     }
 
-    private fun testConfiguredParameterize(test: ConfiguredParameterize.() -> Unit) = testAll(
+    private fun testConfiguredParameterize(test: suspend ConfiguredParameterize.() -> Unit) = testAllCC(
         "configuration-only overload" to {
             test { configure, block ->
                 val configuration = ParameterizeConfiguration { configure() }
@@ -203,7 +202,7 @@ class ParameterizeConfigurationSpec {
         // not possible to resolve to it without passing at least one of the options. So instead, add multiple cases
         // such that each option will eventually have a case where its default argument is used.
         // (It is possible to achieve with reflection using `KFunction.callBy()`, but only on the JVM at the moment)
-        *configurationOptions.map<_, Pair<String, TestAllScope.() -> Unit>> { (_, option) ->
+        *configurationOptions.map<_, Pair<String, suspend TestAllScope.() -> Unit>> { (_, option) ->
             "options overload with default arguments taken from the `configuration` (except `$option`)" to {
                 test { configure, block ->
                     val configuration = ParameterizeConfiguration { configure() }
@@ -211,11 +210,11 @@ class ParameterizeConfigurationSpec {
                 }
             }
 
-        }.toTypedArray<Pair<String, TestAllScope.() -> Unit>>()
+        }.toTypedArray<Pair<String, suspend TestAllScope.() -> Unit>>()
     )
 
     private fun interface ParameterizeWithOptionDefault {
-        fun parameterizeWithOptionDefault(block: ParameterizeScope.() -> Unit)
+        suspend fun parameterizeWithOptionDefault(block: suspend ParameterizeScope.() -> Unit)
     }
 
     /**
@@ -233,12 +232,12 @@ class ParameterizeConfigurationSpec {
      */
     private fun testParameterizeWithOptionDefault(
         configure: Builder.() -> Unit,
-        parameterizeWithDifferentOptionPassed: (
+        parameterizeWithDifferentOptionPassed: suspend (
             configuration: ParameterizeConfiguration,
-            block: ParameterizeScope.() -> Unit
+            block: suspend ParameterizeScope.() -> Unit
         ) -> Unit,
-        test: ParameterizeWithOptionDefault.() -> Unit
-    ) = testAll(
+        test: suspend ParameterizeWithOptionDefault.() -> Unit
+    ) = testAllCC(
         "with default from builder" to {
             val configuration = ParameterizeConfiguration { configure() }
 
@@ -342,7 +341,7 @@ class ParameterizeConfigurationSpec {
     }
 
     @Test
-    fun on_complete_should_be_marked_as_being_called_in_place_exactly_once() {
+    fun on_complete_should_be_marked_as_being_called_in_place_exactly_once() = runTestCC {
         // Must be assigned exactly once
         val lateAssignedValue: Any
 

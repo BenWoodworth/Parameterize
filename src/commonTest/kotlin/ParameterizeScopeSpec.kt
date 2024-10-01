@@ -16,68 +16,37 @@
 
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.ParameterizeScope.Parameter
 import com.benwoodworth.parameterize.ParameterizeScope.ParameterDelegate
 import com.benwoodworth.parameterize.ParameterizeScopeSpec.LazyParameterFunction.LazyArguments
 import kotlin.properties.PropertyDelegateProvider
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 /**
  * Specifies the [parameterize] DSL and its syntax.
  */
 class ParameterizeScopeSpec {
     /**
-     * A unique iterator that the tests can use to verify that a constructed [Parameter] has the correct
-     * [arguments][Parameter.arguments].
-     */
-    private data object ArgumentIterator : Iterator<Nothing> {
-        override fun hasNext(): Boolean = false
-        override fun next(): Nothing = throw NoSuchElementException()
-    }
-
-    @Test
-    fun parameter_from_sequence_should_be_constructed_with_the_same_arguments_instance() = parameterize {
-        val sequence = sequenceOf<Nothing>()
-        val parameter = parameter(sequence)
-
-        assertSame(sequence, parameter.arguments)
-    }
-
-    @Test
-    fun parameter_from_iterable_should_have_the_correct_arguments() = parameterize {
-        val parameter = parameter(Iterable { ArgumentIterator })
-
-        assertSame(ArgumentIterator, parameter.arguments.iterator())
-    }
-
-    @Test
-    fun parameter_of_listed_arguments_should_have_the_correct_arguments() = parameterize {
-        data class UniqueArgument(val argument: String)
-
-        val listedArguments = listOf(
-            UniqueArgument("A"),
-            UniqueArgument("B"),
-            UniqueArgument("C")
-        )
-
-        val parameter = parameterOf(*listedArguments.toTypedArray())
-
-        assertContentEquals(listedArguments.asSequence(), parameter.arguments)
-    }
-
-    /**
      * The lazy `parameter {}` functions should have the same behavior, so this provides an abstraction that a test can
      * use to specify for all the lazy overloads parametrically.
      */
     private interface LazyParameterFunction {
-        operator fun <T> invoke(scope: ParameterizeScope, lazyArguments: () -> LazyArguments<T>): Parameter<T>
+        suspend operator fun <T> invoke(
+            scope: ParameterizeScope,
+            lazyArguments: () -> LazyArguments<T>
+        ): ParameterDelegate<T>
 
         class LazyArguments<T>(val createIterator: () -> Iterator<T>)
     }
 
     private val lazyParameterFunctions = listOf(
         "from sequence" to object : LazyParameterFunction {
-            override fun <T> invoke(scope: ParameterizeScope, lazyArguments: () -> LazyArguments<T>): Parameter<T> =
+            override suspend fun <T> invoke(
+                scope: ParameterizeScope,
+                lazyArguments: () -> LazyArguments<T>
+            ): ParameterDelegate<T> =
                 with(scope) {
                     parameter {
                         val arguments = lazyArguments()
@@ -86,7 +55,10 @@ class ParameterizeScopeSpec {
                 }
         },
         "from iterable" to object : LazyParameterFunction {
-            override fun <T> invoke(scope: ParameterizeScope, lazyArguments: () -> LazyArguments<T>): Parameter<T> =
+            override suspend fun <T> invoke(
+                scope: ParameterizeScope,
+                lazyArguments: () -> LazyArguments<T>
+            ): ParameterDelegate<T> =
                 with(scope) {
                     parameter {
                         val arguments = lazyArguments()
@@ -97,69 +69,65 @@ class ParameterizeScopeSpec {
     )
 
     @Test
-    fun parameter_from_lazy_arguments_should_have_the_correct_arguments() = parameterize {
+    fun parameter_from_lazy_arguments_should_be_computed_before_delegation() = runTestCC {
         testAll(lazyParameterFunctions) { lazyParameterFunction ->
-            val lazyParameter = lazyParameterFunction(this@parameterize) {
-                LazyArguments { ArgumentIterator }
+            assertFailsWith<IllegalStateException>("computed") {
+                parameterize {
+                    lazyParameterFunction<Nothing>(this@parameterize) { throw IllegalStateException("computed") }
+                }
             }
-
-            assertSame(ArgumentIterator, lazyParameter.arguments.iterator())
         }
     }
 
     @Test
-    fun parameter_from_lazy_arguments_should_not_be_computed_before_declaring() = parameterize {
+    fun parameter_from_lazy_argument_iterable_should_only_be_computed_once() = runTestCC {
         testAll(lazyParameterFunctions) { lazyParameterFunction ->
-            /*val undeclared by*/ lazyParameterFunction<Nothing>(this@parameterize) { fail("computed") }
-        }
-    }
-
-    @Test
-    fun parameter_from_lazy_argument_iterable_should_only_be_computed_once() = parameterize {
-        testAll(lazyParameterFunctions) { lazyParameterFunction ->
+            var currentIteration = 0
             var evaluationCount = 0
+            parameterize {
+                val lazyParameter by lazyParameterFunction(this@parameterize) {
+                    evaluationCount++
+                    LazyArguments { (1..10).iterator() }
+                }
 
-            val lazyParameter = lazyParameterFunction(this@parameterize) {
-                evaluationCount++
-                LazyArguments { (1..10).iterator() }
+                assertEquals(currentIteration + 1, lazyParameter, "Iteration #$currentIteration")
+
+                assertEquals(1, evaluationCount)
+                currentIteration++
             }
-
-            repeat(5) { i ->
-                val arguments = lazyParameter.arguments.toList()
-                assertEquals((1..10).toList(), arguments, "Iteration #$i")
-            }
-
-            assertEquals(1, evaluationCount)
         }
     }
 
     @Test
-    fun string_representation_should_show_used_parameter_arguments_in_declaration_order() = parameterize {
-        val a by parameterOf(1)
-        val unused1 by parameterOf(Unit)
-        val b by parameterOf(2)
-        val unused2 by parameterOf(Unit)
-        val c by parameterOf(3)
+    fun string_representation_should_show_used_parameter_arguments_in_declaration_order() = runTestCC {
+        parameterize {
+            val a by parameterOf(1)
+            val unused1 by parameterOf(Unit)
+            val b by parameterOf(2)
+            val unused2 by parameterOf(Unit)
+            val c by parameterOf(3)
 
-        // Used in a different order
-        useParameter(c)
-        useParameter(b)
-        useParameter(a)
+            // Used in a different order
+            useParameter(c)
+            useParameter(b)
+            useParameter(a)
 
-        assertEquals("${ParameterizeScope::class.simpleName}(a = $a, b = $b, c = $c)", this.toString())
+            assertEquals("${ParameterizeScope::class.simpleName}(a = $a, b = $b, c = $c)", this.toString())
+        }
     }
 
     @Test
-    fun parameter_delegate_string_representation_when_declared_should_equal_that_of_the_current_argument() =
+    fun parameter_delegate_string_representation_when_declared_should_equal_that_of_the_current_argument() = runTestCC {
         parameterize {
-            lateinit var delegate: ParameterDelegate<String>
-
+            var delegate: ParameterDelegate<String>? = null
+            val argument = parameterOf("argument")
             val parameter by PropertyDelegateProvider { thisRef: Nothing?, property ->
-                parameterOf("argument")
+                argument
                     .provideDelegate(thisRef, property)
                     .also { delegate = it } // intercept delegate
             }
 
-            assertSame(parameter, delegate.toString())
+            assertSame(parameter, delegate!!.toString())
         }
+    }
 }

@@ -16,6 +16,12 @@
 
 package com.benwoodworth.parameterize
 
+import effekt.discardWithFast
+import effekt.handle
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runTest
+import runCC
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -32,17 +38,15 @@ class ParameterizeSpec {
      */
     private fun <T : Any> testParameterize(
         expectedIterations: Iterable<T?>,
-        block: ParameterizeScope.() -> T
-    ) {
+        block: suspend ParameterizeScope.() -> T
+    ) = runTestCC {
         val iterations = mutableListOf<T?>()
 
-        parameterize {
-            try {
-                iterations += block()
-            } catch (caught: Throwable) {
-                iterations += null
-                throw caught
-            }
+        parameterize(decorator = { iteration ->
+            iterations += null
+            iteration()
+        }) {
+            block().also { iterations[iterations.lastIndex] = it }
         }
 
         assertEquals(expectedIterations.toList(), iterations, "Incorrect iterations")
@@ -57,19 +61,21 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun parameter_arguments_iterator_should_be_computed_when_declared() = parameterize {
-        var computed = false
+    fun parameter_arguments_iterator_should_be_computed_when_declared() = runTestCC {
+        parameterize {
+            var computed = false
 
-        val parameter by parameter(Sequence {
-            computed = true
-            listOf(Unit).iterator()
-        })
+            val parameter by parameter(Sequence {
+                computed = true
+                listOf(Unit).iterator()
+            })
 
-        assertTrue(computed, "computed")
+            assertTrue(computed, "computed")
+        }
     }
 
     @Test
-    fun second_parameter_argument_should_not_be_computed_until_the_next_iteration() {
+    fun second_parameter_argument_should_not_be_computed_until_the_next_iteration() = runTestCC {
         var finishedFirstIteration = false
 
         class AssertingIterator : Iterator<Unit> {
@@ -94,11 +100,9 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun parameter_should_iterate_to_the_next_argument_while_declaring() {
-        var state: String
-
+    fun parameter_should_restore_local_state_on_each_iteration() = runTestCC {
         parameterize {
-            state = "creating arguments"
+            var state = "creating arguments"
             val iterationArguments = Sequence {
                 object : Iterator<Int> {
                     var nextArgument = 0
@@ -106,17 +110,16 @@ class ParameterizeSpec {
                     override fun hasNext(): Boolean = nextArgument <= 5
 
                     override fun next(): Int {
-                        assertEquals("declaring parameter", state, "state (iteration $nextArgument)")
                         return nextArgument++
                     }
                 }
             }
 
-            state = "creating parameter"
+            state = "declaring parameter"
             val iterationParameter = parameter(iterationArguments)
 
-            state = "declaring parameter"
             val iteration by iterationParameter
+            assertEquals("declaring parameter", state, "state (iteration $iteration)")
 
             state = "using parameter"
             useParameter(iteration)
@@ -178,9 +181,13 @@ class ParameterizeSpec {
     ) {
         var string = ""
 
-        repeat(3) {
+        // repeat doesn't work on JS because JS broke its for-loop over IntRange
+        // optimization. TODO find relevant YouTrack issue
+        var i = 0
+        while(i < 3) {
             val letter by parameterOf('a', 'b', 'c')
             string += letter
+            i++
         }
 
         string
@@ -199,13 +206,11 @@ class ParameterizeSpec {
     }
 
     @Test
-    @Suppress("IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION")
     fun unused_parameter_with_no_arguments_should_finish_iteration_early() = testParameterize(
         listOf(null)
     ) {
         val unused by parameterOf<Nothing>()
-
-        "finished"
+        unused
     }
 
     @Test
@@ -232,9 +237,9 @@ class ParameterizeSpec {
     fun custom_lazy_arguments_implementation() = testParameterize(
         listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
     ) {
-        fun <T> ParameterizeScope.customLazyParameter(
+        suspend fun <T> ParameterizeScope.customLazyParameter(
             lazyArguments: () -> Iterable<T>
-        ): ParameterizeScope.Parameter<T> {
+        ): ParameterizeScope.ParameterDelegate<T> {
             val arguments by lazy(lazyArguments)
 
             class CustomLazyArguments : Iterable<T> {
@@ -255,7 +260,7 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun captured_parameters_should_be_usable_after_the_iteration_completes() {
+    fun captured_parameters_should_be_usable_after_the_iteration_completes() = runTestCC {
         val capturedParameters = mutableListOf<() -> Int>()
 
         parameterize {
@@ -272,9 +277,11 @@ class ParameterizeSpec {
     }
 
     @Test
-    fun should_be_able_to_return_from_an_outer_function_from_within_the_block() {
-        parameterize {
-            return@should_be_able_to_return_from_an_outer_function_from_within_the_block
+    fun should_be_able_to_discard_to_an_outer_function_from_within_the_block() = runTestCC {
+        handle {
+            parameterize {
+                discardWithFast(Result.success(Unit))
+            }
         }
     }
 
@@ -282,13 +289,21 @@ class ParameterizeSpec {
      * The motivating use case here is decorating a Kotest test group, in which the test declarations suspend.
      */
     @Test
-    fun should_be_able_to_decorate_a_suspend_block() {
-        val coordinates = sequence {
-            parameterize {
-                val letter by parameter('a'..'c')
-                val number by parameter(1..3)
+    fun should_be_able_to_decorate_a_suspend_block() = runTest {
+        // This works as well with a normal flow, but this could
+        // change in future versions of kontinuity (because
+        // currently, we wrap the `coroutineContext` to add
+        // extra data, but that data could simply be added to the context.
+        // if we do that though, `flow` complains that the context,
+        // and hence the coroutine, changed)
+        val coordinates = channelFlow {
+            runCC {
+                parameterize {
+                    val letter by parameter('a'..'c')
+                    val number by parameter(1..3)
 
-                yield("$letter$number")
+                    send("$letter$number")
+                }
             }
         }
 

@@ -25,14 +25,14 @@ import kotlin.test.*
 
 @Suppress("ClassName")
 class ParameterizeConfigurationSpec_decorator {
-    private inline fun testParameterize(
+    private suspend inline fun testParameterize(
         noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit,
         noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = {
             recordFailure = true
             breakEarly = true
         },
         noinline onComplete: OnCompleteScope.() -> Unit = ParameterizeConfiguration.default.onComplete,
-        block: ParameterizeScope.() -> Unit
+        noinline block: suspend ParameterizeScope.() -> Unit
     ): Unit =
         parameterize(
             decorator = decorator,
@@ -42,7 +42,7 @@ class ParameterizeConfigurationSpec_decorator {
         )
 
     @Test
-    fun should_be_invoked_once_per_iteration() {
+    fun should_be_invoked_once_per_iteration() = runTestCC {
         var iterationCount = 0
         var timesInvoked = 0
 
@@ -60,7 +60,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun failures_within_decorator_should_immediately_terminate_parameterize() {
+    fun failures_within_decorator_should_immediately_terminate_parameterize() = runTestCC {
         class FailureWithinDecorator : Throwable()
 
         testAll<suspend DecoratorScope.(suspend DecoratorScope.() -> Unit) -> Unit>(
@@ -100,7 +100,7 @@ class ParameterizeConfigurationSpec_decorator {
      * without hacking around the type system like this. But a nice error should be provided just in case.
      */
     @Test
-    fun suspending_unexpectedly_should_fail() {
+    fun suspending_unexpectedly_should_fail() = runTestCC {
         val suspendWithoutResuming: suspend Any.() -> Unit = {
             suspendCoroutineUninterceptedOrReturn { COROUTINE_SUSPENDED }
         }
@@ -128,7 +128,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun iteration_function_should_return_regardless_of_how_parameterize_block_fails() = testAll(
+    fun iteration_function_should_return_regardless_of_how_parameterize_block_fails() = testAllCC(
         EdgeCases.iterationFailures
     ) { getFailure ->
         var returned = false
@@ -148,7 +148,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun should_throw_if_iteration_function_is_not_invoked() {
+    fun should_throw_if_iteration_function_is_not_invoked() = runTestCC {
         val exception = assertFailsWith<ParameterizeException> {
             testParameterize(
                 decorator = {
@@ -165,7 +165,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun should_throw_if_iteration_function_is_invoked_more_than_once() {
+    fun should_throw_if_iteration_function_is_invoked_more_than_once() = runTestCC {
         val exception = assertFailsWith<ParameterizeException> {
             testParameterize(
                 decorator = { iteration ->
@@ -183,7 +183,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun is_first_iteration_should_be_correct() = testAll(
+    fun is_first_iteration_should_be_correct() = testAllCC(
         (1..3)
             .flatMap { listOf(it to "before", it to "after") }
             .map { "in iteration ${it.first}, ${it.second}" to it }
@@ -209,7 +209,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun is_last_iteration_should_be_correct() = testAll(
+    fun is_last_iteration_should_be_correct() = testAllCC(
         (1..3).map { "in iteration $it" to it }
     ) { inIteration ->
         var currentIteration = 1
@@ -230,7 +230,7 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun is_last_iteration_when_accessed_before_invoking_iteration_should_throw() = testAll(
+    fun is_last_iteration_when_accessed_before_invoking_iteration_should_throw() = testAllCC(
         (1..3).map { "in iteration $it" to it }
     ) { inIteration ->
         var iterationNumber = 1
@@ -256,23 +256,5 @@ class ParameterizeConfigurationSpec_decorator {
             exception.message,
             "message"
         )
-    }
-
-    @Test
-    fun declaring_parameter_after_iteration_function_should_fail() {
-        assertFailsWith<ParameterizeException> {
-            lateinit var declareParameter: () -> Unit
-
-            testParameterize(
-                decorator = { iteration ->
-                    iteration()
-                    declareParameter()
-                }
-            ) {
-                declareParameter = {
-                    val parameter by parameterOf(Unit)
-                }
-            }
-        }
     }
 }

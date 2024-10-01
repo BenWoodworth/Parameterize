@@ -30,7 +30,7 @@ class ParameterizeFailureSpec {
 
     @Test
     fun string_representation_should_list_properties_with_the_failure_matching_the_stdlib_result_representation() =
-        testAll(
+        testAllCC(
             "with message" to Throwable("failure"),
             "without message" to Throwable()
         ) { failure ->

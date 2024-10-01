@@ -16,7 +16,14 @@
 
 package com.benwoodworth.parameterize
 
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
+import runCC
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Ignore
+import kotlin.time.Duration
 
 /**
  * [Ignore] on native targets.
@@ -54,9 +61,9 @@ object TestAllScope {
         throw TestAllSkip(message)
 }
 
-fun <T> testAll(
+suspend fun <T> testAll(
     testCases: Iterable<Pair<String, T>>,
-    test: TestAllScope.(testCase: T) -> Unit
+    test: suspend TestAllScope.(testCase: T) -> Unit
 ) {
     val results = testCases
         .map { (description, testCase) ->
@@ -98,13 +105,36 @@ fun <T> testAll(
     }
 }
 
-fun <T> testAll(
+fun <T> testAllCC(
+    testCases: Iterable<Pair<String, T>>,
+    test: suspend TestAllScope.(testCase: T) -> Unit
+) = runTestCC { testAll(testCases, test) }
+
+suspend fun <T> testAll(
     vararg testCases: Pair<String, T>,
-    test: TestAllScope.(testCase: T) -> Unit
+    test: suspend TestAllScope.(testCase: T) -> Unit
 ): Unit =
     testAll(testCases.toList(), test)
 
-fun testAll(vararg testCases: Pair<String, TestAllScope.() -> Unit>): Unit =
+suspend fun testAll(vararg testCases: Pair<String, suspend TestAllScope.() -> Unit>): Unit =
     testAll(testCases.toList()) { testCase ->
         testCase()
     }
+
+fun <T> testAllCC(
+    vararg testCases: Pair<String, T>,
+    test: suspend TestAllScope.(testCase: T) -> Unit
+): TestResult = runTestCC { testAll(testCases = testCases, test) }
+
+fun testAllCC(vararg testCases: Pair<String, suspend TestAllScope.() -> Unit>): TestResult =
+    runTestCC { testAll(testCases = testCases) }
+
+inline fun runTestCC(
+    context: CoroutineContext = EmptyCoroutineContext,
+    timeout: Duration? = null,
+    crossinline testBody: suspend TestScope.() -> Unit
+): TestResult = if (timeout == null) runTest(context) {
+    runCC { testBody() }
+} else runTest(context, timeout) {
+    runCC { testBody() }
+}
