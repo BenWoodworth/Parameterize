@@ -35,7 +35,7 @@ import kotlin.reflect.KProperty
  * private class PickingParameterizeScope(
  *     private val parameterizeScope: ParameterizeScope,
  *     private val pickArgumentIndices: List<Int>
- * ) : ParameterizeScope by parameterizeScope {
+ * ) : ParameterizeScope {
  *     private var parameterIndex = 0
  *
  *     // Intercept the parameter, and declare it with just the one picked argument
@@ -49,21 +49,6 @@ import kotlin.reflect.KProperty
  *         return parameterizeScope.run {
  *             parameterOf(pickedArgument).provideDelegate(thisRef, property)
  *         }
- *     }
- * }
- * ```
- *
- * A test framework might also want to report the values that were used. For that, something like this is also possible:
- * ```
- * private class TrackingParameterizeScope(
- *     private val parameterizeScope: ParameterizeScope,
- * ) : ParameterizeScope by parameterizeScope {
- *     private val usedParameters = mutableSetOf<DeclaredParameter<*>>()
- *
- *     // Track the parameters that have been used, that way it's possible to report only the relevant values
- *     override fun <T> DeclaredParameter<T>.getValue(thisRef: Nothing?, property: KProperty<*>): T {
- *         usedParameters += this
- *         return parameterizeScope.run { getValue(thisRef, property) }
  *     }
  * }
  * ```
@@ -83,13 +68,6 @@ public interface ParameterizeScope {
         thisRef: Nothing?,
         property: KProperty<*>
     ): DeclaredParameter<T>
-
-    /**
-     * Returns the argument that this parameter was [declared][provideDelegate] with.
-     *
-     * @see Parameter
-     */
-    public operator fun <T> DeclaredParameter<T>.getValue(thisRef: Nothing?, property: KProperty<*>): T
 
     /**
      * A sequence of [arguments] that can be [declared][provideDelegate] within a [ParameterizeScope] to make one of the
@@ -136,6 +114,14 @@ public interface ParameterizeScope {
          */
         override fun toString(): String =
             argument.toString()
+
+        /**
+         * Returns the [argument] that this parameter was [declared][provideDelegate] with.
+         *
+         * @see Parameter
+         */
+        public operator fun getValue(thisRef: Nothing?, property: KProperty<*>): T =
+            argument
     }
 
     /** @suppress */
