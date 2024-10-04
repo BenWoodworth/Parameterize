@@ -18,6 +18,7 @@ package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeScope.Parameter
 import kotlin.experimental.ExperimentalTypeInference
+import kotlin.jvm.JvmField
 import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmName
 import kotlin.reflect.KProperty
@@ -103,7 +104,13 @@ public interface ParameterizeScope {
      * @see Parameter
      */
     public class DeclaredParameter<out T> internal constructor(
-        internal val argument: T
+        /**
+         * The [argument] that this parameter was [declared][provideDelegate] with.
+         *
+         * @see Parameter
+         */
+        @JvmField
+        public val argument: T
     ) {
         /**
          * Returns a string representation of the current argument.
@@ -119,9 +126,11 @@ public interface ParameterizeScope {
         /**
          * Returns the [argument] that this parameter was [declared][provideDelegate] with.
          *
+         * @see argument
          * @see Parameter
          */
-        public operator fun getValue(thisRef: Nothing?, property: KProperty<*>): T =
+        @Suppress("NOTHING_TO_INLINE")
+        public inline operator fun getValue(thisRef: Nothing?, property: KProperty<*>): T =
             argument
     }
 
