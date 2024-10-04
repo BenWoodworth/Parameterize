@@ -103,11 +103,11 @@ public final class com/benwoodworth/parameterize/ParameterizeKt {
 }
 
 public abstract interface class com/benwoodworth/parameterize/ParameterizeScope {
-	public abstract fun getValue (Lcom/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter;Ljava/lang/Void;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public abstract fun provideDelegate-13mUnGw (Lkotlin/sequences/Sequence;Ljava/lang/Void;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter;
 }
 
 public final class com/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter {
+	public final fun getValue (Ljava/lang/Void;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public fun toString ()Ljava/lang/String;
 }
 
