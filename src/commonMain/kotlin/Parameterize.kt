@@ -155,8 +155,4 @@ internal class SimpleParameterizeScope internal constructor(
         @Suppress("UNCHECKED_CAST")
         return parameterizeState.declareParameter(property as KProperty<T>, arguments)
     }
-
-    override operator fun <T> DeclaredParameter<T>.getValue(thisRef: Nothing?, property: KProperty<*>): T {
-        return argument
-    }
 }
