@@ -32,9 +32,6 @@ class ParameterizeScopeSpec : ParameterizeScope {
     override fun <T> Parameter<T>.provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> =
         throw UnsupportedOperationException("Not Implemented")
 
-    override fun <T> DeclaredParameter<T>.getValue(thisRef: Nothing?, property: KProperty<*>): T =
-        throw UnsupportedOperationException("Not Implemented")
-
     /**
      * A unique iterator that the tests can use to verify that a constructed [Parameter] has the correct
      * [arguments][Parameter.arguments].
