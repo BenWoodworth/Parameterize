@@ -115,6 +115,13 @@ public interface ParameterizeScope {
     @ParameterizeApiFriendModuleApi
     constructor(
         /**
+         * The Kotlin property that this parameter was [declared][provideDelegate] for.
+         *
+         * @see Parameter
+         */
+        public val property: KProperty<*>,
+
+        /**
          * The [argument] that this parameter was [declared][provideDelegate] with.
          *
          * @see Parameter
