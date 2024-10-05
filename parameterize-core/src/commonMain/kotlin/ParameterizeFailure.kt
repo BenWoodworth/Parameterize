@@ -44,7 +44,7 @@ public class ParameterizeFailure internal constructor(
         /**
          * The Kotlin property for the parameter.
          */
-        public val parameter: KProperty<T>,
+        public val parameter: KProperty<*>,
 
         /**
          * The [parameter]'s argument when the [failure] occurred.
@@ -59,7 +59,7 @@ public class ParameterizeFailure internal constructor(
         /**
          * Returns the [parameter][ParameterizeFailure.Argument.parameter] component.
          */
-        public operator fun component1(): KProperty<T> = parameter
+        public operator fun component1(): KProperty<*> = parameter
 
         /**
          * Returns the [argument] component.
