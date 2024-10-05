@@ -21,6 +21,7 @@ import com.benwoodworth.parameterize.test.testAll
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -264,6 +265,27 @@ class ParameterizeSpec {
             (0..10).map { "iteration $it" to it }
         ) { iteration ->
             assertEquals(iteration, capturedParameters[iteration]())
+        }
+    }
+
+    @Test
+    fun getting_declaring_parameter_with_the_wrong_property_should_throw_ParameterizeException() {
+        var isFirstIteration = true
+
+        parameterize {
+            if (isFirstIteration) {
+                val property by parameterOf(Unit, Unit)
+                isFirstIteration = false
+            } else {
+                val exception = assertFailsWith<ParameterizeException> {
+                    val differentProperty by parameterOf<Unit>()
+                }
+
+                assertEquals(
+                    "Cannot use parameter with `differentProperty`, since it was declared for `property`.",
+                    exception.message
+                )
+            }
         }
     }
 

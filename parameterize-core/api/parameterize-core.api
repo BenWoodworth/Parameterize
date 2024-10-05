@@ -44,6 +44,7 @@ public final class com/benwoodworth/parameterize/ParameterizeConfiguration$OnFai
 	public final fun getBreakEarly ()Z
 	public final fun getFailureCount ()J
 	public final fun getIterationCount ()J
+	public final fun getParameters ()Ljava/util/List;
 	public final fun getRecordFailure ()Z
 	public final fun setBreakEarly (Z)V
 	public final fun setRecordFailure (Z)V
@@ -65,7 +66,7 @@ public final class com/benwoodworth/parameterize/ParameterizeFailedError$Compani
 public final class com/benwoodworth/parameterize/ParameterizeFailure {
 	public final fun getArguments ()Ljava/util/List;
 	public final fun getFailure ()Ljava/lang/Throwable;
-	public fun toString ()Ljava/lang/String;
+	public final fun getParameters ()Ljava/util/List;
 }
 
 public final class com/benwoodworth/parameterize/ParameterizeFailure$Argument {

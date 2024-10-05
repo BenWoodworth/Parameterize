@@ -68,6 +68,8 @@ final class com.benwoodworth.parameterize/ParameterizeConfiguration { // com.ben
             final fun <get-failureCount>(): kotlin/Long // com.benwoodworth.parameterize/ParameterizeConfiguration.OnFailureScope.failureCount.<get-failureCount>|<get-failureCount>(){}[0]
         final val iterationCount // com.benwoodworth.parameterize/ParameterizeConfiguration.OnFailureScope.iterationCount|{}iterationCount[0]
             final fun <get-iterationCount>(): kotlin/Long // com.benwoodworth.parameterize/ParameterizeConfiguration.OnFailureScope.iterationCount.<get-iterationCount>|<get-iterationCount>(){}[0]
+        final val parameters // com.benwoodworth.parameterize/ParameterizeConfiguration.OnFailureScope.parameters|{}parameters[0]
+            final fun <get-parameters>(): kotlin.collections/List<com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<*>> // com.benwoodworth.parameterize/ParameterizeConfiguration.OnFailureScope.parameters.<get-parameters>|<get-parameters>(){}[0]
 
         final var breakEarly // com.benwoodworth.parameterize/ParameterizeConfiguration.OnFailureScope.breakEarly|{}breakEarly[0]
             final fun <get-breakEarly>(): kotlin/Boolean // com.benwoodworth.parameterize/ParameterizeConfiguration.OnFailureScope.breakEarly.<get-breakEarly>|<get-breakEarly>(){}[0]
@@ -97,8 +99,8 @@ final class com.benwoodworth.parameterize/ParameterizeFailure { // com.benwoodwo
         final fun <get-arguments>(): kotlin.collections/List<com.benwoodworth.parameterize/ParameterizeFailure.Argument<*>> // com.benwoodworth.parameterize/ParameterizeFailure.arguments.<get-arguments>|<get-arguments>(){}[0]
     final val failure // com.benwoodworth.parameterize/ParameterizeFailure.failure|{}failure[0]
         final fun <get-failure>(): kotlin/Throwable // com.benwoodworth.parameterize/ParameterizeFailure.failure.<get-failure>|<get-failure>(){}[0]
-
-    final fun toString(): kotlin/String // com.benwoodworth.parameterize/ParameterizeFailure.toString|toString(){}[0]
+    final val parameters // com.benwoodworth.parameterize/ParameterizeFailure.parameters|{}parameters[0]
+        final fun <get-parameters>(): kotlin.collections/List<com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<*>> // com.benwoodworth.parameterize/ParameterizeFailure.parameters.<get-parameters>|<get-parameters>(){}[0]
 
     final class <#A1: out kotlin/Any?> Argument { // com.benwoodworth.parameterize/ParameterizeFailure.Argument|null[0]
         final val argument // com.benwoodworth.parameterize/ParameterizeFailure.Argument.argument|{}argument[0]

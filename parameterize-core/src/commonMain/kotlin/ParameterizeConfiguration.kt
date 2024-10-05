@@ -17,6 +17,7 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.RestrictsSuspension
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
@@ -191,7 +192,19 @@ public class ParameterizeConfiguration internal constructor(
         /**
          * The parameter arguments that resulted in the failure.
          */
-        public val arguments: List<ParameterizeFailure.Argument<*>> by lazy {
+        @Deprecated(
+            "Replaced with parameters",
+            ReplaceWith("this.parameters"),
+            DeprecationLevel.ERROR
+        )
+        @Suppress("DEPRECATION_ERROR")
+        public val arguments: List<ParameterizeFailure.Argument<*>>
+            get() = throw UnsupportedOperationException("Replaced with parameters")
+
+        /**
+         * The parameters that resulted in the failure.
+         */
+        public val parameters: List<DeclaredParameter<*>> by lazy {
             state.getFailureArguments()
         }
 

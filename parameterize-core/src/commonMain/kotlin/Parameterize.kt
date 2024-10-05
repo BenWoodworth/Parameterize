@@ -143,8 +143,8 @@ internal class SimpleParameterizeScope internal constructor(
             prefix = "ParameterizeScope(",
             separator = ", ",
             postfix = ")"
-        ) { (parameter, argument) ->
-            "${parameter.name} = $argument"
+        ) { parameter ->
+            "${parameter.property.name} = ${parameter.argument}"
         }
 
     override fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): DeclaredParameter<T> {

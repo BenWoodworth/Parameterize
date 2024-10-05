@@ -95,8 +95,13 @@ internal class ParameterizeState {
             lastParameterWithNextArgument = parameter
         }
 
+        val declaredParameter = parameter.getDeclaredParameter()
+        checkState(property.equalsProperty(declaredParameter.property)) {
+            "Cannot use parameter with `${property.name}`, since it was declared for `${declaredParameter.property.name}`."
+        }
+
         @Suppress("UNCHECKED_CAST") // Assuming it's declared like the previous iteration, the argument should still be T
-        return parameter.getDeclaredParameter(property) as DeclaredParameter<T>
+        return declaredParameter as DeclaredParameter<T>
     }
 
     private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {
@@ -120,9 +125,9 @@ internal class ParameterizeState {
     /**
      * Get a list of arguments for reporting a failure.
      */
-    fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
+    fun getFailureArguments(): List<DeclaredParameter<*>> =
         parameters.take(parameterCount)
-            .map { it.getFailureArgument() }
+            .map { it.getDeclaredParameter() }
 
     @JvmInline
     value class HandleFailureResult(val breakEarly: Boolean)
@@ -144,7 +149,7 @@ internal class ParameterizeState {
             onFailure(failure)
 
             if (recordFailure) {
-                recordedFailures += ParameterizeFailure(failure, arguments)
+                recordedFailures += ParameterizeFailure(failure, parameters)
             }
 
             return HandleFailureResult(breakEarly)
