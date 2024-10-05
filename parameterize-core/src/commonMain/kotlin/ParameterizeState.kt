@@ -96,7 +96,7 @@ internal class ParameterizeState {
         }
 
         @Suppress("UNCHECKED_CAST") // Assuming it's declared like the previous iteration, the argument should still be T
-        return DeclaredParameter(parameter.getArgument(property)) as DeclaredParameter<T>
+        return parameter.getDeclaredParameter(property) as DeclaredParameter<T>
     }
 
     private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {
