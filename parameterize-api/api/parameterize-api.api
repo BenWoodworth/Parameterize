@@ -21,7 +21,8 @@ public abstract interface class com/benwoodworth/parameterize/ParameterizeScope 
 
 public final class com/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter {
 	public final field argument Ljava/lang/Object;
-	public fun <init> (Ljava/lang/Object;)V
+	public fun <init> (Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+	public final fun getProperty ()Lkotlin/reflect/KProperty;
 	public final fun getValue (Ljava/lang/Void;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
 	public fun toString ()Ljava/lang/String;
 }
