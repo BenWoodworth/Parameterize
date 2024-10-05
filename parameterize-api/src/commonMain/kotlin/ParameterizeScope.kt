@@ -102,6 +102,9 @@ public interface ParameterizeScope {
      * A [Parameter] declared in a [ParameterizeScope], providing access to the selected [argument] and enabling its use
      * through [property delegation][DeclaredParameter.getValue].
      *
+     * This class implements referential equality, that way parameters declared at different times can be reliably
+     * distinguished even if they were declared with the same [argument].
+     *
      * @see Parameter
      */
     public class DeclaredParameter<out T> @ExperimentalParameterizeApi constructor(
