@@ -16,6 +16,7 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import com.benwoodworth.parameterize.test.NativeIgnore
 import com.benwoodworth.parameterize.test.WasmJsIgnore
 import com.benwoodworth.parameterize.test.WasmWasiIgnore
@@ -25,15 +26,16 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 class ParameterizeFailedErrorSpec {
+    @OptIn(ExperimentalParameterizeApi::class)
     private val arguments = run {
-        val parameters = object : Any() {
-            val parameterA = "argumentA"
-            val parameterB = "argumentB"
+        val properties = object : Any() {
+            val propertyA = "argumentA"
+            val propertyB = "argumentB"
         }
 
         listOf(
-            ParameterizeFailure.Argument(parameters::parameterA, parameters.parameterA),
-            ParameterizeFailure.Argument(parameters::parameterB, parameters.parameterB)
+            DeclaredParameter(properties::propertyA, properties.propertyA),
+            DeclaredParameter(properties::propertyB, properties.propertyB)
         )
     }
 

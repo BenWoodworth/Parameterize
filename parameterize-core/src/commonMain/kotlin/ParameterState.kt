@@ -142,17 +142,4 @@ internal class ParameterState(
         this.declaredParameter = DeclaredParameter(declaredParameter.property, iterator.next())
         argumentIterator = iterator.takeIf { it.hasNext() }
     }
-
-    /**
-     * Returns the property and argument.
-     *
-     * @throws IllegalStateException if this parameter is not declared.
-     */
-    fun getFailureArgument(): ParameterizeFailure.Argument<*> {
-        val declaredParameter = checkNotNull(this.declaredParameter) {
-            "Cannot get failure argument before parameter has been declared"
-        }
-
-        return ParameterizeFailure.Argument(declaredParameter.property, declaredParameter.argument)
-    }
 }
