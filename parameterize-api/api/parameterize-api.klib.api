@@ -11,7 +11,7 @@ open annotation class com.benwoodworth.parameterize/ExperimentalParameterizeApi 
 }
 
 abstract interface com.benwoodworth.parameterize/ParameterizeScope { // com.benwoodworth.parameterize/ParameterizeScope|null[0]
-    abstract fun <#A1: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A1>).provideDelegate(kotlin/Any?, kotlin.reflect/KProperty<*>): com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<#A1> // com.benwoodworth.parameterize/ParameterizeScope.provideDelegate|provideDelegate@com.benwoodworth.parameterize.ParameterizeScope.Parameter<0:0>(kotlin.Any?;kotlin.reflect.KProperty<*>){0§<kotlin.Any?>}[0]
+    abstract fun <#A1: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A1>).provideDelegate(kotlin/Nothing?, kotlin.reflect/KProperty<*>): com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<#A1> // com.benwoodworth.parameterize/ParameterizeScope.provideDelegate|provideDelegate@com.benwoodworth.parameterize.ParameterizeScope.Parameter<0:0>(kotlin.Nothing?;kotlin.reflect.KProperty<*>){0§<kotlin.Any?>}[0]
 
     final class <#A1: kotlin/Any?> ParameterDelegate // com.benwoodworth.parameterize/ParameterizeScope.ParameterDelegate|null[0]
 
@@ -22,7 +22,7 @@ abstract interface com.benwoodworth.parameterize/ParameterizeScope { // com.benw
             final fun <get-argument>(): #A1 // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter.argument.<get-argument>|<get-argument>(){}[0]
 
         final fun toString(): kotlin/String // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter.toString|toString(){}[0]
-        final inline fun getValue(kotlin/Any?, kotlin.reflect/KProperty<*>): #A1 // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter.getValue|getValue(kotlin.Any?;kotlin.reflect.KProperty<*>){}[0]
+        final inline fun getValue(kotlin/Nothing?, kotlin.reflect/KProperty<*>): #A1 // com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter.getValue|getValue(kotlin.Nothing?;kotlin.reflect.KProperty<*>){}[0]
     }
 
     final value class <#A1: out kotlin/Any?> Parameter { // com.benwoodworth.parameterize/ParameterizeScope.Parameter|null[0]
@@ -40,7 +40,7 @@ abstract interface com.benwoodworth.parameterize/ParameterizeScope { // com.benw
 final value class com.benwoodworth.parameterize/LazyParameterScope { // com.benwoodworth.parameterize/LazyParameterScope|null[0]
     constructor <init>(com.benwoodworth.parameterize/ParameterizeScope) // com.benwoodworth.parameterize/LazyParameterScope.<init>|<init>(com.benwoodworth.parameterize.ParameterizeScope){}[0]
 
-    final fun <#A1: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A1>).provideDelegate(kotlin/Any?, kotlin.reflect/KProperty<*>): com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<#A1> // com.benwoodworth.parameterize/LazyParameterScope.provideDelegate|provideDelegate@com.benwoodworth.parameterize.ParameterizeScope.Parameter<0:0>(kotlin.Any?;kotlin.reflect.KProperty<*>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A1>).provideDelegate(kotlin/Nothing?, kotlin.reflect/KProperty<*>): com.benwoodworth.parameterize/ParameterizeScope.DeclaredParameter<#A1> // com.benwoodworth.parameterize/LazyParameterScope.provideDelegate|provideDelegate@com.benwoodworth.parameterize.ParameterizeScope.Parameter<0:0>(kotlin.Nothing?;kotlin.reflect.KProperty<*>){0§<kotlin.Any?>}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.benwoodworth.parameterize/LazyParameterScope.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.benwoodworth.parameterize/LazyParameterScope.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.benwoodworth.parameterize/LazyParameterScope.toString|toString(){}[0]
