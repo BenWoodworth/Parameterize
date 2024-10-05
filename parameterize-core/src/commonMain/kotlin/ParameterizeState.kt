@@ -67,7 +67,7 @@ internal class ParameterizeState {
     }
 
     fun <T> declareParameter(
-        property: KProperty<T>,
+        property: KProperty<*>,
         arguments: Sequence<T>
     ): DeclaredParameter<T> = trackNestedDeclaration(property) {
         val parameterIndex = parameterCount
@@ -96,6 +96,7 @@ internal class ParameterizeState {
         }
 
         @OptIn(ExperimentalParameterizeApi::class)
+        @Suppress("UNCHECKED_CAST") // Assuming it's declared like the previous iteration, the argument should still be T
         return DeclaredParameter(parameter.getArgument(property))
     }
 

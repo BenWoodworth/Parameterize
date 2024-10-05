@@ -74,14 +74,14 @@ class ParameterStateSpec {
     @Test
     fun declaring_with_no_arguments_should_throw_ParameterizeContinue() {
         assertFailsWith<ParameterizeContinue> {
-            parameter.declare(::property, emptySequence())
+            parameter.declare(::property, emptySequence<Nothing>())
         }
     }
 
     @Test
     fun declaring_with_no_arguments_should_leave_parameter_undeclared() {
         runCatching {
-            parameter.declare(::property, emptySequence())
+            parameter.declare(::property, emptySequence<Nothing>())
         }
 
         assertUndeclared(parameter)
