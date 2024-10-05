@@ -19,7 +19,7 @@ package com.benwoodworth.parameterize
 import kotlin.test.*
 
 class ParameterStateSpec {
-    private val getArgumentBeforeDeclaredMessage = "Cannot get argument before parameter has been declared"
+    private val getDeclaredParameterBeforeDeclaredMessage = "Cannot get declared parameter before it's been declared"
     private val getFailureArgumentBeforeDeclaredMessage =
         "Cannot get failure argument before parameter has been declared"
 
@@ -36,10 +36,10 @@ class ParameterStateSpec {
 
     private fun assertUndeclared(parameter: ParameterState) {
         val failure = assertFailsWith<IllegalStateException> {
-            parameter.getArgument(::property)
+            parameter.getDeclaredParameter(::property)
         }
 
-        assertEquals(getArgumentBeforeDeclaredMessage, failure.message, "message")
+        assertEquals(getDeclaredParameterBeforeDeclaredMessage, failure.message, "message")
     }
 
     @Test
@@ -134,20 +134,20 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun getting_argument_before_declared_should_throw_IllegalStateException() {
+    fun getting_declared_parameter_before_declared_should_throw_IllegalStateException() {
         val failure = assertFailsWith<IllegalStateException> {
-            parameter.getArgument(::property)
+            parameter.getDeclaredParameter(::property)
         }
 
-        assertEquals(getArgumentBeforeDeclaredMessage, failure.message, "message")
+        assertEquals(getDeclaredParameterBeforeDeclaredMessage, failure.message, "message")
     }
 
     @Test
-    fun getting_argument_with_the_wrong_property_should_throw_ParameterizeException() {
+    fun getting_declared_parameter_with_the_wrong_property_should_throw_ParameterizeException() {
         parameter.declare(::property, sequenceOf(Unit))
 
         val exception = assertFailsWith<ParameterizeException> {
-            parameter.getArgument(::differentProperty)
+            parameter.getDeclaredParameter(::differentProperty)
         }
 
         assertEquals(
@@ -157,10 +157,11 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun getting_argument_should_initially_return_the_first_argument() {
+    fun getting_declared_parameter_should_initially_return_the_first_argument() {
         parameter.declare(::property, sequenceOf("first", "second"))
 
-        assertEquals("first", parameter.getArgument(::property))
+        val declaredParameter = parameter.getDeclaredParameter(::property)
+        assertEquals("first", declaredParameter.argument)
     }
 
     @Test
@@ -175,19 +176,21 @@ class ParameterStateSpec {
     @Test
     fun next_should_move_to_the_next_argument() {
         parameter.declare(::property, sequenceOf("first", "second", "third"))
-        parameter.getArgument(::property)
+        parameter.getDeclaredParameter(::property)
 
         parameter.nextArgument()
-        assertEquals("second", parameter.getArgument(::property))
+        val secondDeclaredParameter = parameter.getDeclaredParameter(::property)
+        assertEquals("second", secondDeclaredParameter.argument)
 
         parameter.nextArgument()
-        assertEquals("third", parameter.getArgument(::property))
+        val thirdDeclaredParameter = parameter.getDeclaredParameter(::property)
+        assertEquals("third", thirdDeclaredParameter.argument)
     }
 
     @Test
     fun next_to_a_middle_argument_should_leave_is_last_argument_as_false() {
         parameter.declare(::property, sequenceOf("first", "second", "third", "fourth"))
-        parameter.getArgument(::property)
+        parameter.getDeclaredParameter(::property)
 
         parameter.nextArgument()
         assertFalse(parameter.isLastArgument, "second")
@@ -199,7 +202,7 @@ class ParameterStateSpec {
     @Test
     fun next_to_the_last_argument_should_set_is_last_argument_to_true() {
         parameter.declare(::property, sequenceOf("first", "second", "third", "fourth"))
-        parameter.getArgument(::property)
+        parameter.getDeclaredParameter(::property)
         parameter.nextArgument() // second
         parameter.nextArgument() // third
         parameter.nextArgument() // forth
@@ -210,17 +213,18 @@ class ParameterStateSpec {
     @Test
     fun next_after_the_last_argument_should_loop_back_to_the_first() {
         parameter.declare(::property, sequenceOf("first", "second"))
-        parameter.getArgument(::property)
+        parameter.getDeclaredParameter(::property)
         parameter.nextArgument() // second
         parameter.nextArgument() // first
 
-        assertEquals("first", parameter.getArgument(::property))
+        val declaredParameter = parameter.getDeclaredParameter(::property)
+        assertEquals("first", declaredParameter.argument)
     }
 
     @Test
     fun next_after_the_last_argument_should_set_is_last_argument_to_false() {
         parameter.declare(::property, sequenceOf("first", "second"))
-        parameter.getArgument(::property)
+        parameter.getDeclaredParameter(::property)
         parameter.nextArgument() // second
         parameter.nextArgument() // first
 
@@ -236,7 +240,8 @@ class ParameterStateSpec {
         }
         parameter.declare(::property, newArguments)
 
-        assertEquals("a", parameter.getArgument(::property))
+        val declaredParameter = parameter.getDeclaredParameter(::property)
+        assertEquals("a", declaredParameter.argument)
     }
 
     @Test
@@ -279,7 +284,7 @@ class ParameterStateSpec {
     fun get_failure_argument_when_declared_should_have_correct_property_and_argument() {
         val expectedArgument = "a"
         parameter.declare(::property, sequenceOf(expectedArgument))
-        parameter.getArgument(::property)
+        parameter.getDeclaredParameter(::property)
 
         val (property, argument) = parameter.getFailureArgument()
         assertTrue(property.equalsProperty(::property))

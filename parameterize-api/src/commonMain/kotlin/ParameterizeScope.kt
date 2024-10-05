@@ -103,7 +103,9 @@ public interface ParameterizeScope {
      * A [Parameter][Parameter] [declared][provideDelegate] with one of its [arguments][Parameter.arguments] so that it can be used
      * as the [value][getValue] of a Kotlin property.
      *
-     * Equality is done by reference, making instances suitable for use as unique keys.
+     * Equality is done by reference, making instances suitable for use as unique keys. The same instance is also reused
+     * between iterations if a parameter's argument is unchanged making it possible to reliably track parameters through
+     * iterations.
      *
      * @see Parameter
      */
