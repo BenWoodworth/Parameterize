@@ -117,12 +117,9 @@ internal class ParameterizeState {
         skipCount++
     }
 
-    /**
-     * Get a list of arguments for reporting a failure.
-     */
-    fun getFailureArguments(): List<ParameterizeFailure.Argument<*>> =
+    fun getDeclaredParameters(): List<DeclaredParameter<*>> =
         parameters.take(parameterCount)
-            .map { it.getFailureArgument() }
+            .map { it.getDeclaredParameter() }
 
     @JvmInline
     value class HandleFailureResult(val breakEarly: Boolean)
@@ -144,7 +141,7 @@ internal class ParameterizeState {
             onFailure(failure)
 
             if (recordFailure) {
-                recordedFailures += ParameterizeFailure(failure, arguments)
+                recordedFailures += ParameterizeFailure(failure, parameters)
             }
 
             return HandleFailureResult(breakEarly)
