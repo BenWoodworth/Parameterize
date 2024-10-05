@@ -139,12 +139,12 @@ internal class SimpleParameterizeScope internal constructor(
     internal var iterationCompleted: Boolean = false
 
     override fun toString(): String =
-        parameterizeState.getFailureArguments().joinToString(
+        parameterizeState.getDeclaredParameters().joinToString(
             prefix = "ParameterizeScope(",
             separator = ", ",
             postfix = ")"
-        ) { (parameter, argument) ->
-            "${parameter.name} = $argument"
+        ) { parameter ->
+            "${parameter.property.name} = ${parameter.argument}"
         }
 
     override fun <T> Parameter<T>.provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> {

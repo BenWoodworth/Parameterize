@@ -20,8 +20,6 @@ import kotlin.test.*
 
 class ParameterStateSpec {
     private val getDeclaredParameterBeforeDeclaredMessage = "Cannot get declared parameter before it's been declared"
-    private val getFailureArgumentBeforeDeclaredMessage =
-        "Cannot get failure argument before parameter has been declared"
 
     private val property: String get() = error("${::property.name} is not meant to be used")
     private val differentProperty: String get() = error("${::differentProperty.name} is not meant to be used")
@@ -255,25 +253,5 @@ class ParameterStateSpec {
             parameter.isLastArgument
         }
         assertEquals("Parameter has not been declared", failure.message)
-    }
-
-    @Test
-    fun get_failure_argument_when_not_declared_should_throw_IllegalStateException() {
-        val failure = assertFailsWith<IllegalStateException> {
-            parameter.getFailureArgument()
-        }
-
-        assertEquals(getFailureArgumentBeforeDeclaredMessage, failure.message, "message")
-    }
-
-    @Test
-    fun get_failure_argument_when_declared_should_have_correct_property_and_argument() {
-        val expectedArgument = "a"
-        parameter.declare(::property, sequenceOf(expectedArgument))
-        parameter.getDeclaredParameter()
-
-        val (property, argument) = parameter.getFailureArgument()
-        assertTrue(property.equalsProperty(::property))
-        assertSame(expectedArgument, argument)
     }
 }
