@@ -16,10 +16,11 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import kotlin.reflect.KProperty
 
 /**
- * A [failure] thrown from a [parameterize] iteration, and the [arguments] that caused it.
+ * A [failure] thrown from a [parameterize] iteration, and the [parameters] that caused it.
  */
 public class ParameterizeFailure internal constructor(
     /**
@@ -28,18 +29,33 @@ public class ParameterizeFailure internal constructor(
     public val failure: Throwable,
 
     /**
+     * The parameters when the [failure] occurred.
+     */
+    public val parameters: List<DeclaredParameter<*>>
+) {
+    /**
      * The parameter arguments when the [failure] occurred.
      */
+    @Deprecated(
+        "Replaced with parameters",
+        ReplaceWith("this.parameters"),
+        DeprecationLevel.ERROR
+    )
+    @Suppress("DEPRECATION_ERROR")
     public val arguments: List<Argument<*>>
-) {
-    /** @suppress */
-    override fun toString(): String =
-        "ParameterizeFailure(failure=$failure, arguments=$arguments)"
-
+        get() = throw UnsupportedOperationException("Replaced with parameters")
 
     /**
      * A [parameter] and its [argument] when the [failure] occurred.
      */
+    @Deprecated(
+        "Removed in favor of DeclaredParameter",
+        ReplaceWith(
+            "ParameterizeScope.DeclaredParameter<T>",
+            "com.benwoodworth.parameterize.ParameterizeScope"
+        ),
+        DeprecationLevel.ERROR
+    )
     public class Argument<out T> internal constructor(
         /**
          * The Kotlin property for the parameter.
