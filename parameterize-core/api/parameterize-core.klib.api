@@ -104,9 +104,9 @@ final class com.benwoodworth.parameterize/ParameterizeFailure { // com.benwoodwo
         final val argument // com.benwoodworth.parameterize/ParameterizeFailure.Argument.argument|{}argument[0]
             final fun <get-argument>(): #A1 // com.benwoodworth.parameterize/ParameterizeFailure.Argument.argument.<get-argument>|<get-argument>(){}[0]
         final val parameter // com.benwoodworth.parameterize/ParameterizeFailure.Argument.parameter|{}parameter[0]
-            final fun <get-parameter>(): kotlin.reflect/KProperty<#A1> // com.benwoodworth.parameterize/ParameterizeFailure.Argument.parameter.<get-parameter>|<get-parameter>(){}[0]
+            final fun <get-parameter>(): kotlin.reflect/KProperty<*> // com.benwoodworth.parameterize/ParameterizeFailure.Argument.parameter.<get-parameter>|<get-parameter>(){}[0]
 
-        final fun component1(): kotlin.reflect/KProperty<#A1> // com.benwoodworth.parameterize/ParameterizeFailure.Argument.component1|component1(){}[0]
+        final fun component1(): kotlin.reflect/KProperty<*> // com.benwoodworth.parameterize/ParameterizeFailure.Argument.component1|component1(){}[0]
         final fun component2(): #A1 // com.benwoodworth.parameterize/ParameterizeFailure.Argument.component2|component2(){}[0]
         final fun toString(): kotlin/String // com.benwoodworth.parameterize/ParameterizeFailure.Argument.toString|toString(){}[0]
     }
