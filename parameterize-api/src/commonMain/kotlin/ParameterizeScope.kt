@@ -103,6 +103,8 @@ public interface ParameterizeScope {
      * A [Parameter][Parameter] [declared][provideDelegate] with one of its [arguments][Parameter.arguments] so that it can be used
      * as the [value][getValue] of a Kotlin property.
      *
+     * Equality is done by reference, making instances suitable for use as unique keys.
+     *
      * @see Parameter
      */
     public class DeclaredParameter<out T> @ExperimentalParameterizeApi constructor(
