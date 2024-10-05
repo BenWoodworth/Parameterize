@@ -151,8 +151,8 @@ class ParameterizeConfigurationSpec_onFailure {
 
         testParameterize(
             onFailure = {
-                val actualParameterArguments = arguments
-                    .map { (parameter, argument) -> parameter.name to argument }
+                val actualParameterArguments = parameters
+                    .map { it.property.name to it.argument }
 
                 assertEquals(lastParameterArguments, actualParameterArguments)
             }
@@ -179,7 +179,7 @@ class ParameterizeConfigurationSpec_onFailure {
     @Test
     fun failure_arguments_should_include_lazily_used_parameters_that_were_unused_this_iteration() = testParameterize(
         onFailure = {
-            val actualUsedParameters = arguments.map { it.parameter.name }
+            val actualUsedParameters = parameters.map { it.property.name }
             assertContains(actualUsedParameters, "letter")
         }
     ) {

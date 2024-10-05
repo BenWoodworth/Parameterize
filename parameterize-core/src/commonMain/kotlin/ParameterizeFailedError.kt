@@ -57,14 +57,14 @@ private class Failure(
         clearStackTrace()
     }
 
-    override val message: String = when (failure.arguments.size) {
+    override val message: String = when (failure.parameters.size) {
         0 -> "Failed with no arguments"
 
-        1 -> failure.arguments.single().let { argument ->
+        1 -> failure.parameters.single().let { argument ->
             "Failed with argument:\n\t\t$argument"
         }
 
-        else -> failure.arguments.joinToString(
+        else -> failure.parameters.joinToString(
             prefix = "Failed with arguments:\n\t\t",
             separator = "\n\t\t"
         )
@@ -116,9 +116,9 @@ internal inline val ParameterizeFailedError.commonMessage
                     }
                 }
 
-                failure.arguments.forEach { argument ->
+                failure.parameters.forEach { parameter ->
                     append("\n\t\t")
-                    append(argument)
+                    append(parameter.argument)
                 }
             }
 
