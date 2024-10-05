@@ -94,7 +94,7 @@ internal class ParameterState(
      * @throws ParameterizeException if already declared for a different [property].
      * @throws ParameterizeContinue if [arguments] is empty.
      */
-    fun <T> declare(property: KProperty<T>, arguments: Sequence<T>) {
+    fun <T> declare(property: KProperty<*>, arguments: Sequence<T>) {
         // Nothing to do if already declared (besides validating the property)
         this.property?.let { declaredProperty ->
             parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
@@ -120,7 +120,7 @@ internal class ParameterState(
      * @throws ParameterizeException if already declared for a different [property].
      * @throws IllegalStateException if the argument has not been declared yet.
      */
-    fun <T> getArgument(property: KProperty<T>): T {
+    fun getArgument(property: KProperty<*>): Any? {
         val declaredProperty = checkNotNull(this.property) {
             "Cannot get argument before parameter has been declared"
         }
@@ -129,8 +129,7 @@ internal class ParameterState(
             "Cannot use parameter with `${property.name}`, since it was declared with `${declaredProperty.name}`."
         }
 
-        @Suppress("UNCHECKED_CAST") // Argument is declared with property's arguments, so must be T
-        return argument as T
+        return argument
     }
 
     /**

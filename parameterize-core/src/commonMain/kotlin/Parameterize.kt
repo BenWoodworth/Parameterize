@@ -152,7 +152,6 @@ internal class SimpleParameterizeScope internal constructor(
             "Cannot declare parameter `${property.name}` after its iteration has completed"
         }
 
-        @Suppress("UNCHECKED_CAST")
-        return parameterizeState.declareParameter(property as KProperty<T>, arguments)
+        return parameterizeState.declareParameter(property, arguments)
     }
 }
