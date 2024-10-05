@@ -95,9 +95,8 @@ internal class ParameterizeState {
             lastParameterWithNextArgument = parameter
         }
 
-        @OptIn(ExperimentalParameterizeApi::class)
         @Suppress("UNCHECKED_CAST") // Assuming it's declared the same as last iteration, the argument should still be T
-        return DeclaredParameter(parameter.getArgument(property)) as DeclaredParameter<T>
+        return parameter.getDeclaredParameter(property) as DeclaredParameter<T>
     }
 
     private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {
