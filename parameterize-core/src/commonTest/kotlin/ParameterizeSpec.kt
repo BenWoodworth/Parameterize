@@ -16,7 +16,9 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import com.benwoodworth.parameterize.test.testAll
+import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -263,6 +265,25 @@ class ParameterizeSpec {
         ) { iteration ->
             assertEquals(iteration, capturedParameters[iteration]())
         }
+    }
+
+    @Test
+    fun declared_parameter_should_be_same_instance_when_unchanged_between_iterations() {
+        val declaredParameters = mutableListOf<DeclaredParameter<Unit>>()
+
+        parameterize {
+            val parameter by PropertyDelegateProvider { thisRef: Nothing?, property ->
+                parameterOf(Unit) // A single argument, so every iteration should have the same declared parameter
+                    .provideDelegate(thisRef, property)
+                    .also { declaredParameters += it } // Intercept delegate
+            }
+
+            // Multiple arguments, so there should be multiple iterations with `parameter` being the same
+            val parameter2 by parameterOf(Unit, Unit)
+        }
+
+        val allSame = declaredParameters.all { it == declaredParameters[0] }
+        assertTrue(allSame, "Expected `parameter` to have the same DeclaredParameter instance through all iterations")
     }
 
     @Test
