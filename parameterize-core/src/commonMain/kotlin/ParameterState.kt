@@ -54,13 +54,11 @@ internal class ParameterState(
     private val parameterizeState: ParameterizeState
 ) {
     private var declaredParameter: DeclaredParameter<*>? = null
-    private var property: KProperty<*>? = null
     private var arguments: Sequence<*>? = null
     private var argumentIterator: Iterator<*>? = null
 
     internal fun reset() {
         declaredParameter = null
-        property = null
         arguments = null
         argumentIterator = null
     }
@@ -93,7 +91,7 @@ internal class ParameterState(
      */
     fun <T> declare(property: KProperty<*>, arguments: Sequence<T>) {
         // Nothing to do if already declared (besides validating the property)
-        this.property?.let { declaredProperty ->
+        this.declaredParameter?.property?.let { declaredProperty ->
             parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
                 "Expected to be declaring `${declaredProperty.name}`, but got `${property.name}`"
             }
@@ -105,8 +103,7 @@ internal class ParameterState(
             throw ParameterizeContinue // Before changing any state
         }
 
-        this.declaredParameter = DeclaredParameter(iterator.next())
-        this.property = property
+        this.declaredParameter = DeclaredParameter(property, iterator.next())
         this.arguments = arguments
         this.argumentIterator = iterator.takeIf { it.hasNext() }
     }
@@ -130,13 +127,17 @@ internal class ParameterState(
      * @throws IllegalStateException if the argument has not been declared yet.
      */
     fun nextArgument() {
-        val arguments = checkNotNull(arguments) {
+        val declaredParameter = checkNotNull(this.declaredParameter) {
             "Cannot iterate arguments before parameter has been declared"
+        }
+
+        val arguments = checkNotNull(arguments) {
+            "Expected arguments to be non-null since parameter has been declared"
         }
 
         val iterator = argumentIterator ?: arguments.iterator()
 
-        declaredParameter = DeclaredParameter(iterator.next())
+        this.declaredParameter = DeclaredParameter(declaredParameter.property, iterator.next())
         argumentIterator = iterator.takeIf { it.hasNext() }
     }
 
@@ -150,10 +151,6 @@ internal class ParameterState(
             "Cannot get failure argument before parameter has been declared"
         }
 
-        val declaredProperty = checkNotNull(this.property) {
-            "The property is null even though the parameter has been declared"
-        }
-
-        return ParameterizeFailure.Argument(declaredProperty, declaredParameter.argument)
+        return ParameterizeFailure.Argument(declaredParameter.property, declaredParameter.argument)
     }
 }
