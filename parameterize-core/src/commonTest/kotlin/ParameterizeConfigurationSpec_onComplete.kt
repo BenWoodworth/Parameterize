@@ -18,6 +18,7 @@ package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import com.benwoodworth.parameterize.test.testAll
 import kotlin.test.*
 
@@ -294,19 +295,19 @@ class ParameterizeConfigurationSpec_onComplete {
 
     @Test
     fun recorded_failures_should_be_correct() {
-        val expectedRecordedFailures = mutableListOf<Pair<Throwable, List<ParameterizeFailure.Argument<*>>>>()
+        val expectedRecordedFailures = mutableListOf<Pair<Throwable, List<DeclaredParameter<*>>>>()
 
         var lastIteration = -1
         testParameterize(
             onFailure = { failure ->
                 if (lastIteration % 3 == 0) {
                     recordFailure = true
-                    expectedRecordedFailures += failure to arguments
+                    expectedRecordedFailures += failure to parameters
                 }
             },
             onComplete = {
                 val actualRecordedFailures = recordedFailures
-                    .map { recordedFailure -> recordedFailure.failure to recordedFailure.arguments }
+                    .map { recordedFailure -> recordedFailure.failure to recordedFailure.parameters }
 
                 assertEquals(expectedRecordedFailures, actualRecordedFailures)
             }
