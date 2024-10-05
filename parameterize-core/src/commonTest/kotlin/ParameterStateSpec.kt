@@ -151,7 +151,7 @@ class ParameterStateSpec {
         }
 
         assertEquals(
-            "Cannot use parameter with `differentProperty`, since it was declared with `property`.",
+            "Cannot use parameter with `differentProperty`, since it was declared for `property`.",
             exception.message
         )
     }
