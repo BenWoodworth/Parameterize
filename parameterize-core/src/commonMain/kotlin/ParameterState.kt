@@ -16,6 +16,7 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import kotlin.reflect.KProperty
 
 /**
@@ -52,15 +53,15 @@ import kotlin.reflect.KProperty
 internal class ParameterState(
     private val parameterizeState: ParameterizeState
 ) {
+    private var declaredParameter: DeclaredParameter<*>? = null
     private var property: KProperty<*>? = null
     private var arguments: Sequence<*>? = null
-    private var argument: Any? = null // T
     private var argumentIterator: Iterator<*>? = null
 
     internal fun reset() {
+        declaredParameter = null
         property = null
         arguments = null
-        argument = null
         argumentIterator = null
     }
 
@@ -69,7 +70,7 @@ internal class ParameterState(
      */
     val isLastArgument: Boolean
         get() {
-            checkNotNull(property) { "Parameter has not been declared" }
+            checkNotNull(declaredParameter) { "Parameter has not been declared" }
             return argumentIterator == null
         }
 
@@ -78,11 +79,7 @@ internal class ParameterState(
      * Returns a string representation of the current argument, or a "not declared" message.
      */
     override fun toString(): String =
-        if (property == null) {
-            "Parameter not declared yet."
-        } else {
-            argument.toString()
-        }
+        declaredParameter?.toString() ?: "Parameter not declared yet."
 
     /**
      * Set up the delegate for a parameter [property] with the given [arguments].
@@ -108,28 +105,32 @@ internal class ParameterState(
             throw ParameterizeContinue // Before changing any state
         }
 
+        this.declaredParameter = DeclaredParameter(iterator.next())
         this.property = property
         this.arguments = arguments
-        this.argument = iterator.next()
         this.argumentIterator = iterator.takeIf { it.hasNext() }
     }
 
     /**
-     * Get the current argument.
+     * Get the current [DeclaredParameter].
      *
      * @throws ParameterizeException if already declared for a different [property].
      * @throws IllegalStateException if the argument has not been declared yet.
      */
-    fun getArgument(property: KProperty<*>): Any? {
+    fun getDeclaredParameter(property: KProperty<*>): DeclaredParameter<*> {
+        val declaredParameter = checkNotNull(this.declaredParameter) {
+            "Cannot get declared parameter before it's been declared"
+        }
+
         val declaredProperty = checkNotNull(this.property) {
-            "Cannot get argument before parameter has been declared"
+            "The property is null even though the parameter has been declared"
         }
 
         parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
             "Cannot use parameter with `${property.name}`, since it was declared with `${declaredProperty.name}`."
         }
 
-        return argument
+        return declaredParameter
     }
 
     /**
@@ -144,7 +145,7 @@ internal class ParameterState(
 
         val iterator = argumentIterator ?: arguments.iterator()
 
-        argument = iterator.next()
+        declaredParameter = DeclaredParameter(iterator.next())
         argumentIterator = iterator.takeIf { it.hasNext() }
     }
 
@@ -154,10 +155,14 @@ internal class ParameterState(
      * @throws IllegalStateException if this parameter is not declared.
      */
     fun getFailureArgument(): ParameterizeFailure.Argument<*> {
-        val property = checkNotNull(property) {
+        val declaredParameter = checkNotNull(this.declaredParameter) {
             "Cannot get failure argument before parameter has been declared"
         }
 
-        return ParameterizeFailure.Argument(property, argument)
+        val declaredProperty = checkNotNull(this.property) {
+            "The property is null even though the parameter has been declared"
+        }
+
+        return ParameterizeFailure.Argument(declaredProperty, declaredParameter.argument)
     }
 }
