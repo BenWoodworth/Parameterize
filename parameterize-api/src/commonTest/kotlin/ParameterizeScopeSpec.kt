@@ -135,6 +135,33 @@ class ParameterizeScopeSpec : ParameterizeScope {
     }
 
     @Test
+    fun declared_parameter_equals_should_compare_by_reference_equality() {
+        val declaredParameter = DeclaredParameter(Unit)
+        val structurallyEqualDeclaredParameter = DeclaredParameter(Unit)
+
+        assertEquals(declaredParameter, declaredParameter, "Should equal the same instance")
+        assertNotEquals(declaredParameter, structurallyEqualDeclaredParameter, "Should not equal a different instance")
+    }
+
+    @Test
+    fun declared_parameter_hash_code_should_be_evaluated_by_reference() {
+        val declaredParameter = DeclaredParameter(Unit)
+        val structurallyEqualDeclaredParameters = generateSequence { DeclaredParameter(Unit) }
+
+        assertEquals(
+            declaredParameter.hashCode(),
+            declaredParameter.hashCode(),
+            "Should equal hash code of the same instance"
+        )
+
+        // There's a chance the hash code of different instances are equal, so check plenty of times
+        val anyHaveDifferentHashCodes = structurallyEqualDeclaredParameters.take(100)
+            .any { declaredParameter.hashCode() != it.hashCode() }
+
+        assertTrue(anyHaveDifferentHashCodes, "Different instances should have different hash codes")
+    }
+
+    @Test
     fun declared_parameter_string_representation_when_declared_should_equal_that_of_the_current_argument() {
         lateinit var declaredParameter: DeclaredParameter<Any>
 
