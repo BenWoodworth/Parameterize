@@ -33,6 +33,8 @@ class ParameterizeScopeSpec : ParameterizeScope {
     override fun <T> Parameter<T>.provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> =
         throw UnsupportedOperationException("Not Implemented")
 
+    private val property: KProperty<*> get() = ::property
+
     /**
      * A unique iterator that the tests can use to verify that a constructed [Parameter] has the correct
      * [arguments][Parameter.arguments].
@@ -135,18 +137,20 @@ class ParameterizeScopeSpec : ParameterizeScope {
     }
 
     @Test
+    @OptIn(ExperimentalParameterizeApi::class)
     fun declared_parameter_equals_should_compare_by_reference_equality() {
-        val declaredParameter = DeclaredParameter(Unit)
-        val structurallyEqualDeclaredParameter = DeclaredParameter(Unit)
+        val declaredParameter = DeclaredParameter(property, Unit)
+        val structurallyEqualDeclaredParameter = DeclaredParameter(property, Unit)
 
         assertEquals(declaredParameter, declaredParameter, "Should equal the same instance")
         assertNotEquals(declaredParameter, structurallyEqualDeclaredParameter, "Should not equal a different instance")
     }
 
     @Test
+    @OptIn(ExperimentalParameterizeApi::class)
     fun declared_parameter_hash_code_should_be_evaluated_by_reference() {
-        val declaredParameter = DeclaredParameter(Unit)
-        val structurallyEqualDeclaredParameters = generateSequence { DeclaredParameter(Unit) }
+        val declaredParameter = DeclaredParameter(property, Unit)
+        val structurallyEqualDeclaredParameters = generateSequence { DeclaredParameter(property, Unit) }
 
         assertEquals(
             declaredParameter.hashCode(),
@@ -167,7 +171,7 @@ class ParameterizeScopeSpec : ParameterizeScope {
         lateinit var declaredParameter: DeclaredParameter<Any>
 
         val parameter by PropertyDelegateProvider { thisRef: Nothing?, property ->
-            DeclaredParameter("argument")
+            DeclaredParameter(property, "argument")
                 .also { declaredParameter = it }
         }
 
