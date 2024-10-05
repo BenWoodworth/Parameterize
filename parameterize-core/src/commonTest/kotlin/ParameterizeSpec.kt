@@ -21,6 +21,7 @@ import com.benwoodworth.parameterize.test.testAll
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
