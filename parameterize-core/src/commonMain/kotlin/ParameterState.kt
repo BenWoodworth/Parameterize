@@ -114,20 +114,11 @@ internal class ParameterState(
     /**
      * Get the current [DeclaredParameter].
      *
-     * @throws ParameterizeException if already declared for a different [property].
      * @throws IllegalStateException if the argument has not been declared yet.
      */
-    fun getDeclaredParameter(property: KProperty<*>): DeclaredParameter<*> {
+    fun getDeclaredParameter(): DeclaredParameter<*> {
         val declaredParameter = checkNotNull(this.declaredParameter) {
             "Cannot get declared parameter before it's been declared"
-        }
-
-        val declaredProperty = checkNotNull(this.property) {
-            "The property is null even though the parameter has been declared"
-        }
-
-        parameterizeState.checkState(property.equalsProperty(declaredProperty)) {
-            "Cannot use parameter with `${property.name}`, since it was declared with `${declaredProperty.name}`."
         }
 
         return declaredParameter
