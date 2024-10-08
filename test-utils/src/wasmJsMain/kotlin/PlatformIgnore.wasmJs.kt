@@ -16,5 +16,6 @@
 
 package com.benwoodworth.parameterize.test
 
-actual val Throwable.stackTraceLines: List<String>
-    get() = stackTrace.map { "at $it" }
+import kotlin.test.Ignore
+
+public actual typealias WasmJsIgnore = Ignore

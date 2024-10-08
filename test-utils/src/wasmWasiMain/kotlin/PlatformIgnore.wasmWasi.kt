@@ -16,4 +16,6 @@
 
 package com.benwoodworth.parameterize.test
 
-expect val Throwable.stackTraceLines: List<String>
+import kotlin.test.Ignore
+
+public actual typealias WasmWasiIgnore = Ignore

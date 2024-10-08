@@ -20,12 +20,12 @@ private class TestAllSkip(
     message: String
 ) : Throwable(message)
 
-object TestAllScope {
-    fun skip(message: String): Nothing =
+public object TestAllScope {
+    public fun skip(message: String): Nothing =
         throw TestAllSkip(message)
 }
 
-fun <T> testAll(
+public fun <T> testAll(
     testCases: Iterable<Pair<String, T>>,
     test: TestAllScope.(testCase: T) -> Unit
 ) {
@@ -69,13 +69,13 @@ fun <T> testAll(
     }
 }
 
-fun <T> testAll(
+public fun <T> testAll(
     vararg testCases: Pair<String, T>,
     test: TestAllScope.(testCase: T) -> Unit
 ): Unit =
     testAll(testCases.toList(), test)
 
-fun testAll(vararg testCases: Pair<String, TestAllScope.() -> Unit>): Unit =
+public fun testAll(vararg testCases: Pair<String, TestAllScope.() -> Unit>): Unit =
     testAll(testCases.toList()) { testCase ->
         testCase()
     }
