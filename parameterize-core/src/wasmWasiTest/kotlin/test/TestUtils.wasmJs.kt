@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.benwoodworth.parameterize
+package com.benwoodworth.parameterize.test
 
+import kotlin.test.Ignore
+
+actual typealias WasmWasiIgnore = Ignore
+
+// Currently not possible on native: https://youtrack.jetbrains.com/issue/KT-59017/
 actual val Throwable.stackTraceLines: List<String>
-    get() = (this.asDynamic().stack as? String)
-        ?.removeSuffix("\n")?.lines()
-        ?: emptyList()
+    get() = throw UnsupportedOperationException("Not supported on wasm wasi")
