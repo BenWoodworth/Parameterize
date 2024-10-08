@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-rootProject.name = "parameterize"
+package com.benwoodworth.parameterize.test
 
-include(":parameterize-core")
-include(":test-utils")
+import kotlin.test.Ignore
+
+public actual typealias WasmJsIgnore = Ignore
+
+// Currently not possible on native: https://youtrack.jetbrains.com/issue/KT-59017/
+public actual val Throwable.stackTraceLines: List<String>
+    get() = throw UnsupportedOperationException("Not supported on wasm js")
