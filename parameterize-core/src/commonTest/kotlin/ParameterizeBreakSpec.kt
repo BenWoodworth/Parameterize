@@ -16,70 +16,74 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.test.EdgeCases
 import com.benwoodworth.parameterize.test.parameterizeState
 import com.benwoodworth.parameterize.test.probeThrow
+import com.benwoodworth.parameterize.test.testAll
 import kotlin.test.*
 
 class ParameterizeBreakSpec {
-    /**
-     * [ParameterizeBreak] is thrown when [parameterize] is misused, so should cause it to immediately fail since
-     * its state and parameter tracking are invalid.
-     */
-    @Test
-    fun should_cause_parameterize_to_immediately_break_without_continuing_or_triggering_handlers() {
-        val failedAssertions = mutableListOf<String>()
-
-        runCatching {
-            parameterize(
-                onFailure = { failedAssertions += "onFailure handler should not be invoked" },
-                onComplete = { failedAssertions += "onComplete handler should not be invoked" }
-            ) {
-                val iteration by parameter(1..2)
-                if (iteration == 2) failedAssertions += "Should not continue to iteration 2"
-
-                throw ParameterizeBreak(parameterizeState, ParameterizeException("Stub"))
-            }
-        }
-
-        assertEquals(emptyList(), failedAssertions, "Failed assertions")
-    }
-
-    @Test
-    fun should_cause_parameterize_to_fail_with_the_break_exception() {
-        val breakException = ParameterizeException("Stub")
-
-        val actualException = assertFailsWith<ParameterizeException> {
-            parameterize {
-                throw ParameterizeBreak(parameterizeState, breakException)
-            }
-        }
-
-        assertSame(breakException, actualException, "Should fail with the break's exception")
-    }
-
-    // TODO Valid? Test outer declaring param within inner?
-    /**
-     * When a different *inner* [parameterize] is misused, its should not cause other *outer* [parameterize] calls to
-     * fail, as the *inner* [parameterize] being invalid does not make the *outer* one invalid.
-     */
-    @Test
-    fun when_thrown_from_a_different_parameterize_call_it_should_be_ignored() {
-        val probedThrows = mutableListOf<Throwable?>()
-
-        runCatching {
-            parameterize {
-                val outerScope = this
-
-                probeThrow(probedThrows) {
-                    parameterize {
-                        throw ParameterizeBreak(outerScope.parameterizeState, ParameterizeException("Stub"))
-                    }
-                }
-            }
-        }
-
-        assertIs<ParameterizeBreak>(probedThrows[0], "Inner parameterize should not catch break for the outer parameterize")
-    }
+// TODO Move to configuration module
+//
+//    /**
+//     * [ParameterizeBreak] is thrown when [parameterize] is misused, so should cause it to immediately fail since
+//     * its state and parameter tracking are invalid.
+//     */
+//    @Test
+//    fun should_cause_parameterize_to_immediately_break_without_continuing_or_triggering_handlers() {
+//        val failedAssertions = mutableListOf<String>()
+//
+//        runCatching {
+//            parameterize(
+//                onFailure = { failedAssertions += "onFailure handler should not be invoked" },
+//                onComplete = { failedAssertions += "onComplete handler should not be invoked" }
+//            ) {
+//                val iteration by parameter(1..2)
+//                if (iteration == 2) failedAssertions += "Should not continue to iteration 2"
+//
+//                throw ParameterizeBreak(parameterizeState, ParameterizeException("Stub"))
+//            }
+//        }
+//
+//        assertEquals(emptyList(), failedAssertions, "Failed assertions")
+//    }
+//
+//    @Test
+//    fun should_cause_parameterize_to_fail_with_the_break_exception() {
+//        val breakException = ParameterizeException("Stub")
+//
+//        val actualException = assertFailsWith<ParameterizeException> {
+//            parameterize {
+//                throw ParameterizeBreak(parameterizeState, breakException)
+//            }
+//        }
+//
+//        assertSame(breakException, actualException, "Should fail with the break's exception")
+//    }
+//
+//    // TODO Valid? Test outer declaring param within inner?
+//    /**
+//     * When a different *inner* [parameterize] is misused, its should not cause other *outer* [parameterize] calls to
+//     * fail, as the *inner* [parameterize] being invalid does not make the *outer* one invalid.
+//     */
+//    @Test
+//    fun when_thrown_from_a_different_parameterize_call_it_should_be_ignored() {
+//        val probedThrows = mutableListOf<Throwable?>()
+//
+//        runCatching {
+//            parameterize {
+//                val outerScope = this
+//
+//                probeThrow(probedThrows) {
+//                    parameterize {
+//                        throw ParameterizeBreak(outerScope.parameterizeState, ParameterizeException("Stub"))
+//                    }
+//                }
+//            }
+//        }
+//
+//        assertIs<ParameterizeBreak>(probedThrows[0], "Inner parameterize should not catch break for the outer parameterize")
+//    }
 
     @Test
     fun parameter_disappears_on_second_iteration_due_to_external_condition() {
@@ -239,19 +243,32 @@ class ParameterizeBreakSpec {
 
     @Test
     fun declaring_parameter_after_iteration_completed() { // TODO Not break-related
-        var declareParameter = {}
+        val iterationCompletionsByThrowing = EdgeCases.iterationFailures.map { (name, getFailure) ->
+            "Complete by throwing $name" to { state: ParameterizeState -> throw getFailure(state) }
+        }
 
-        parameterize {
-            declareParameter = {
-                val parameter by parameterOf(Unit)
+        testAll<(ParameterizeState) -> Unit>(
+            "Complete without failing" to {},
+            *iterationCompletionsByThrowing.toTypedArray()
+        ) { completeIteration ->
+            var declareParameter = {}
+
+            kotlin.runCatching {
+                parameterize {
+                    declareParameter = {
+                        val parameter by parameterOf(Unit)
+                    }
+
+                    completeIteration(parameterizeState)
+                }
             }
-        }
 
-        val failure = assertFailsWith<ParameterizeException> { // TODO
-            declareParameter()
-        }
+            val failure = assertFailsWith<ParameterizeException> { // TODO
+                declareParameter()
+            }
 
-        assertEquals("Cannot declare parameter `parameter` after its iteration has completed", failure.message)
+            assertEquals("Cannot declare parameter `parameter` after its iteration has completed", failure.message)
+        }
     }
 
     @Test

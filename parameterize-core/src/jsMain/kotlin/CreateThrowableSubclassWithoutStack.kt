@@ -3,9 +3,8 @@ package com.benwoodworth.parameterize
 /**
  * Create a subclass of [Throwable] without a `stack` being captured.
  *
- * For classes extending [Throwable], Kotlin/JS checks if `captureStackTrace`
- * is defined, and if so, uses that to capture/set the [Throwable]'s `stack`
- * property. So, this function temporarily defines `captureStackTrace`, and has
+ * For classes extending [Throwable], Kotlin/JS checks if `captureStackTrace` is defined, and if so, uses that to
+ * capture/set the [Throwable]'s `stack` property. So, this function temporarily defines `captureStackTrace`, and has
  * it set `stack` to `null`, instead of taking time to collect the actual stack.
  *
  * In Kotlin 2.0.21:
