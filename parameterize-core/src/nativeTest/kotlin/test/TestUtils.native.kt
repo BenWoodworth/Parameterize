@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.benwoodworth.parameterize
+package com.benwoodworth.parameterize.test
 
 import kotlin.test.Ignore
 
