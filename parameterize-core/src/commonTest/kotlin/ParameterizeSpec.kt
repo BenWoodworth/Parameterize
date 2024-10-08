@@ -16,6 +16,7 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.test.testAll
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
