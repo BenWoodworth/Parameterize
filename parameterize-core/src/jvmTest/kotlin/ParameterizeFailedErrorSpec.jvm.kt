@@ -16,6 +16,7 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.test.testAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.opentest4j.MultipleFailuresError
 import java.lang.reflect.Modifier

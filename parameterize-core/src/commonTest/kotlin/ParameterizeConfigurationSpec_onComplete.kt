@@ -18,6 +18,7 @@ package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
 import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
+import com.benwoodworth.parameterize.test.testAll
 import kotlin.test.*
 
 @Suppress("ClassName")
