@@ -16,25 +16,7 @@
 
 package com.benwoodworth.parameterize.test
 
-import kotlin.test.Ignore
-
-/**
- * [Ignore] on native targets.
- */
-@OptIn(ExperimentalMultiplatform::class)
-@OptionalExpectation
-expect annotation class NativeIgnore()
-
-/**
- * [Ignore] on wasm js targets.
- */
-@OptIn(ExperimentalMultiplatform::class)
-@OptionalExpectation
-expect annotation class WasmJsIgnore()
-
-/**
- * [Ignore] on wasm wasi targets.
- */
-@OptIn(ExperimentalMultiplatform::class)
-@OptionalExpectation
-expect annotation class WasmWasiIgnore()
+public actual val Throwable.stackTraceLines: List<String>
+    get() = (this.asDynamic().stack as? String)
+        ?.removeSuffix("\n")?.lines()
+        ?: emptyList()
