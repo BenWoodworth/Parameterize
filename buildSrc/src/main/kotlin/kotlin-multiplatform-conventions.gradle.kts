@@ -86,6 +86,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(libs.findLibrary("kotlin-test").get())
+                implementation(project(":test-utils"))
             }
         }
     }

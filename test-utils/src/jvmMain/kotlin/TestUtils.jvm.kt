@@ -16,10 +16,5 @@
 
 package com.benwoodworth.parameterize.test
 
-import kotlin.test.Ignore
-
-actual typealias WasmJsIgnore = Ignore
-
-// Currently not possible on native: https://youtrack.jetbrains.com/issue/KT-59017/
-actual val Throwable.stackTraceLines: List<String>
-    get() = throw UnsupportedOperationException("Not supported on wasm js")
+public actual val Throwable.stackTraceLines: List<String>
+    get() = stackTrace.map { "at $it" }
