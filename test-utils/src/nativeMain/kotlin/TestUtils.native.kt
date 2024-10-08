@@ -18,8 +18,8 @@ package com.benwoodworth.parameterize.test
 
 import kotlin.test.Ignore
 
-actual typealias WasmWasiIgnore = Ignore
+public actual typealias NativeIgnore = Ignore
 
 // Currently not possible on native: https://youtrack.jetbrains.com/issue/KT-59017/
-actual val Throwable.stackTraceLines: List<String>
-    get() = throw UnsupportedOperationException("Not supported on wasm wasi")
+public actual val Throwable.stackTraceLines: List<String>
+    get() = throw UnsupportedOperationException("Not supported on native")

@@ -16,5 +16,10 @@
 
 package com.benwoodworth.parameterize.test
 
-actual val Throwable.stackTraceLines: List<String>
-    get() = stackTrace.map { "at $it" }
+import kotlin.test.Ignore
+
+public actual typealias WasmWasiIgnore = Ignore
+
+// Currently not possible on native: https://youtrack.jetbrains.com/issue/KT-59017/
+public actual val Throwable.stackTraceLines: List<String>
+    get() = throw UnsupportedOperationException("Not supported on wasm wasi")
