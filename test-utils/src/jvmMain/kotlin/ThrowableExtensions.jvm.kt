@@ -16,6 +16,5 @@
 
 package com.benwoodworth.parameterize.test
 
-// Currently not possible on native: https://youtrack.jetbrains.com/issue/KT-59017/
-actual val Throwable.stackTraceLines: List<String>
-    get() = throw UnsupportedOperationException("Not supported on native")
+public actual val Throwable.stackTraceLines: List<String>
+    get() = stackTrace.map { "at $it" }

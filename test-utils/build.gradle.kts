@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Ben Woodworth
+ * Copyright 2024 Ben Woodworth
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,25 @@
  * limitations under the License.
  */
 
-package com.benwoodworth.parameterize.test
+plugins {
+    id("kotlin-multiplatform-conventions")
+}
 
-import kotlin.test.Ignore
+repositories {
+    mavenCentral()
+}
 
-actual typealias NativeIgnore = Ignore
+kotlin {
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.kotlin.test.jvm)
+            }
+        }
+    }
+}

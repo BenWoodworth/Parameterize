@@ -18,4 +18,4 @@ package com.benwoodworth.parameterize.test
 
 import kotlin.test.Ignore
 
-actual typealias WasmJsIgnore = Ignore
+public actual typealias NativeIgnore = Ignore
