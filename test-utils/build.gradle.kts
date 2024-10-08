@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
-package com.benwoodworth.parameterize.test
+plugins {
+    id("kotlin-multiplatform-conventions")
+}
 
-import kotlin.test.Ignore
+repositories {
+    mavenCentral()
+}
 
-actual typealias NativeIgnore = Ignore
-
-// Currently not possible on native: https://youtrack.jetbrains.com/issue/KT-59017/
-actual val Throwable.stackTraceLines: List<String>
-    get() = throw UnsupportedOperationException("Not supported on native")
+kotlin {
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.kotlin.test.jvm)
+            }
+        }
+    }
+}

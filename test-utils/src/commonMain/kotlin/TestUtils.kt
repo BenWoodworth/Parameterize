@@ -16,9 +16,6 @@
 
 package com.benwoodworth.parameterize.test
 
-import com.benwoodworth.parameterize.ParameterizeScope
-import com.benwoodworth.parameterize.ParameterizeState
-import com.benwoodworth.parameterize.SimpleParameterizeScope
 import kotlin.test.Ignore
 
 /**
@@ -26,42 +23,34 @@ import kotlin.test.Ignore
  */
 @OptIn(ExperimentalMultiplatform::class)
 @OptionalExpectation
-expect annotation class NativeIgnore()
+public expect annotation class NativeIgnore()
 
 /**
  * [Ignore] on wasm js targets.
  */
 @OptIn(ExperimentalMultiplatform::class)
 @OptionalExpectation
-expect annotation class WasmJsIgnore()
+public expect annotation class WasmJsIgnore()
 
 /**
  * [Ignore] on wasm wasi targets.
  */
 @OptIn(ExperimentalMultiplatform::class)
 @OptionalExpectation
-expect annotation class WasmWasiIgnore()
+public expect annotation class WasmWasiIgnore()
 
-expect val Throwable.stackTraceLines: List<String>
-
-internal val ParameterizeScope.parameterizeState: ParameterizeState
-    get() {
-        check(this is SimpleParameterizeScope) {
-            "Expected scope to be a ${SimpleParameterizeScope::class.simpleName}, but was ${this::class.simpleName}"
-        }
-        return parameterizeState
-    }
+public expect val Throwable.stackTraceLines: List<String>
 
 private class TestAllSkip(
     message: String
 ) : Throwable(message)
 
-object TestAllScope {
-    fun skip(message: String): Nothing =
+public object TestAllScope {
+    public fun skip(message: String): Nothing =
         throw TestAllSkip(message)
 }
 
-fun <T> testAll(
+public fun <T> testAll(
     testCases: Iterable<Pair<String, T>>,
     test: TestAllScope.(testCase: T) -> Unit
 ) {
@@ -105,13 +94,13 @@ fun <T> testAll(
     }
 }
 
-fun <T> testAll(
+public fun <T> testAll(
     vararg testCases: Pair<String, T>,
     test: TestAllScope.(testCase: T) -> Unit
 ): Unit =
     testAll(testCases.toList(), test)
 
-fun testAll(vararg testCases: Pair<String, TestAllScope.() -> Unit>): Unit =
+public fun testAll(vararg testCases: Pair<String, TestAllScope.() -> Unit>): Unit =
     testAll(testCases.toList()) { testCase ->
         testCase()
     }
