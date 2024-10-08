@@ -16,6 +16,7 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.test.parameterizeState
 import kotlin.test.*
 
 class ParameterizeExceptionSpec {

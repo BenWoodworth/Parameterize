@@ -19,6 +19,7 @@ package com.benwoodworth.parameterize
 import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import com.benwoodworth.parameterize.ParameterizeScope.Parameter
 import com.benwoodworth.parameterize.ParameterizeScopeSpec.LazyParameterFunction.LazyArguments
+import com.benwoodworth.parameterize.test.testAll
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.reflect.KProperty
 import kotlin.test.*

@@ -18,6 +18,8 @@ package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
 import com.benwoodworth.parameterize.ParameterizeConfigurationSpec.ParameterizeWithOptionDefault
+import com.benwoodworth.parameterize.test.TestAllScope
+import com.benwoodworth.parameterize.test.testAll
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty1
 import kotlin.test.*
