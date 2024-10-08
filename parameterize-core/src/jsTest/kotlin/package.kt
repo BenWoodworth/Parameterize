@@ -14,9 +14,4 @@
  * limitations under the License.
  */
 
-rootProject.name = "parameterize"
-
-include(":parameterize-api")
-include(":parameterize-core")
-include(":parameterize-configuration")
-include(":test-utils")
+package com.benwoodworth.parameterize

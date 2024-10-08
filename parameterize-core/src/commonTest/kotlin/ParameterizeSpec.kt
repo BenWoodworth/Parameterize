@@ -21,6 +21,7 @@ import com.benwoodworth.parameterize.test.testAll
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -291,6 +292,29 @@ class ParameterizeSpec {
         parameterize {
             return@should_be_able_to_return_from_an_outer_function_from_within_the_block
         }
+    }
+
+    // TODO Wording
+    /**
+     * The [parameterize] implementation catches all [Throwable]s so it can handle its own `throw`-based control flow.
+     * Anything else that's thrown shouldn't be swallowed, and throw normally, aborting the loop.
+     */
+    @Test
+    fun failures_from_the_block_should_not_be_caught() {
+        var iterationCount = 0
+
+        class ThrownFailure : Throwable()
+
+        assertFailsWith<ThrownFailure> {
+            parameterize {
+                val iteration by parameter(1..2)
+
+                iterationCount++
+                throw ThrownFailure()
+            }
+        }
+
+        assertEquals(1, iterationCount, "continued to next iteration after failing")
     }
 
     /**

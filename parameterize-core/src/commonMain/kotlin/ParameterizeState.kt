@@ -16,12 +16,7 @@
 
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
-import com.benwoodworth.parameterize.ParameterizeConfiguration.OnFailureScope
 import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
-import kotlin.jvm.JvmInline
 import kotlin.reflect.KProperty
 
 internal class ParameterizeState {
@@ -49,19 +44,13 @@ internal class ParameterizeState {
      */
     private var lastParameterWithNextArgument: ParameterState? = null
 
-    private var iterationCount = 0L
-    private var skipCount = 0L
-    private var failureCount = 0L
-    private val recordedFailures = mutableListOf<ParameterizeFailure>()
+    private var startedFirstIteration = false
 
     val hasNextArgumentCombination: Boolean
-        get() = lastParameterWithNextArgument != null || iterationCount == 0L
-
-    val isFirstIteration: Boolean
-        get() = iterationCount == 1L
+        get() = lastParameterWithNextArgument != null || !startedFirstIteration
 
     fun startNextIteration() {
-        iterationCount++
+        startedFirstIteration = true
         parameterCount = 0
 
         parameterToIterate = lastParameterWithNextArgument
@@ -118,59 +107,16 @@ internal class ParameterizeState {
         }
     }
 
-    fun handleContinue() {
-        skipCount++
-    }
-
     fun getDeclaredParameters(): List<DeclaredParameter<*>> =
         parameters.take(parameterCount)
             .map { it.getDeclaredParameter() }
 
-    @JvmInline
-    value class HandleFailureResult(val breakEarly: Boolean)
-
-    fun handleFailure(onFailure: OnFailureScope.(Throwable) -> Unit, failure: Throwable): HandleFailureResult {
+    fun checkFailure(failure: Throwable) {
         if (parameterToIterate != null) {
             val message = "Previous iteration executed to this point successfully, " +
                     "but now failed with the same arguments"
 
             throw ParameterizeException(message, failure)
-        }
-
-        failureCount++
-
-        val scope = OnFailureScope(
-            state = this,
-            iterationCount,
-            failureCount,
-        )
-
-        with(scope) {
-            onFailure(failure)
-
-            if (recordFailure) {
-                recordedFailures += ParameterizeFailure(failure, parameters)
-            }
-
-            return HandleFailureResult(breakEarly)
-        }
-    }
-
-    fun handleComplete(onComplete: OnCompleteScope.() -> Unit) {
-        contract {
-            callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
-        }
-
-        val scope = OnCompleteScope(
-            iterationCount,
-            skipCount,
-            failureCount,
-            completedEarly = hasNextArgumentCombination,
-            recordedFailures,
-        )
-
-        with(scope) {
-            onComplete()
         }
     }
 }
