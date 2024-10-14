@@ -18,6 +18,7 @@ package com.benwoodworth.parameterize.test
 
 import kotlin.test.Ignore
 
+// TODO Move to separate file (and actuals)
 /**
  * [Ignore] on native targets.
  */
@@ -39,6 +40,7 @@ public expect annotation class WasmJsIgnore()
 @OptionalExpectation
 public expect annotation class WasmWasiIgnore()
 
+// TODO Move to separate file
 private class TestAllSkip(
     message: String
 ) : Throwable(message)

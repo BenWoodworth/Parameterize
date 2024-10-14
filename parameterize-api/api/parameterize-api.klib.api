@@ -39,6 +39,10 @@ abstract interface com.benwoodworth.parameterize/ParameterizeScope { // com.benw
     }
 }
 
+abstract class com.benwoodworth.parameterize/ParameterizeControlFlow : kotlin/Throwable { // com.benwoodworth.parameterize/ParameterizeControlFlow|null[0]
+    constructor <init>() // com.benwoodworth.parameterize/ParameterizeControlFlow.<init>|<init>(){}[0]
+}
+
 final value class com.benwoodworth.parameterize/LazyParameterScope { // com.benwoodworth.parameterize/LazyParameterScope|null[0]
     constructor <init>(com.benwoodworth.parameterize/ParameterizeScope) // com.benwoodworth.parameterize/LazyParameterScope.<init>|<init>(com.benwoodworth.parameterize.ParameterizeScope){}[0]
 

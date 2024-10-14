@@ -65,7 +65,9 @@ public interface ParameterizeScope {
      * Declares this [Parameter], allowing one of its arguments to be used as the [value][getValue] of the Kotlin
      * [property].
      *
-     * @throws ParameterizeException if this [Parameter] is being declared with the wrong [property].
+     * @throws ParameterizeControlFlow if signaling non-local control flow in the [ParameterizeScope].
+     *         Third-party code must not `catch` this type.
+     *
      * @see Parameter
      */
     public operator fun <T> Parameter<T>.provideDelegate(
@@ -168,6 +170,9 @@ public interface ParameterizeScope {
  * val letter by parameter('a'..'z')
  * ```
  *
+ * @throws ParameterizeControlFlow when declared if signaling non-local control flow in the [ParameterizeScope].
+ *         Third-party code must not `catch` this type.
+ *
  * @see Parameter
  */
 @Suppress("UnusedReceiverParameter") // Should only be accessible within parameterize scopes
@@ -182,6 +187,9 @@ public fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): Parameter<T>
  * val letter by parameter('a'..'z')
  * ```
  *
+ * @throws ParameterizeControlFlow when declared if signaling non-local control flow in the [ParameterizeScope].
+ *         Third-party code must not `catch` this type.
+ *
  * @see Parameter
  */
 public fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): Parameter<T> =
@@ -193,6 +201,9 @@ public fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): Parameter<T>
  * ```
  * val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
  * ```
+ *
+ * @throws ParameterizeControlFlow when declared if signaling non-local control flow in the [ParameterizeScope].
+ *         Third-party code must not `catch` this type.
  *
  * @see Parameter
  */
@@ -218,6 +229,9 @@ public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> 
  *
  * - The [lazyArguments] block should not have side effects. Since it's not run every iteration, side effects could make
  *   the execution different from future iterations, breaking [parameterize]'s determinism assumption.
+ *
+ * @throws ParameterizeControlFlow when declared if signaling non-local control flow in the [ParameterizeScope].
+ *         Third-party code must not `catch` this type.
  *
  * @see Parameter
  */
@@ -261,6 +275,9 @@ public inline fun <T> ParameterizeScope.parameter(
  *
  * - The [lazyArguments] block should not have side effects. Since it's not run every iteration, side effects could make
  *   the execution different from future iterations, breaking [parameterize]'s determinism assumption.
+ *
+ * @throws ParameterizeControlFlow when declared if signaling non-local control flow in the [ParameterizeScope].
+ *         Third-party code must not `catch` this type.
  *
  * @see Parameter
  */

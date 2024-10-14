@@ -274,4 +274,24 @@ class ParameterizeConfigurationSpec_decorator {
             }
         }
     }
+
+    /**
+     * With testing for example, it's important that any setup code before the iteration can be cleaned up, even if
+     * the case is skipped because of a parameter with empty arguments.
+     */
+    @Test
+    fun should_complete_after_a_skip() {
+        var finishedDecorator = false
+
+        testParameterize(
+            decorator = { iteration ->
+                iteration()
+                finishedDecorator = true
+            }
+        ) {
+            val skip by parameterOf<Unit>()
+        }
+
+        assertTrue(finishedDecorator, "finishedDecorator")
+    }
 }

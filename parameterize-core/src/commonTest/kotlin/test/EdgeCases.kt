@@ -16,27 +16,33 @@
 
 package com.benwoodworth.parameterize.test
 
-import com.benwoodworth.parameterize.ParameterizeContinue
-import com.benwoodworth.parameterize.ParameterizeException
-import com.benwoodworth.parameterize.ParameterizeState
-import com.benwoodworth.parameterize.parameterize
+import com.benwoodworth.parameterize.*
 
 internal object EdgeCases {
     val iterationFailures = listOf<Pair<String, (ParameterizeState) -> Throwable>>(
-        "ParameterizeContinue" to {
-            ParameterizeContinue
+        "ParameterizeContinue for same parameterize" to { parameterizeState ->
+            ParameterizeContinue(parameterizeState)
         },
-        "ParameterizeException for same parameterize" to { parameterizeState ->
-            ParameterizeException(parameterizeState, "same parameterize")
-        },
-        "ParameterizeException for different parameterize" to {
+        "ParameterizeContinue for different parameterize" to {
             lateinit var differentParameterizeState: ParameterizeState
 
             parameterize {
                 differentParameterizeState = parameterizeState
             }
 
-            ParameterizeException(differentParameterizeState, "different parameterize")
+            ParameterizeContinue(differentParameterizeState)
+        },
+        "ParameterizeBreak for same parameterize" to { parameterizeState ->
+            ParameterizeBreak(parameterizeState, ParameterizeException("same parameterize"))
+        },
+        "ParameterizeBreak for different parameterize" to {
+            lateinit var differentParameterizeState: ParameterizeState
+
+            parameterize {
+                differentParameterizeState = parameterizeState
+            }
+
+            ParameterizeBreak(differentParameterizeState, ParameterizeException("different parameterize"))
         },
         "Throwable" to {
             Throwable()

@@ -22,8 +22,6 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.intrinsics.createCoroutineUnintercepted
 import kotlin.coroutines.resume
 
-internal data object ParameterizeContinue : Throwable()
-
 @PublishedApi
 internal class ParameterizeIterator(
     private val configuration: ParameterizeConfiguration
@@ -55,11 +53,20 @@ internal class ParameterizeIterator(
 
     @PublishedApi
     internal fun handleFailure(failure: Throwable): Unit = when {
-        failure is ParameterizeContinue -> parameterizeState.handleContinue()
+        failure is ParameterizeStateControlFlow && failure.parameterizeState === parameterizeState -> when (failure) {
+            is ParameterizeContinue -> parameterizeState.handleContinue()
 
-        failure is ParameterizeException && failure.parameterizeState === parameterizeState -> {
-            afterEach() // Since nextIteration() won't be called again to finalize the iteration
-            throw failure
+            is ParameterizeBreak -> {
+                afterEach() // Since nextIteration() won't be called again to finalize the iteration
+                throw failure.cause
+            }
+
+            else -> throw ParameterizeException( // KT-59625
+                "Expected Parameterize control flow to be " +
+                        "${ParameterizeBreak::class.simpleName} or ${ParameterizeContinue::class.simpleName}, " +
+                        "but was ${failure::class.simpleName}",
+                failure
+            )
         }
 
         else -> {
@@ -105,7 +112,7 @@ private class DecoratorCoroutine(
     private var completed = false
 
     private val iteration: suspend DecoratorScope.() -> Unit = {
-        parameterizeState.checkState(continueAfterIteration == null) {
+        checkState(continueAfterIteration == null) {
             "Decorator must invoke the iteration function exactly once, but was invoked twice"
         }
 
@@ -130,7 +137,7 @@ private class DecoratorCoroutine(
             )
             .resume(Unit)
 
-        parameterizeState.checkState(continueAfterIteration != null) {
+        checkState(continueAfterIteration != null) {
             if (completed) {
                 "Decorator must invoke the iteration function exactly once, but was not invoked"
             } else {
@@ -145,7 +152,7 @@ private class DecoratorCoroutine(
         continueAfterIteration?.resume(Unit)
             ?: error("Iteration not invoked")
 
-        parameterizeState.checkState(completed) {
+        checkState(completed) {
             "Decorator suspended unexpectedly"
         }
     }

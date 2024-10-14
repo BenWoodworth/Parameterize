@@ -15,6 +15,10 @@ public final class com/benwoodworth/parameterize/LazyParameterScope {
 	public final synthetic fun unbox-impl ()Lcom/benwoodworth/parameterize/ParameterizeScope;
 }
 
+public abstract class com/benwoodworth/parameterize/ParameterizeControlFlow : java/lang/Throwable {
+	public fun <init> ()V
+}
+
 public abstract interface class com/benwoodworth/parameterize/ParameterizeScope {
 	public abstract fun provideDelegate-13mUnGw (Lkotlin/sequences/Sequence;Ljava/lang/Void;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter;
 }
