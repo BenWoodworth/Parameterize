@@ -45,7 +45,14 @@ kotlin {
         }
     }
     js {
-        browser()
+        browser {
+            testTask {
+                useKarma {
+                    useFirefoxHeadless()
+                    useChromeHeadless()
+                }
+            }
+        }
         nodejs()
     }
 

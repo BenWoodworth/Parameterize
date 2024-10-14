@@ -17,6 +17,8 @@
 package com.benwoodworth.parameterize.test
 
 public actual val Throwable.stackTraceLines: List<String>
-    get() = (this.asDynamic().stack as? String)
-        ?.removeSuffix("\n")?.lines()
-        ?: emptyList()
+    get() = ((this.asDynamic().stack as? String)
+        ?.removeSuffix("\n")
+//        ?.takeUnless { it == "" }
+        ?.lines()
+        ?: emptyList())
