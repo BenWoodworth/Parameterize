@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package com.benwoodworth.parameterize.test
+package com.benwoodworth.parameterize
 
-public actual val Throwable.stackTraceLines: List<String>
-    get() = (this.asDynamic().stack as? String)
-        ?.removeSuffix("\n")
-//        ?.takeUnless { it == "" } TODO
-        ?.lines()
-        ?: emptyList()
+import com.benwoodworth.parameterize.test.stackTraceLines
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class ThrowableExtensionsTest {
+    @Test
+    fun stack_trace_lines_should_be_empty_if_stack_is_null() {
+        val throwable = Throwable().apply {
+            asDynamic().stack = null
+        }
+
+        assertEquals(emptyList(), throwable.stackTraceLines)
+    }
+}
