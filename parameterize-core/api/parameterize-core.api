@@ -52,6 +52,8 @@ public abstract interface annotation class com/benwoodworth/parameterize/Paramet
 
 public final class com/benwoodworth/parameterize/ParameterizeFailedError : org/opentest4j/MultipleFailuresError {
 	public static final field Companion Lcom/benwoodworth/parameterize/ParameterizeFailedError$Companion;
+	public synthetic fun <init> (Ljava/util/List;JJZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun fillInStackTrace ()Ljava/lang/Throwable;
 	public synthetic fun getFailures ()Ljava/util/List;
 	public fun getMessage ()Ljava/lang/String;
 	public synthetic fun hasFailures ()Z
