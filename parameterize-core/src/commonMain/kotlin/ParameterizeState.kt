@@ -25,6 +25,8 @@ import kotlin.jvm.JvmInline
 import kotlin.reflect.KProperty
 
 internal class ParameterizeState {
+    internal val parameterizeContinue = ParameterizeContinue(this)
+
     /**
      * The parameters created for [parameterize].
      *
@@ -101,7 +103,7 @@ internal class ParameterizeState {
 
     private inline fun <T> trackNestedDeclaration(property: KProperty<*>, block: () -> T): T {
         val outerParameter = declaringParameter
-        checkState(outerParameter == null) {
+        checkStateBreaking(outerParameter == null) {
             "Nesting parameters is not currently supported: `${property.name}` was declared within `${outerParameter!!.name}`'s arguments"
         }
 
