@@ -239,10 +239,10 @@ class ParameterStateSpec {
     }
 
     @Test
-    fun redeclare_with_different_parameter_should_throw_ParameterizeException() {
+    fun redeclare_with_different_parameter_should_throw_ParameterizeBreak() {
         parameter.declare(::property, sequenceOf(Unit))
 
-        assertFailsWith<ParameterizeException> {
+        assertFailsWith<ParameterizeBreak> {
             parameter.declare(::differentProperty, sequenceOf(Unit))
         }
     }
