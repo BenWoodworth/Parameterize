@@ -31,15 +31,17 @@ import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
  *
  * Can only be constructed from [onComplete][Builder.onComplete].
  */
-public expect class ParameterizeFailedError internal constructor(
-    recordedFailures: List<ParameterizeFailure>,
-    successCount: Long,
-    failureCount: Long,
-    completedEarly: Boolean
-) : AssertionError {
+public expect class ParameterizeFailedError : AssertionError {
     // TODO: Use context receiver instead of companion + pseudo constructor
     /** @suppress */
-    public companion object;
+    public companion object {
+        internal operator fun invoke(
+            recordedFailures: List<ParameterizeFailure>,
+            successCount: Long,
+            failureCount: Long,
+            completedEarly: Boolean
+        ): ParameterizeFailedError
+    }
 
     internal val recordedFailures: List<ParameterizeFailure>
     internal val successCount: Long
@@ -50,34 +52,25 @@ public expect class ParameterizeFailedError internal constructor(
     override val message: String
 }
 
-private class Failure(
-    failure: ParameterizeFailure,
-) : AssertionError(failure.failure) {
-    init {
-        clearStackTrace()
+internal expect class Failure : AssertionError {
+    companion object {
+        operator fun invoke(failure: ParameterizeFailure): Failure
     }
 
-    override val message: String = when (failure.parameters.size) {
-        0 -> "Failed with no arguments"
+    internal val failure: ParameterizeFailure
 
-        1 -> failure.parameters.single().let { argument ->
-            "Failed with argument:\n\t\t$argument"
-        }
-
-        else -> failure.parameters.joinToString(
-            prefix = "Failed with arguments:\n\t\t",
-            separator = "\n\t\t"
-        )
-    }
+    override val message: String
+    override val cause: Throwable
 }
 
-internal expect fun Throwable.clearStackTrace()
+@Suppress("NOTHING_TO_INLINE")
+internal inline fun ParameterizeFailedError.Companion.commonShouldCaptureStackTrace(
+    recordedFailures: List<ParameterizeFailure>
+): Boolean {
+    return recordedFailures.isEmpty()
+}
 
 internal fun ParameterizeFailedError.commonInit() {
-    if (recordedFailures.isNotEmpty()) {
-        clearStackTrace()
-    }
-
     recordedFailures.forEach { failure ->
         addSuppressed(Failure(failure))
     }
@@ -127,3 +120,20 @@ internal inline val ParameterizeFailedError.commonMessage
             }
         }
     }
+
+internal inline val Failure.commonMessage: String
+    get() = when (failure.parameters.size) {
+        0 -> "Failed with no arguments"
+
+        1 -> failure.parameters.single().let { argument ->
+            "Failed with argument:\n\t\t$argument"
+        }
+
+        else -> failure.parameters.joinToString(
+            prefix = "Failed with arguments:\n\t\t",
+            separator = "\n\t\t"
+        )
+    }
+
+internal inline val Failure.commonCause: Throwable
+    get() = failure.failure

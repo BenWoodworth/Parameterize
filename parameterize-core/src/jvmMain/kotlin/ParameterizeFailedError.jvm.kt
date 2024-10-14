@@ -19,20 +19,36 @@ package com.benwoodworth.parameterize
 import org.opentest4j.MultipleFailuresError
 
 @Suppress("ACTUAL_WITHOUT_EXPECT") // https://youtrack.jetbrains.com/issue/KT-20641/
-public actual class ParameterizeFailedError internal actual constructor(
+public actual class ParameterizeFailedError private constructor(
     internal actual val recordedFailures: List<ParameterizeFailure>,
     internal actual val successCount: Long,
     internal actual val failureCount: Long,
     internal actual val completedEarly: Boolean
 ) : MultipleFailuresError(null, emptyList()) {
-    public actual companion object;
+    public actual companion object {
+        internal actual operator fun invoke(
+            recordedFailures: List<ParameterizeFailure>,
+            successCount: Long,
+            failureCount: Long,
+            completedEarly: Boolean
+        ): ParameterizeFailedError {
+            return ParameterizeFailedError(recordedFailures, successCount, failureCount, completedEarly)
+        }
+    }
 
     init {
+        if (commonShouldCaptureStackTrace(recordedFailures)) {
+            super.fillInStackTrace()
+        }
+
         commonInit()
     }
 
     public actual override val message: String
         get() = commonMessage
+
+    /** @suppress */
+    override fun fillInStackTrace(): Throwable = this
 
     // Usually won't be used, so compute as needed (instead of always providing it to `MultipleFailuresError` up front)
     @Deprecated("Exists for MultipleFailuresError tooling, and is not API", level = DeprecationLevel.HIDDEN)
@@ -44,6 +60,20 @@ public actual class ParameterizeFailedError internal actual constructor(
         recordedFailures.isNotEmpty()
 }
 
-internal actual fun Throwable.clearStackTrace() {
-    stackTrace = emptyArray()
+internal actual class Failure private constructor(
+    actual val failure: ParameterizeFailure
+) : AssertionError() {
+    actual companion object {
+        actual operator fun invoke(failure: ParameterizeFailure): Failure {
+            return Failure(failure)
+        }
+    }
+
+    actual override val message: String
+        get() = commonMessage
+
+    actual override val cause: Throwable
+        get() = commonCause
+
+    override fun fillInStackTrace(): Throwable = this
 }
