@@ -39,8 +39,6 @@ public expect annotation class WasmJsIgnore()
 @OptionalExpectation
 public expect annotation class WasmWasiIgnore()
 
-public expect val Throwable.stackTraceLines: List<String>
-
 private class TestAllSkip(
     message: String
 ) : Throwable(message)
