@@ -1,91 +1,22 @@
-/*
- * Copyright 2024 Ben Woodworth
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.test.parameterizeState
+import com.benwoodworth.parameterize.test.probeThrow
 import kotlin.test.*
 
+/**
+ * Ways that [parameterize] can be checked for misuse, and the [ParameterizeException]s that should be thrown as a
+ * result.
+ *
+ * If the misuse occurs during an iteration, the exception should be thrown within a [ParameterizeBreak] to signal that
+ * the [parameterize] loop is in an invalid state, and also to protecting the exception from being caught since thrown
+ * [ParameterizeControlFlow]s being caught is documented as being disallowed.
+ */
 class ParameterizeExceptionSpec {
-    /**
-     * [ParameterizeException] is thrown when [parameterize] is misused, so should cause it to immediately fail since
-     * its state and parameter tracking are invalid.
-     */
-    @Test
-    fun should_cause_parameterize_to_immediately_fail_without_or_triggering_handlers() {
-        lateinit var exception: ParameterizeException
-
-        val actualException = assertFailsWith<ParameterizeException> {
-            parameterize(
-                onFailure = { fail("onFailure handler should not be invoked") },
-                onComplete = { fail("onComplete handler should not be invoked") }
-            ) {
-                exception = ParameterizeException(parameterizeState, "test")
-                throw exception
-            }
-        }
-
-        assertSame(exception, actualException)
-    }
-
-    /**
-     * When a different *inner* [parameterize] is misused, its should not cause other *outer* [parameterize] calls to
-     * fail, as the *inner* [parameterize] being invalid does not make the *outer* one invalid.
-     */
-    @Test
-    fun when_thrown_from_a_different_parameterize_call_it_should_be_handled_like_any_other_failure() {
-        lateinit var exceptionFromDifferentParameterize: ParameterizeException
-
-        var onFailureInvoked = false
-        var onCompleteInvoked = false
-
-        val result = runCatching {
-            parameterize(
-                onFailure = { failure ->
-                    onFailureInvoked = true
-
-                    assertSame(
-                        exceptionFromDifferentParameterize,
-                        failure,
-                        "onFailure handler should be invoked with the exception"
-                    )
-                },
-                onComplete = {
-                    onCompleteInvoked = true
-                }
-            ) {
-                parameterize {
-                    exceptionFromDifferentParameterize = ParameterizeException(
-                        parameterizeState,
-                        "from different parameterize"
-                    )
-
-                    throw exceptionFromDifferentParameterize
-                }
-            }
-        }
-
-        assertEquals(Result.success(Unit), result, "should have been handled and not thrown")
-        assertTrue(onFailureInvoked, "onFailure handler should be invoked")
-        assertTrue(onCompleteInvoked, "onComplete handler should be invoked")
-    }
-
     @Test
     fun parameter_disappears_on_second_iteration_due_to_external_condition() {
-        val exception = assertFailsWith<ParameterizeException> {
+        val probedThrows = mutableListOf<Throwable?>()
+
+        runCatching {
             var shouldDeclareA = true
 
             parameterize {
@@ -93,23 +24,29 @@ class ParameterizeExceptionSpec {
                     val a by parameterOf(1)
                 }
 
-                val b by parameterOf(1, 2)
+                probeThrow(probedThrows) {
+                    val b by parameterOf(1, 2)
+                }
 
                 shouldDeclareA = false
             }
         }
 
-        assertEquals("Expected to be declaring `a`, but got `b`", exception.message)
+        val probedBreak = assertIs<ParameterizeBreak>(probedThrows[0])
+        assertEquals("Expected to be declaring `a`, but got `b`", probedBreak.cause.message)
     }
 
     @Test
     fun parameter_appears_on_second_iteration_due_to_external_condition() {
-        val exception = assertFailsWith<ParameterizeException> {
-            var shouldDeclareA = false
+        var shouldDeclareA = false
+        val probedThrows = mutableListOf<Throwable?>()
 
+        runCatching {
             parameterize {
                 if (shouldDeclareA) {
-                    val a by parameterOf(2)
+                    probeThrow(probedThrows) {
+                        val a by parameterOf(2)
+                    }
                 }
 
                 val b by parameterOf(1, 2)
@@ -118,72 +55,102 @@ class ParameterizeExceptionSpec {
             }
         }
 
-        assertEquals("Expected to be declaring `b`, but got `a`", exception.message)
+        val probedBreak = assertIs<ParameterizeBreak>(probedThrows[0])
+        assertEquals("Expected to be declaring `b`, but got `a`", probedBreak.cause.message)
     }
 
     @Test
     fun nested_parameter_declaration_within_arguments_iterator_function() {
+        val probedThrows = mutableListOf<Throwable?>()
+
         fun ParameterizeScope.testArguments() = object : Sequence<Unit> {
             override fun iterator(): Iterator<Unit> {
-                val inner by parameterOf(Unit)
+                probeThrow(probedThrows) {
+                    val inner by parameterOf(Unit)
+                }
 
                 return listOf(Unit).iterator()
             }
         }
 
-        val exception = assertFailsWith<ParameterizeException> {
+        runCatching {
             parameterize {
                 val outer by parameter(testArguments())
-
-                val end by parameterOf(Unit, Unit)
             }
         }
 
+        val thrownBreak = assertIs<ParameterizeBreak>(probedThrows[0])
         assertEquals(
             "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
-            exception.message
+            thrownBreak.cause.message
         )
     }
 
     @Test
     fun nested_parameter_declaration_within_arguments_iterator_next_function() {
-        fun ParameterizeScope.testArgumentsIterator() = object : Iterator<Unit> {
-            private var index = 0
+        val probedThrows = mutableListOf<Throwable?>()
 
-            override fun hasNext(): Boolean = index <= 1
+        fun ParameterizeScope.testArgumentsIterator() = object : Iterator<Unit> {
+            override fun hasNext(): Boolean = true
 
             override fun next() {
-                if (index == 0) {
-                    val innerA by parameterOf(Unit)
-                } else {
-                    val innerB by parameterOf(Unit)
+                probeThrow(probedThrows) {
+                    val inner by parameterOf(Unit)
                 }
-
-                index++
             }
         }
 
-        val exception = assertFailsWith<ParameterizeException> {
+        runCatching {
             parameterize {
                 val outer by parameter(Sequence(::testArgumentsIterator))
-                val end by parameterOf(Unit, Unit)
             }
         }
 
+        val probedThrow = assertIs<ParameterizeBreak>(probedThrows[0])
         assertEquals(
-            "Nesting parameters is not currently supported: `innerA` was declared within `outer`'s arguments",
-            exception.message
+            "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
+            probedThrow.cause.message
         )
     }
 
     @Test
-    fun nested_parameter_declaration_with_another_valid_intermediate_parameter_usage() {
-        val exception = assertFailsWith<ParameterizeException> {
+    fun nested_parameter_declaration_with_another_valid_intermediate_parameter_usage() { // TODO Remove in usage special treatment commit
+        val probedThrows = mutableListOf<Throwable?>()
+
+        runCatching {
             parameterize {
                 val trackedNestingInterference by parameterOf(Unit)
 
                 val outer by parameter {
-                    with(this@parameterize) {
+                    with(this@parameterize) { // TODO Fix in DslMarker commit
+                        probeThrow(probedThrows) {
+                            val inner by parameterOf(Unit)
+                        }
+                    }
+
+                    listOf(Unit)
+                }
+            }
+        }
+
+        val probedBreak = assertIs<ParameterizeBreak>(probedThrows[0])
+        assertEquals(
+            "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
+            probedBreak.cause.message
+        )
+    }
+
+    @Test
+    fun nested_parameter_declaration_with_another_valid_intermediate_parameter_usage_with_lazy_parameter_scope() { // TODO Remove in usage special treatment commit
+        val probedThrows = mutableListOf<Throwable?>()
+
+        runCatching {
+            parameterize {
+                val trackedNestingInterference by parameterOf(Unit)
+
+                val outer by parameter {
+                    probeThrow(probedThrows) {
+                        @Suppress("DEPRECATION_ERROR")
                         val inner by parameterOf(Unit)
                     }
 
@@ -194,35 +161,17 @@ class ParameterizeExceptionSpec {
             }
         }
 
+        val probedBreak = assertIs<ParameterizeBreak>(probedThrows[0])
         assertEquals(
             "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
-            exception.message
+            probedBreak.cause.message
         )
     }
 
-    @Test
-    fun nested_parameter_declaration_with_another_valid_intermediate_parameter_usage_with_lazy_parameter_scope() {
-        val exception = assertFailsWith<ParameterizeException> {
-            parameterize {
-                val trackedNestingInterference by parameterOf(Unit)
-
-                val outer by parameter {
-                    @Suppress("DEPRECATION_ERROR")
-                    val inner by parameterOf(Unit)
-
-                    listOf(Unit)
-                }
-
-                val end by parameterOf(Unit, Unit)
-            }
-        }
-
-        assertEquals(
-            "Nesting parameters is not currently supported: `inner` was declared within `outer`'s arguments",
-            exception.message
-        )
-    }
-
+    /**
+     * Without [ParameterizeBreak] since this is potentially happening outside the iteration in user code.
+     * This also doesn't put [parameterize] into a bad state, so there's no need to break out of the loop.
+     */
     @Test
     fun declaring_parameter_after_iteration_completed() {
         var declareParameter = {}

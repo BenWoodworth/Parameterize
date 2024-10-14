@@ -155,7 +155,7 @@ public class ParameterizeConfiguration internal constructor(
          */
         public var isLastIteration: Boolean = false
             get() {
-                parameterizeState.checkState(initializedIsLastIteration) {
+                checkState(initializedIsLastIteration) {
                     "Last iteration cannot be known until after the iteration function is invoked"
                 }
 
