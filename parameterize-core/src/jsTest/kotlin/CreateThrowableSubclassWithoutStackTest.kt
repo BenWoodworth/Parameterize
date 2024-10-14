@@ -14,9 +14,20 @@
  * limitations under the License.
  */
 
-package com.benwoodworth.parameterize.test
+package com.benwoodworth.parameterize
 
-public actual val Throwable.stackTraceLines: List<String>
-    get() = (this.asDynamic().stack as? String)
-        ?.removeSuffix("\n")?.lines()
-        ?: emptyList()
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class CreateThrowableSubclassWithoutStackTest {
+    @Test
+    fun stack_should_be_left_null() {
+        class ThrowableSubclass : Throwable()
+
+        val throwable = createThrowableSubclassWithoutStack {
+            ThrowableSubclass()
+        }
+
+        assertEquals(null, throwable.asDynamic().stack)
+    }
+}
