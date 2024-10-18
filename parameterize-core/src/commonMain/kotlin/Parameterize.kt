@@ -148,8 +148,8 @@ internal class SimpleParameterizeScope internal constructor(
         }
 
     override fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): DeclaredParameter<T> {
-        checkState(!iterationCompleted) {
-            "Cannot declare parameter `${property.name}` after its iteration has completed"
+        if (iterationCompleted) {
+            throw ParameterizeException("Cannot declare parameter `${property.name}` after its iteration has completed")
         }
 
         return parameterizeState.declareParameter(property, arguments)
