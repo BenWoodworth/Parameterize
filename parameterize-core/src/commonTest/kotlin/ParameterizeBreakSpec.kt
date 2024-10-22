@@ -16,8 +16,6 @@
 
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.test.EdgeCases
-import com.benwoodworth.parameterize.test.parameterizeState
 import com.benwoodworth.parameterize.test.probeThrow
 import com.benwoodworth.parameterize.test.testAll
 import kotlin.test.*
