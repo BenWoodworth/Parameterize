@@ -17,8 +17,6 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.*
-import com.benwoodworth.parameterize.test.EdgeCases
-import com.benwoodworth.parameterize.test.parameterizeState
 import com.benwoodworth.parameterize.test.testAll
 import kotlin.coroutines.RestrictsSuspension
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
@@ -130,19 +128,18 @@ class ParameterizeConfigurationSpec_decorator {
     }
 
     @Test
-    fun iteration_function_should_return_regardless_of_how_parameterize_block_fails() = testAll(
-        EdgeCases.iterationFailures
-    ) { getFailure ->
+    fun iteration_function_should_return_regardless_of_how_the_iteration_ended() {
         var returned = false
 
-        runCatching {
-            testParameterize(
+        run exitLoop@{
+            parameterize(
                 decorator = { iteration ->
                     iteration()
                     returned = true
                 }
             ) {
-                throw getFailure(parameterizeState)
+                // A non-local return ensures that all types of loop exits will be handled (with a `finally` block)
+                return@exitLoop
             }
         }
 

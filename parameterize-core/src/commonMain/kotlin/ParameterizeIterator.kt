@@ -31,14 +31,13 @@ internal class ParameterizeIterator(
     private var breakEarly = false
     private var currentIterationScope: SimpleParameterizeScope? = null // Non-null if afterEach still needs to be called
     private var decoratorCoroutine: DecoratorCoroutine? = null
+    private var iterationFailure: Throwable? = null
 
     /**
      * Signals the start of a new [parameterize] iteration, and returns its scope if there is one.
      */
     @PublishedApi
     internal fun nextIteration(): ParameterizeScope? {
-        if (currentIterationScope != null) afterEach()
-
         if (breakEarly || !parameterizeState.hasNextArgumentCombination) {
             handleComplete()
             return null
@@ -52,14 +51,25 @@ internal class ParameterizeIterator(
     }
 
     @PublishedApi
+    internal fun endIteration() {
+        val currentIterationScope = checkNotNull(currentIterationScope) { "${::currentIterationScope.name} was null" }
+        currentIterationScope.iterationEnded = true
+        this.currentIterationScope = null
+
+        afterEach()
+
+        iterationFailure?.let { failure ->
+            val result = parameterizeState.handleFailure(configuration.onFailure, failure)
+            breakEarly = result.breakEarly
+            iterationFailure = null
+        }
+    }
+
+    @PublishedApi
     internal fun handleFailure(failure: Throwable): Unit = when {
         failure is ParameterizeStateControlFlow && failure.parameterizeState === parameterizeState -> when (failure) {
             is ParameterizeContinue -> parameterizeState.handleContinue()
-
-            is ParameterizeBreak -> {
-                afterEach() // Since nextIteration() won't be called again to finalize the iteration
-                throw failure.cause
-            }
+            is ParameterizeBreak -> throw failure.cause
 
             else -> throw ParameterizeException( // KT-59625
                 "Expected Parameterize control flow to be " +
@@ -70,10 +80,7 @@ internal class ParameterizeIterator(
         }
 
         else -> {
-            afterEach() // Since the decorator should complete before onFailure is invoked
-
-            val result = parameterizeState.handleFailure(configuration.onFailure, failure)
-            breakEarly = result.breakEarly
+            iterationFailure = failure
         }
     }
 
@@ -83,13 +90,9 @@ internal class ParameterizeIterator(
     }
 
     private fun afterEach() {
-        val currentIterationScope = checkNotNull(currentIterationScope) { "${::currentIterationScope.name} was null" }
         val decoratorCoroutine = checkNotNull(decoratorCoroutine) { "${::decoratorCoroutine.name} was null" }
 
-        currentIterationScope.iterationEnded = true
         decoratorCoroutine.afterIteration()
-
-        this.currentIterationScope = null
         this.decoratorCoroutine = null
     }
 
