@@ -86,7 +86,7 @@ internal class ParameterizeIterator(
         val currentIterationScope = checkNotNull(currentIterationScope) { "${::currentIterationScope.name} was null" }
         val decoratorCoroutine = checkNotNull(decoratorCoroutine) { "${::decoratorCoroutine.name} was null" }
 
-        currentIterationScope.iterationCompleted = true
+        currentIterationScope.iterationEnded = true
         decoratorCoroutine.afterIteration()
 
         this.currentIterationScope = null

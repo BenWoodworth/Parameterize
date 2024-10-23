@@ -136,7 +136,7 @@ public inline fun parameterize(
 internal class SimpleParameterizeScope internal constructor(
     internal val parameterizeState: ParameterizeState,
 ) : ParameterizeScope {
-    internal var iterationCompleted: Boolean = false
+    internal var iterationEnded: Boolean = false
 
     override fun toString(): String =
         parameterizeState.getDeclaredParameters().joinToString(
@@ -148,8 +148,8 @@ internal class SimpleParameterizeScope internal constructor(
         }
 
     override fun <T> Parameter<T>.provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> {
-        checkState(!iterationCompleted) {
-            "Cannot declare parameter `${property.name}` after its iteration has completed"
+        checkState(!iterationEnded) {
+            "Cannot declare parameter `${property.name}` after its iteration has ended"
         }
 
         return parameterizeState.declareParameter(property, arguments)
