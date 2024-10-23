@@ -173,7 +173,7 @@ class ParameterizeMisuseSpec {
      * This also doesn't put [parameterize] into a bad state, so there's no need to break out of the loop.
      */
     @Test
-    fun declaring_parameter_after_iteration_completed() {
+    fun declaring_parameter_after_iteration_ended() {
         var declareParameter = {}
 
         parameterize {
@@ -186,7 +186,7 @@ class ParameterizeMisuseSpec {
             declareParameter()
         }
 
-        assertEquals("Cannot declare parameter `parameter` after its iteration has completed", failure.message)
+        assertEquals("Cannot declare parameter `parameter` after its iteration has ended", failure.message)
     }
 
     @Test
