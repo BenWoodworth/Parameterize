@@ -29,10 +29,10 @@ import kotlin.test.*
  * Implements [ParameterizeScope] only so [Parameter] functions are available in tests.
  */
 class ParameterizeScopeSpec : ParameterizeScope {
-    override fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): DeclaredParameter<T> =
+    override fun <T> Parameter<T>.provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> =
         throw UnsupportedOperationException("Not Implemented")
 
-    override fun <T> DeclaredParameter<T>.getValue(thisRef: Any?, property: KProperty<*>): T =
+    override fun <T> DeclaredParameter<T>.getValue(thisRef: Nothing?, property: KProperty<*>): T =
         throw UnsupportedOperationException("Not Implemented")
 
     /**
