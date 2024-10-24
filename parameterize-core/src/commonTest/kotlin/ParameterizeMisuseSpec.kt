@@ -11,7 +11,7 @@ import kotlin.test.*
  * the [parameterize] loop is in an invalid state, and also to protecting the exception from being caught since thrown
  * [ParameterizeControlFlow]s being caught is documented as being disallowed.
  */
-class ParameterizeExceptionSpec {
+class ParameterizeMisuseSpec {
     @Test
     fun parameter_disappears_on_second_iteration_due_to_external_condition() {
         val probedThrows = mutableListOf<Throwable?>()
