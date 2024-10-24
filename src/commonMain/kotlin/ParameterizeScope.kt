@@ -39,7 +39,7 @@ import kotlin.reflect.KProperty
  *     private var parameterIndex = 0
  *
  *     // Intercept the parameter, and declare it with just the one picked argument
- *     override fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): DeclaredParameter<T> {
+ *     override fun <T> Parameter<T>.provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> {
  *         val pickArgumentIndex = pickArgumentIndices.getOrNull(parameterIndex++)
  *             ?: throw IllegalArgumentException("Argument index not specified for ${property.name}")
  *
@@ -61,7 +61,7 @@ import kotlin.reflect.KProperty
  *     private val usedParameters = mutableSetOf<DeclaredParameter<*>>()
  *
  *     // Track the parameters that have been used, that way it's possible to report only the relevant values
- *     override fun <T> DeclaredParameter<T>.getValue(thisRef: Any?, property: KProperty<*>): T {
+ *     override fun <T> DeclaredParameter<T>.getValue(thisRef: Nothing?, property: KProperty<*>): T {
  *         usedParameters += this
  *         return parameterizeScope.run { getValue(thisRef, property) }
  *     }
@@ -79,14 +79,17 @@ public interface ParameterizeScope {
      * @throws ParameterizeException if this [Parameter] is being declared with the wrong [property].
      * @see Parameter
      */
-    public operator fun <T> Parameter<T>.provideDelegate(thisRef: Any?, property: KProperty<*>): DeclaredParameter<T>
+    public operator fun <T> Parameter<T>.provideDelegate(
+        thisRef: Nothing?,
+        property: KProperty<*>
+    ): DeclaredParameter<T>
 
     /**
      * Returns the argument that this parameter was [declared][provideDelegate] with.
      *
      * @see Parameter
      */
-    public operator fun <T> DeclaredParameter<T>.getValue(thisRef: Any?, property: KProperty<*>): T
+    public operator fun <T> DeclaredParameter<T>.getValue(thisRef: Nothing?, property: KProperty<*>): T
 
     /**
      * A sequence of [arguments] that can be [declared][provideDelegate] within a [ParameterizeScope] to make one of the
