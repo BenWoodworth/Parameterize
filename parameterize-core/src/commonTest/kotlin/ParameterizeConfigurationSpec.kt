@@ -173,7 +173,7 @@ class ParameterizeConfigurationSpec {
             "onComplete"
         )
 
-        assertEquals(order, expectedOrder)
+        assertEquals(expectedOrder, order)
     }
 
     private fun interface ConfiguredParameterize {
