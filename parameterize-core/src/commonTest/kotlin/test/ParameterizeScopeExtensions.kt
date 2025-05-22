@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ben Woodworth
+ * Copyright 2025 Ben Woodworth
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,3 +15,15 @@
  */
 
 package com.benwoodworth.parameterize.test
+
+import com.benwoodworth.parameterize.ParameterizeScope
+import com.benwoodworth.parameterize.ParameterizeState
+import com.benwoodworth.parameterize.SimpleParameterizeScope
+
+internal val ParameterizeScope.parameterizeState: ParameterizeState
+    get() {
+        check(this is SimpleParameterizeScope) {
+            "Expected scope to be a ${SimpleParameterizeScope::class.simpleName}, but was ${this::class.simpleName}"
+        }
+        return parameterizeState
+    }
