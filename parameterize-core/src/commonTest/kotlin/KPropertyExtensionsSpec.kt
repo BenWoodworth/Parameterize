@@ -21,7 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class KPropertyUtilsSpec {
+class KPropertyExtensionsSpec {
     @Test
     fun property_should_equal_the_same_instance() {
         val property by ReadOnlyProperty { _, property -> property }
