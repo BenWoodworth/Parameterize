@@ -15,6 +15,16 @@ public final class com/benwoodworth/parameterize/LazyParameterScope {
 	public final synthetic fun unbox-impl ()Lcom/benwoodworth/parameterize/ParameterizeScope;
 }
 
+public abstract class com/benwoodworth/parameterize/PairwiseParameters {
+	public fun <init> (Lcom/benwoodworth/parameterize/ParameterizeScope;)V
+	protected final fun provideDelegate-13mUnGw (Lkotlin/sequences/Sequence;Lcom/benwoodworth/parameterize/PairwiseParameters;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/PairwiseParameters$PairwiseDeclaredParameter;
+}
+
+protected final class com/benwoodworth/parameterize/PairwiseParameters$PairwiseDeclaredParameter {
+	public final fun getValue (Lcom/benwoodworth/parameterize/PairwiseParameters;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract interface class com/benwoodworth/parameterize/ParameterizeScope {
 	public abstract fun provideDelegate-13mUnGw (Lkotlin/sequences/Sequence;Ljava/lang/Void;Lkotlin/reflect/KProperty;)Lcom/benwoodworth/parameterize/ParameterizeScope$DeclaredParameter;
 }

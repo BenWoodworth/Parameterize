@@ -39,6 +39,17 @@ abstract interface com.benwoodworth.parameterize/ParameterizeScope { // com.benw
     }
 }
 
+abstract class com.benwoodworth.parameterize/PairwiseParameters { // com.benwoodworth.parameterize/PairwiseParameters|null[0]
+    constructor <init>(com.benwoodworth.parameterize/ParameterizeScope) // com.benwoodworth.parameterize/PairwiseParameters.<init>|<init>(com.benwoodworth.parameterize.ParameterizeScope){}[0]
+
+    final fun <#A1: kotlin/Any?> (com.benwoodworth.parameterize/ParameterizeScope.Parameter<#A1>).provideDelegate(com.benwoodworth.parameterize/PairwiseParameters, kotlin.reflect/KProperty<*>): com.benwoodworth.parameterize/PairwiseParameters.PairwiseDeclaredParameter<#A1> // com.benwoodworth.parameterize/PairwiseParameters.provideDelegate|provideDelegate@com.benwoodworth.parameterize.ParameterizeScope.Parameter<0:0>(com.benwoodworth.parameterize.PairwiseParameters;kotlin.reflect.KProperty<*>){0§<kotlin.Any?>}[0]
+
+    final class <#A1: kotlin/Any?> PairwiseDeclaredParameter { // com.benwoodworth.parameterize/PairwiseParameters.PairwiseDeclaredParameter|null[0]
+        final fun getValue(com.benwoodworth.parameterize/PairwiseParameters, kotlin.reflect/KProperty<*>): #A1 // com.benwoodworth.parameterize/PairwiseParameters.PairwiseDeclaredParameter.getValue|getValue(com.benwoodworth.parameterize.PairwiseParameters;kotlin.reflect.KProperty<*>){}[0]
+        final fun toString(): kotlin/String // com.benwoodworth.parameterize/PairwiseParameters.PairwiseDeclaredParameter.toString|toString(){}[0]
+    }
+}
+
 final value class com.benwoodworth.parameterize/LazyParameterScope { // com.benwoodworth.parameterize/LazyParameterScope|null[0]
     constructor <init>(com.benwoodworth.parameterize/ParameterizeScope) // com.benwoodworth.parameterize/LazyParameterScope.<init>|<init>(com.benwoodworth.parameterize.ParameterizeScope){}[0]
 
