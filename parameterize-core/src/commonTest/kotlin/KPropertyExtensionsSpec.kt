@@ -16,6 +16,7 @@
 
 package com.benwoodworth.parameterize
 
+import kotlin.properties.PropertyDelegateProvider
 import kotlin.properties.ReadOnlyProperty
 import kotlin.test.Test
 import kotlin.test.assertFalse
@@ -23,7 +24,34 @@ import kotlin.test.assertTrue
 
 class KPropertyExtensionsSpec {
     @Test
-    fun property_should_equal_the_same_instance() {
+    fun property_should_equal_the_same_instance_through_delegate_provider() {
+        val property by PropertyDelegateProvider { _: Nothing?, property ->
+            ReadOnlyProperty { _: Nothing?, _ -> property }
+        }
+
+        val reference = property
+
+        assertTrue(reference.equalsProperty(reference))
+    }
+
+    @Test
+    fun property_should_not_equal_a_different_property_through_delegate_providers() {
+        val property1 by PropertyDelegateProvider { _: Nothing?, property ->
+            ReadOnlyProperty { _: Nothing?, _ -> property }
+        }
+
+        val property2 by PropertyDelegateProvider { _: Nothing?, property ->
+            ReadOnlyProperty { _: Nothing?, _ -> property }
+        }
+
+        val reference1 = property1
+        val reference2 = property2
+
+        assertFalse(reference1.equalsProperty(reference2))
+    }
+
+    @Test
+    fun property_should_equal_the_same_instance_through_delegate() {
         val property by ReadOnlyProperty { _, property -> property }
 
         val reference = property
@@ -32,7 +60,7 @@ class KPropertyExtensionsSpec {
     }
 
     @Test
-    fun property_should_equal_the_same_property_through_different_delegate_calls() {
+    fun property_should_equal_the_same_property_through_delegate() {
         val property by ReadOnlyProperty { _, property -> property }
 
         val reference1 = property
@@ -42,7 +70,7 @@ class KPropertyExtensionsSpec {
     }
 
     @Test
-    fun property_should_not_equal_a_different_property() {
+    fun property_should_not_equal_a_different_property_through_delegates() {
         val property1 by ReadOnlyProperty { _, property -> property }
         val property2 by ReadOnlyProperty { _, property -> property }
 
