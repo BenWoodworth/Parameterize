@@ -89,7 +89,6 @@ internal class ParameterState(
      * @throws ParameterizeException if already declared for a different [property].
      * @throws ParameterizeContinue if [arguments] is empty.
      */
-    @OptIn(ExperimentalParameterizeApi::class)
     fun <T> declare(property: KProperty<*>, arguments: Sequence<T>) {
         // Nothing to do if already declared (besides validating the property)
         this.declaredParameter?.property?.let { declaredProperty ->
@@ -127,7 +126,6 @@ internal class ParameterState(
      *
      * @throws IllegalStateException if the argument has not been declared yet.
      */
-    @OptIn(ExperimentalParameterizeApi::class)
     fun nextArgument() {
         val declaredParameter = checkNotNull(this.declaredParameter) {
             "Cannot iterate arguments before parameter has been declared"

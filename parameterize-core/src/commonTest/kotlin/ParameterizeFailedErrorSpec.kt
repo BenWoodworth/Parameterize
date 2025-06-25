@@ -26,7 +26,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 class ParameterizeFailedErrorSpec {
-    @OptIn(ExperimentalParameterizeApi::class)
     private val arguments = run {
         val properties = object : Any() {
             val propertyA = "argumentA"
