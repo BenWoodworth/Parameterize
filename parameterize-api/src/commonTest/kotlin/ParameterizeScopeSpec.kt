@@ -137,7 +137,6 @@ class ParameterizeScopeSpec : ParameterizeScope {
     }
 
     @Test
-    @OptIn(ExperimentalParameterizeApi::class)
     fun declared_parameter_equals_should_compare_by_reference_equality() {
         val declaredParameter = DeclaredParameter(property, Unit)
         val structurallyEqualDeclaredParameter = DeclaredParameter(property, Unit)
@@ -147,7 +146,6 @@ class ParameterizeScopeSpec : ParameterizeScope {
     }
 
     @Test
-    @OptIn(ExperimentalParameterizeApi::class)
     fun declared_parameter_hash_code_should_be_evaluated_by_reference() {
         val declaredParameter = DeclaredParameter(property, Unit)
         val structurallyEqualDeclaredParameters = generateSequence { DeclaredParameter(property, Unit) }
@@ -166,7 +164,6 @@ class ParameterizeScopeSpec : ParameterizeScope {
     }
 
     @Test
-    @OptIn(ExperimentalParameterizeApi::class)
     fun declared_parameter_string_representation_when_declared_should_equal_that_of_the_current_argument() {
         lateinit var declaredParameter: DeclaredParameter<Any>
 

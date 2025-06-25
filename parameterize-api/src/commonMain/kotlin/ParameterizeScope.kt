@@ -84,14 +84,9 @@ public interface ParameterizeScope {
      * val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
      * val computedValue by parameter { lazilyComputedValues() }
      * ```
-     *
-     * @constructor
-     * **Experimental:** Prefer using the scope-limited [parameter] function, if possible.
-     * The constructor will be made `@PublishedApi internal` once
-     * [context parameters](https://github.com/Kotlin/KEEP/issues/367) are introduced to the language.
      */
     @JvmInline
-    public value class Parameter<out T> @ExperimentalParameterizeApi constructor(
+    public value class Parameter<out T>(
         /**
          * The [value][getValue]s that this parameter can be [declared][provideDelegate] with.
          */
@@ -107,7 +102,7 @@ public interface ParameterizeScope {
      *
      * @see Parameter
      */
-    public class DeclaredParameter<out T> @ExperimentalParameterizeApi constructor(
+    public class DeclaredParameter<out T>(
         /**
          * The Kotlin property that this parameter was [declared][provideDelegate] for.
          *
@@ -168,7 +163,6 @@ public interface ParameterizeScope {
  * @see Parameter
  */
 @Suppress("UnusedReceiverParameter") // Should only be accessible within parameterize scopes
-@OptIn(ExperimentalParameterizeApi::class)
 public fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): Parameter<T> =
     Parameter(arguments)
 
