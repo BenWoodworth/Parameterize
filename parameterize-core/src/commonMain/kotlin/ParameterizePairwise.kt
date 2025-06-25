@@ -16,12 +16,68 @@
 
 package com.benwoodworth.parameterize
 
+import com.benwoodworth.parameterize.ParameterizeScope.Parameter
+import kotlin.reflect.KProperty
+
 // TODO https://github.com/BenWoodworth/Parameterize/issues/38
 public inline fun parameterizePairwise(
     block: ParameterizeScope.() -> Unit
 ) {
-    // TODO Iterate pairwise parameter combinations only once each
     parameterize {
-        block()
+        with(PairwiseParameterizeScope(this, 2)) {
+            block()
+        }
     }
+}
+
+/**
+ * [Parameter]s declared through this [ParameterizeScope] will have their arguments iterated through such that all pairs
+ * (or [N-wise][nWise] tuples) of parameters have their combinations iterated, instead of all combinations of all
+ * parameters.
+ *
+ * The first iteration is a baseline, with each parameter on its first argument. From there, each iteration will cover
+ * one new [N-wise][nWise] parameter combination.
+ */
+@PublishedApi
+internal class PairwiseParameterizeScope(
+    private val parameterizeScope: ParameterizeScope,
+    private val nWise: Int = 2
+) : ParameterizeScope {
+    private var pairwiseParametersDeclared = 0
+
+    init {
+        require(nWise >= 1) { "N-wise parameter count should be >= 1, but was $nWise" }
+    }
+
+    @OptIn(ExperimentalParameterizeApi::class)
+    override fun <T> ParameterizeScope.Parameter<T>.provideDelegate(
+        thisRef: Nothing?,
+        property: KProperty<*>
+    ): ParameterizeScope.DeclaredParameter<T> {
+        val pairwiseParameter = parameter {
+            arguments
+                .let { if (pairwiseParametersDeclared == nWise) it.take(1) else it }
+                .mapIndexed { index, argument ->
+                    PairwiseArgument(argument, index > 0)
+                }
+        }
+
+        val declaredPairwiseParameter = with(parameterizeScope) {
+            pairwiseParameter.provideDelegate(thisRef, property)
+        }
+
+        if (declaredPairwiseParameter.argument.isEvaluatingCombinations) {
+            pairwiseParametersDeclared++
+        }
+
+        return ParameterizeScope.DeclaredParameter(
+            declaredPairwiseParameter.property,
+            declaredPairwiseParameter.argument.argument
+        )
+    }
+
+    private class PairwiseArgument<T>(
+        val argument: T,
+        val isEvaluatingCombinations: Boolean
+    )
 }
