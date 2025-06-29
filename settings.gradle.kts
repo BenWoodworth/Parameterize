@@ -15,3 +15,5 @@
  */
 
 rootProject.name = "parameterize"
+
+include(":parameterize-relocation")
