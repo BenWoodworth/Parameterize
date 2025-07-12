@@ -16,10 +16,7 @@
 
 package com.benwoodworth.parameterize.test
 
-import com.benwoodworth.parameterize.ParameterizeContinue
-import com.benwoodworth.parameterize.ParameterizeException
-import com.benwoodworth.parameterize.ParameterizeState
-import com.benwoodworth.parameterize.parameterize
+import com.benwoodworth.parameterize.*
 
 internal object EdgeCases {
     val iterationFailures = listOf<Pair<String, (ParameterizeState) -> Throwable>>(
@@ -33,7 +30,7 @@ internal object EdgeCases {
             lateinit var differentParameterizeState: ParameterizeState
 
             parameterize {
-                differentParameterizeState = parameterizeState
+                differentParameterizeState = contextOf<ParameterizeScope>().parameterizeState
             }
 
             ParameterizeException(differentParameterizeState, "different parameterize")

@@ -27,7 +27,7 @@ class ParameterizeConfigurationSpec_onComplete {
     private inline fun testParameterize(
         noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = {}, // Continue on failure
         noinline onComplete: OnCompleteScope.() -> Unit,
-        block: ParameterizeScope.() -> Unit
+        block: context(ParameterizeScope) () -> Unit
     ): Unit =
         parameterize(
             onFailure = onFailure,

@@ -23,7 +23,7 @@ import kotlin.test.*
 class ParameterizeConfigurationSpec_onFailure {
     private inline fun testParameterize(
         noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit,
-        block: ParameterizeScope.() -> Unit
+        block: context(ParameterizeScope) () -> Unit
     ): Unit =
         parameterize(
             onFailure = onFailure,

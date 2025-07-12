@@ -18,7 +18,6 @@
 
 package com.benwoodworth.parameterize
 
-import com.benwoodworth.parameterize.ParameterizeScope.DeclaredParameter
 import com.benwoodworth.parameterize.ParameterizeScope.Parameter
 import kotlin.experimental.ExperimentalTypeInference
 import kotlin.jvm.JvmField
@@ -61,16 +60,17 @@ import kotlin.reflect.KProperty
  */
 public interface ParameterizeScope {
     /**
-     * Declares this [Parameter], allowing one of its arguments to be used as the [value][getValue] of the Kotlin
-     * [property].
+     * Declares a [parameter] with the provided [property].
      *
      * @throws ParameterizeException if this [Parameter] is being declared with the wrong [property].
      * @see Parameter
      */
-    public operator fun <T> Parameter<T>.provideDelegate(
-        thisRef: Nothing?,
-        property: KProperty<*>
-    ): DeclaredParameter<T>
+    public fun <T> declareParameter(parameter: Parameter<T>, property: KProperty<*>): DeclaredParameter<T>
+
+    /**
+     * A marker for scopes where declaring parameters is not supported.
+     */
+    public interface Disabled
 
     /**
      * A sequence of [arguments] that can be [declared][provideDelegate] within a [ParameterizeScope] to make one of the
@@ -88,10 +88,23 @@ public interface ParameterizeScope {
     @JvmInline
     public value class Parameter<out T>(
         /**
-         * The [value][getValue]s that this parameter can be [declared][provideDelegate] with.
+         * The [value][getValue]s that this parameter can be [declared][declareParameter] with.
          */
         public val arguments: Sequence<T>
-    )
+    ) {
+        // TODO Remove UNSUPPORTED once contexts are supported on provideDelegate
+        @Suppress("NOTHING_TO_INLINE", "UNSUPPORTED")
+        context(parameterizeScope: ParameterizeScope)
+        public inline operator fun provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> =
+            parameterizeScope.declareParameter(this, property)
+
+        // TODO Remove UNSUPPORTED once contexts are supported on provideDelegate
+        @Suppress("UNSUPPORTED")
+        @Deprecated("Declaring parameters in this context is not supported", level = DeprecationLevel.ERROR)
+        context(parameterizeScope: ParameterizeScope.Disabled)
+        public operator fun provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> =
+            throw UnsupportedOperationException("Declaring parameters in this context is not supported: $parameterizeScope")
+    }
 
     /**
      * A [Parameter] declared in a [ParameterizeScope], providing access to the selected [argument] and enabling its use
@@ -154,7 +167,7 @@ public interface ParameterizeScope {
 }
 
 /**
- * Used to [declare][ParameterizeScope.provideDelegate] a parameter with the supplied [arguments].
+ * Used to [declare][ParameterizeScope.declareParameter] a parameter with the supplied [arguments].
  *
  * ```
  * val letter by parameter('a'..'z')
@@ -162,12 +175,12 @@ public interface ParameterizeScope {
  *
  * @see Parameter
  */
-@Suppress("UnusedReceiverParameter") // Should only be accessible within parameterize scopes
-public fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): Parameter<T> =
+context(_: ParameterizeScope)
+public fun <T> parameter(arguments: Sequence<T>): Parameter<T> =
     Parameter(arguments)
 
 /**
- * Used to [declare][ParameterizeScope.provideDelegate] a parameter with the supplied [arguments].
+ * Used to [declare][ParameterizeScope.declareParameter] a parameter with the supplied [arguments].
  *
  * ```
  * val letter by parameter('a'..'z')
@@ -175,11 +188,12 @@ public fun <T> ParameterizeScope.parameter(arguments: Sequence<T>): Parameter<T>
  *
  * @see Parameter
  */
-public fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): Parameter<T> =
+context(_: ParameterizeScope)
+public fun <T> parameter(arguments: Iterable<T>): Parameter<T> =
     parameter(arguments.asSequence())
 
 /**
- * Used to [declare][ParameterizeScope.provideDelegate] a parameter with the listed [arguments].
+ * Used to [declare][ParameterizeScope.declareParameter] a parameter with the listed [arguments].
  *
  * ```
  * val primeUnder20 by parameterOf(2, 3, 5, 7, 11, 13, 17, 19)
@@ -187,11 +201,12 @@ public fun <T> ParameterizeScope.parameter(arguments: Iterable<T>): Parameter<T>
  *
  * @see Parameter
  */
-public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> =
+context(_: ParameterizeScope)
+public fun <T> parameterOf(vararg arguments: T): Parameter<T> =
     parameter(arguments.asSequence())
 
 /**
- * Used to [declare][ParameterizeScope.provideDelegate] a parameter with the computed [lazyArguments].
+ * Used to [declare][ParameterizeScope.declareParameter] a parameter with the computed [lazyArguments].
  * The arguments are only computed the first time the parameter is used, and not at all if used.
  *
  * This `parameter` function is useful to avoid computing the arguments every iteration.
@@ -215,7 +230,8 @@ public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> 
 @OptIn(ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 @JvmName("parameterLazySequence")
-public inline fun <T> ParameterizeScope.parameter(
+context(parameterizeScope: ParameterizeScope)
+public inline fun <T> parameter(
     crossinline lazyArguments: LazyParameterScope.() -> Sequence<T>
 ): Parameter<T> =
     parameter(object : Sequence<T> {
@@ -225,7 +241,7 @@ public inline fun <T> ParameterizeScope.parameter(
             var arguments = this.arguments
 
             if (arguments == null) {
-                arguments = LazyParameterScope(this@parameter).lazyArguments()
+                arguments = LazyParameterScope(parameterizeScope).lazyArguments()
                 this.arguments = arguments
             }
 
@@ -234,7 +250,7 @@ public inline fun <T> ParameterizeScope.parameter(
     })
 
 /**
- * Used to [declare][ParameterizeScope.provideDelegate] a parameter with the computed [lazyArguments].
+ * Used to [declare][ParameterizeScope.declareParameter] a parameter with the computed [lazyArguments].
  * The arguments are only computed the first time the parameter is used, and not at all if used.
  *
  * This `parameter` function is useful to avoid computing the arguments every iteration.
@@ -258,7 +274,8 @@ public inline fun <T> ParameterizeScope.parameter(
 @OptIn(ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 @JvmName("parameterLazyIterable")
-public inline fun <T> ParameterizeScope.parameter(
+context(_: ParameterizeScope)
+public inline fun <T> parameter(
     crossinline lazyArguments: LazyParameterScope.() -> Iterable<T>
 ): Parameter<T> =
     parameter {
@@ -271,22 +288,4 @@ public inline fun <T> ParameterizeScope.parameter(
 @JvmInline
 public value class LazyParameterScope @PublishedApi internal constructor(
     private val parameterizeScope: ParameterizeScope
-) {
-    /**
-     * Declares this [Parameter], allowing one of its arguments to be used as the [value][getValue] of the Kotlin
-     * [property].
-     *
-     * @throws ParameterizeException since declaring parameters in lazy `parameter {}` blocks is not currently supported.
-     * @see Parameter
-     * @see ParameterizeScope.provideDelegate
-     */
-    @Deprecated(
-        "Declaring parameters in lazy `parameter {}` blocks is not currently supported.",
-        level = DeprecationLevel.ERROR
-    )
-    public operator fun <T> Parameter<T>.provideDelegate(
-        thisRef: Nothing?,
-        property: KProperty<*>
-    ): DeclaredParameter<T> =
-        parameterizeScope.run { provideDelegate(thisRef, property) }
-}
+) : ParameterizeScope.Disabled

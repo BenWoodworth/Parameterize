@@ -17,7 +17,6 @@
 package com.benwoodworth.parameterize
 
 import com.benwoodworth.parameterize.ParameterizeConfiguration.Builder
-import com.benwoodworth.parameterize.ParameterizeConfigurationSpec.ParameterizeWithOptionDefault
 import com.benwoodworth.parameterize.test.TestAllScope
 import com.benwoodworth.parameterize.test.testAll
 import kotlin.reflect.KMutableProperty1
@@ -63,7 +62,7 @@ class ParameterizeConfigurationSpec {
         val builderProperty: KMutableProperty1<Builder, T>,
         val distinctValue: T,
         val parameterizeWithConfigurationAndOptionPassed: (
-            configuration: ParameterizeConfiguration, block: ParameterizeScope.() -> Unit
+            configuration: ParameterizeConfiguration, block: context(ParameterizeScope) () -> Unit
         ) -> Unit
     ) {
         init {
@@ -177,7 +176,7 @@ class ParameterizeConfigurationSpec {
     }
 
     private fun interface ConfiguredParameterize {
-        fun configuredParameterize(configure: Builder.() -> Unit, block: ParameterizeScope.() -> Unit)
+        fun configuredParameterize(configure: Builder.() -> Unit, block: context(ParameterizeScope) () -> Unit)
     }
 
     private fun testConfiguredParameterize(test: ConfiguredParameterize.() -> Unit) = testAll(
@@ -217,7 +216,7 @@ class ParameterizeConfigurationSpec {
     )
 
     private fun interface ParameterizeWithOptionDefault {
-        fun parameterizeWithOptionDefault(block: ParameterizeScope.() -> Unit)
+        fun parameterizeWithOptionDefault(block: context(ParameterizeScope) () -> Unit)
     }
 
     /**
@@ -237,7 +236,7 @@ class ParameterizeConfigurationSpec {
         configure: Builder.() -> Unit,
         parameterizeWithDifferentOptionPassed: (
             configuration: ParameterizeConfiguration,
-            block: ParameterizeScope.() -> Unit
+            block: context(ParameterizeScope) () -> Unit
         ) -> Unit,
         test: ParameterizeWithOptionDefault.() -> Unit
     ) = testAll(

@@ -34,7 +34,7 @@ class ParameterizeConfigurationSpec_decorator {
             breakEarly = true
         },
         noinline onComplete: OnCompleteScope.() -> Unit = ParameterizeConfiguration.default.onComplete,
-        block: ParameterizeScope.() -> Unit
+        block: context(ParameterizeScope) () -> Unit
     ): Unit =
         parameterize(
             decorator = decorator,
@@ -142,7 +142,7 @@ class ParameterizeConfigurationSpec_decorator {
                     returned = true
                 }
             ) {
-                throw getFailure(parameterizeState)
+                throw getFailure(contextOf<ParameterizeScope>().parameterizeState)
             }
         }
 

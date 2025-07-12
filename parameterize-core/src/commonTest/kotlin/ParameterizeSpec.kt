@@ -35,7 +35,7 @@ class ParameterizeSpec {
      */
     private fun <T : Any> testParameterize(
         expectedIterations: Iterable<T?>,
-        block: ParameterizeScope.() -> T
+        block: context(ParameterizeScope) () -> T
     ) {
         val iterations = mutableListOf<T?>()
 
@@ -228,7 +228,8 @@ class ParameterizeSpec {
     fun custom_lazy_arguments_implementation() = testParameterize(
         listOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
     ) {
-        fun <T> ParameterizeScope.customLazyParameter(
+        context(_: ParameterizeScope)
+        fun <T> customLazyParameter(
             lazyArguments: () -> Iterable<T>
         ): ParameterizeScope.Parameter<T> {
             val arguments by lazy(lazyArguments)
@@ -319,6 +320,9 @@ class ParameterizeSpec {
         val b by parameterOf(2)
         val c by parameterOf(3)
 
-        assertEquals("${ParameterizeScope::class.simpleName}(a = $a, b = $b, c = $c)", this.toString())
+        assertEquals(
+            "${ParameterizeScope::class.simpleName}(a = $a, b = $b, c = $c)",
+            contextOf<ParameterizeScope>().toString()
+        )
     }
 }

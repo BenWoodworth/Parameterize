@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -33,6 +32,7 @@ kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 
     jvm {

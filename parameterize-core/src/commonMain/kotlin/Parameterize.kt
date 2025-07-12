@@ -81,7 +81,7 @@ import kotlin.reflect.KProperty
  */
 public inline fun parameterize(
     configuration: ParameterizeConfiguration = ParameterizeConfiguration.default,
-    block: ParameterizeScope.() -> Unit
+    block: context(ParameterizeScope) () -> Unit
 ) {
     // Exercise extreme caution modifying this code, since the iterator is sensitive to the behavior of this function.
     // Code inlined from a previous version could have subtly different semantics when interacting with the runtime
@@ -93,7 +93,7 @@ public inline fun parameterize(
         val scope = iterator.nextIteration() ?: break
 
         try {
-            scope.block()
+            block(scope)
         } catch (failure: Throwable) {
             iterator.handleFailure(failure)
         }
@@ -118,7 +118,7 @@ public inline fun parameterize(
     noinline decorator: suspend DecoratorScope.(iteration: suspend DecoratorScope.() -> Unit) -> Unit = configuration.decorator,
     noinline onFailure: OnFailureScope.(failure: Throwable) -> Unit = configuration.onFailure,
     noinline onComplete: OnCompleteScope.() -> Unit = configuration.onComplete,
-    block: ParameterizeScope.() -> Unit
+    block: context(ParameterizeScope) () -> Unit
 ) {
     contract {
         callsInPlace(onComplete, InvocationKind.EXACTLY_ONCE)
@@ -147,11 +147,11 @@ internal class SimpleParameterizeScope internal constructor(
             "${parameter.property.name} = ${parameter.argument}"
         }
 
-    override fun <T> Parameter<T>.provideDelegate(thisRef: Nothing?, property: KProperty<*>): DeclaredParameter<T> {
+    override fun <T> declareParameter(parameter: Parameter<T>, property: KProperty<*>): DeclaredParameter<T> {
         parameterizeState.checkState(!iterationCompleted) {
             "Cannot declare parameter `${property.name}` after its iteration has completed"
         }
 
-        return parameterizeState.declareParameter(property, arguments)
+        return parameterizeState.declareParameter(property, parameter.arguments)
     }
 }
