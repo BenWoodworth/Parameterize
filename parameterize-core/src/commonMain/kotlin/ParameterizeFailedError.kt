@@ -26,8 +26,8 @@ import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
  * [completedEarly][OnCompleteScope.completedEarly] was true in [onComplete][Builder.onComplete].
  *
  * The [suppressedExceptions] include [recordedFailures][OnCompleteScope.recordedFailures] from the
- * [onComplete][Builder.onComplete] handler, with each being decorated with a message to include a list of the
- * [arguments][ParameterizeFailure.arguments] that caused it.
+ * [onComplete][Builder.onComplete] handler, each being decorated with a message to include a list of the
+ * [parameter arguments][ParameterizeFailure.parameters] that caused it.
  *
  * Can only be constructed from [onComplete][Builder.onComplete].
  */
