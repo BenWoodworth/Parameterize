@@ -63,6 +63,9 @@ internal expect class Failure : AssertionError {
     override val cause: Throwable
 }
 
+private fun ParameterizeScope.DeclaredParameter<*>.toErrorString(): String =
+    "${property.name} = $argument"
+
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun ParameterizeFailedError.Companion.commonShouldCaptureStackTrace(
     recordedFailures: List<ParameterizeFailure>
@@ -111,7 +114,7 @@ internal inline val ParameterizeFailedError.commonMessage
 
                 failure.parameters.forEach { parameter ->
                     append("\n\t\t")
-                    append(parameter.argument)
+                    append(parameter.toErrorString())
                 }
             }
 
@@ -125,14 +128,16 @@ internal inline val Failure.commonMessage: String
     get() = when (failure.parameters.size) {
         0 -> "Failed with no arguments"
 
-        1 -> failure.parameters.single().let { argument ->
-            "Failed with argument:\n\t\t$argument"
+        1 -> failure.parameters.single().let { parameter ->
+            "Failed with argument:\n\t\t${parameter.toErrorString()}"
         }
 
         else -> failure.parameters.joinToString(
             prefix = "Failed with arguments:\n\t\t",
             separator = "\n\t\t"
-        )
+        ) { parameter ->
+            parameter.toErrorString()
+        }
     }
 
 internal inline val Failure.commonCause: Throwable
