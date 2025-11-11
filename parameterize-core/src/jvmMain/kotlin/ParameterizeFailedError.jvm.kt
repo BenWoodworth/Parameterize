@@ -18,7 +18,6 @@ package com.benwoodworth.parameterize
 
 import org.opentest4j.MultipleFailuresError
 
-@Suppress("ACTUAL_WITHOUT_EXPECT") // https://youtrack.jetbrains.com/issue/KT-20641/
 public actual class ParameterizeFailedError private constructor(
     internal actual val recordedFailures: List<ParameterizeFailure>,
     internal actual val successCount: Long,
