@@ -69,7 +69,7 @@ tasks.register("ciPublish") {
     ciHostTargets
         .map { it.name.replaceFirstChar(Char::uppercase) }
         .map { if (it == "Metadata") "KotlinMultiplatform" else it }
-        .map { target -> "publish${target}PublicationToMavenRepository" }
+        .map { target -> "publish${target}PublicationToMavenCentralRepository" }
         .forEach { publishTarget ->
             dependsOn(publishTarget)
         }

@@ -30,4 +30,5 @@ dependencies {
     implementation(plugin(libs.plugins.kotlin.multiplatform))
     implementation(plugin(libs.plugins.dokka))
     implementation(plugin(libs.plugins.binary.compatibility.validator))
+    implementation(plugin(libs.plugins.vanniktech.maven.publish))
 }

@@ -1,7 +1,7 @@
 # Parameterize
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.benwoodworth.parameterize/parameterize-core)](https://central.sonatype.com/artifact/com.benwoodworth.parameterize/parameterize-core)
-[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/com.benwoodworth.parameterize/parameterize-core?server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/content/repositories/snapshots/com/benwoodworth/parameterize/parameterize-core)
+[![Maven Snapshots](https://img.shields.io/maven-metadata/v?label=maven-snapshots&metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fcom%2Fbenwoodworth%2Fparameterize%2Fparameterize-core%2Fmaven-metadata.xml)](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/com/benwoodworth/parameterize/parameterize-core)
 [![KDoc](https://img.shields.io/badge/api-KDoc-blue)](https://benwoodworth.github.io/Parameterize/parameterize-core/com.benwoodworth.parameterize/parameterize.html)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![Slack channel](https://img.shields.io/badge/chat-slack-blue.svg?logo=slack)](https://kotlinlang.slack.com/messages/parameterize/)
@@ -282,7 +282,7 @@ plugins {
 
 repositories {
     mavenCentral()
-    //maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    //maven("https://central.sonatype.com/repository/maven-snapshots/")
 }
 
 dependencies {
