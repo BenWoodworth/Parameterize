@@ -33,7 +33,7 @@ import kotlin.reflect.KProperty
  * also validates that the parameter is in fact being used with the expected
  * property.
  *
- * When first declared, the parameter [property] and the [arguments] it was
+ * When first declared, the parameter property and the [arguments] it was
  * declared with will be stored, along with a new argument iterator and the
  * first argument from it. The arguments are lazily read in from the iterator as
  * they're needed, and will seamlessly continue with the start again after the

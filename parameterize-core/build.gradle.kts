@@ -40,3 +40,9 @@ kotlin {
         }
     }
 }
+
+dokka {
+    dokkaPublications.configureEach {
+        failOnWarning = false // https://github.com/Kotlin/dokka/issues/4351
+    }
+}

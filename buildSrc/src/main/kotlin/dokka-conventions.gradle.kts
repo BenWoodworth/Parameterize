@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import org.jetbrains.dokka.gradle.DokkaTask
-import java.net.URL
-
 plugins {
     id("org.jetbrains.dokka")
 }
 
-tasks.withType<DokkaTask>().configureEach {
+dokka {
+    dokkaPublications.configureEach {
+        failOnWarning = true
+    }
+
     dokkaSourceSets.configureEach {
         reportUndocumented = true
-        failOnWarning = true
 
         val releaseVersionRef = version.toString()
             .takeIf { version -> version.matches(Regex("""\d+\.\d+\.\d+""")) }
@@ -33,7 +33,7 @@ tasks.withType<DokkaTask>().configureEach {
         if (releaseVersionRef != null) {
             sourceLink {
                 localDirectory = rootDir
-                remoteUrl = URL("https://github.com/BenWoodworth/Parameterize/tree/$releaseVersionRef")
+                remoteUrl = uri("https://github.com/BenWoodworth/Parameterize/tree/$releaseVersionRef")
                 remoteLineSuffix = "#L"
             }
         }

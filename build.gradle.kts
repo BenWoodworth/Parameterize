@@ -24,6 +24,11 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    dokka(project(":parameterize-api"))
+    dokka(project(":parameterize-core"))
+}
+
 tasks.withType<DokkaMultiModuleTask>().configureEach {
     doLast {
         layout.buildDirectory.asFileTree.asSequence()
