@@ -82,12 +82,12 @@ jobs:
           distribution: 'adopt'
 
       - name: Build KDoc
-        run: ./gradlew dokkaHtmlMultiModule
+        run: ./gradlew dokkaGenerate
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './build/dokka/htmlMultiModule'
+          path: './build/dokka/html'
 
       - name: Deploy to GitHub Pages
         id: deployment
