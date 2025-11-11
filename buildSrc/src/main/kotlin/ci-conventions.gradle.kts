@@ -56,7 +56,7 @@ val ciHostTargets = run {
     hostTargets[host]!!.asSequence()
 }
 
-tasks.create("ciTest") {
+tasks.register("ciTest") {
     ciHostTargets
         .filterIsInstance<KotlinTargetWithTests<*, *>>()
         .map { target -> "${target.name}Test" }
@@ -65,7 +65,7 @@ tasks.create("ciTest") {
         }
 }
 
-tasks.create("ciPublish") {
+tasks.register("ciPublish") {
     ciHostTargets
         .map { it.name.replaceFirstChar(Char::uppercase) }
         .map { if (it == "Metadata") "KotlinMultiplatform" else it }
