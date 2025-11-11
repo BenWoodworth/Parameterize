@@ -203,7 +203,8 @@ class ParameterizeSpec {
     fun unused_parameter_with_no_arguments_should_finish_iteration_early() = testParameterize(
         listOf(null)
     ) {
-        val unused by parameterOf<Nothing>()
+        @Suppress("unused", "UnusedVariable")
+        val unused: Nothing by parameter(emptyList())
 
         "finished"
     }
