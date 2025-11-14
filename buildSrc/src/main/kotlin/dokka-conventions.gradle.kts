@@ -39,3 +39,7 @@ dokka {
         }
     }
 }
+
+dependencies {
+    dokkaPlugin(project(":dokka-plugin"))
+}
