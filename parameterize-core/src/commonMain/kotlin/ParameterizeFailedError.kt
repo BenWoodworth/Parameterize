@@ -26,8 +26,8 @@ import com.benwoodworth.parameterize.ParameterizeConfiguration.OnCompleteScope
  * [completedEarly][OnCompleteScope.completedEarly] was true in [onComplete][Builder.onComplete].
  *
  * The [suppressedExceptions] include [recordedFailures][OnCompleteScope.recordedFailures] from the
- * [onComplete][Builder.onComplete] handler, with each being decorated with a message to include a list of the
- * [arguments][ParameterizeFailure.arguments] that caused it.
+ * [onComplete][Builder.onComplete] handler, each being decorated with a message to include a list of the
+ * [parameter arguments][ParameterizeFailure.parameters] that caused it.
  *
  * Can only be constructed from [onComplete][Builder.onComplete].
  */
@@ -62,6 +62,9 @@ internal expect class Failure : AssertionError {
     override val message: String
     override val cause: Throwable
 }
+
+private fun ParameterizeScope.DeclaredParameter<*>.toErrorString(): String =
+    "${property.name} = $argument"
 
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun ParameterizeFailedError.Companion.commonShouldCaptureStackTrace(
@@ -111,7 +114,7 @@ internal inline val ParameterizeFailedError.commonMessage
 
                 failure.parameters.forEach { parameter ->
                     append("\n\t\t")
-                    append(parameter.argument)
+                    append(parameter.toErrorString())
                 }
             }
 
@@ -125,14 +128,16 @@ internal inline val Failure.commonMessage: String
     get() = when (failure.parameters.size) {
         0 -> "Failed with no arguments"
 
-        1 -> failure.parameters.single().let { argument ->
-            "Failed with argument:\n\t\t$argument"
+        1 -> failure.parameters.single().let { parameter ->
+            "Failed with argument:\n\t\t${parameter.toErrorString()}"
         }
 
         else -> failure.parameters.joinToString(
             prefix = "Failed with arguments:\n\t\t",
             separator = "\n\t\t"
-        )
+        ) { parameter ->
+            parameter.toErrorString()
+        }
     }
 
 internal inline val Failure.commonCause: Throwable
