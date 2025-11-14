@@ -16,6 +16,7 @@
 
 rootProject.name = "parameterize"
 
+include(":dokka-plugin")
 include(":parameterize-api")
 include(":parameterize-core")
 include(":test-utils")

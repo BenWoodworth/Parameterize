@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Ben Woodworth
+ * Copyright 2025 Ben Woodworth
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 plugins {
-    id("dokka-conventions")
+    kotlin("jvm")
 }
 
 repositories {
@@ -23,6 +23,5 @@ repositories {
 }
 
 dependencies {
-    dokka(project(":parameterize-api"))
-    dokka(project(":parameterize-core"))
+    implementation(libs.dokka.core)
 }
