@@ -41,7 +41,10 @@ kotlin {
 }
 
 dokka {
-    dokkaPublications.configureEach {
-        failOnWarning = false // https://github.com/Kotlin/dokka/issues/4351
+    dokkaSourceSets.configureEach {
+        // https://github.com/Kotlin/dokka/issues/4351
+        for (target in listOf("js", "jvm", "native", "wasmJs", "wasmWasi")) {
+            suppressedFiles.from("src/${target}Main/kotlin/ParameterizeFailedError.$target.kt")
+        }
     }
 }
