@@ -18,6 +18,7 @@ import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
 
 // https://github.com/gradle/gradle/issues/15383#issuecomment-1216098405
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -96,5 +97,10 @@ kotlin {
                 implementation(project(":test-utils"))
             }
         }
+    }
+
+    @OptIn(ExperimentalAbiValidation::class)
+    abiValidation {
+        enabled = true
     }
 }

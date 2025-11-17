@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation
+
 plugins {
     id("kotlin-multiplatform-conventions")
 }
@@ -34,5 +36,10 @@ kotlin {
                 implementation(libs.kotlin.test.jvm)
             }
         }
+    }
+
+    @OptIn(ExperimentalAbiValidation::class)
+    abiValidation {
+        enabled = false
     }
 }

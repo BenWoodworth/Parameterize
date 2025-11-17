@@ -33,7 +33,7 @@ jobs:
           distribution: 'adopt'
 
       - name: Binary Compatibility
-        run: ./gradlew apiCheck
+        run: ./gradlew checkLegacyAbi
 
       - name: Documentation
         if: success() || failure()

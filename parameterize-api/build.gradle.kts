@@ -17,7 +17,6 @@
 plugins {
     id("kotlin-multiplatform-conventions")
     id("dokka-conventions")
-    id("binary-compatibility-validator-conventions")
     id("publishing-conventions")
     id("ci-conventions")
 }
