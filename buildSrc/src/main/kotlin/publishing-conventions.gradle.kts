@@ -19,10 +19,6 @@ plugins {
     id("com.vanniktech.maven.publish")
 }
 
-System.getenv("CI_VERSION")?.let { ciVersion ->
-    version = ciVersion
-}
-
 mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
