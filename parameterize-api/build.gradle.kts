@@ -24,9 +24,3 @@ plugins {
 repositories {
     mavenCentral()
 }
-
-dokka {
-    dokkaPublications.configureEach {
-        failOnWarning = false // TODO Fix the link resolution issues surfaced by Dokka v2
-    }
-}

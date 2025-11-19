@@ -64,7 +64,6 @@ public interface ParameterizeScope {
      * Declares this [Parameter], allowing one of its arguments to be used as the [value][getValue] of the Kotlin
      * [property].
      *
-     * @throws ParameterizeException if this [Parameter] is being declared with the wrong [property].
      * @see Parameter
      */
     public operator fun <T> Parameter<T>.provideDelegate(
@@ -205,11 +204,6 @@ public fun <T> ParameterizeScope.parameterOf(vararg arguments: T): Parameter<T> 
  * }
  * ```
  *
- * ### Restrictions
- *
- * - The [lazyArguments] block should not have side effects. Since it's not run every iteration, side effects could make
- *   the execution different from future iterations, breaking [parameterize]'s determinism assumption.
- *
  * @see Parameter
  */
 @OptIn(ExperimentalTypeInference::class)
@@ -248,11 +242,6 @@ public inline fun <T> ParameterizeScope.parameter(
  * }
  * ```
  *
- * ### Restrictions
- *
- * - The [lazyArguments] block should not have side effects. Since it's not run every iteration, side effects could make
- *   the execution different from future iterations, breaking [parameterize]'s determinism assumption.
- *
  * @see Parameter
  */
 @OptIn(ExperimentalTypeInference::class)
@@ -276,7 +265,6 @@ public value class LazyParameterScope @PublishedApi internal constructor(
      * Declares this [Parameter], allowing one of its arguments to be used as the [value][getValue] of the Kotlin
      * [property].
      *
-     * @throws ParameterizeException since declaring parameters in lazy `parameter {}` blocks is not currently supported.
      * @see Parameter
      * @see ParameterizeScope.provideDelegate
      */
